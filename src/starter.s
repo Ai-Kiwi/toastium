@@ -2,11 +2,13 @@
 .global _start
 
 _start:
+    #setup stack top
     la sp, _stack_top
-    #li t1, 'H'
-    #li t0, 0x10000000
-    #sb t1, 0(t0)
 
+    #bind for interrupts 
+    #la t0, trap_entry
+    #csrw mtvec, t0
+    
     #clear out the bss
     la t0, _bss_bottom
     la t1, _bss_top

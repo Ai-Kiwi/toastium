@@ -1,9 +1,9 @@
 CC = riscv64-unknown-elf-gcc
-CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64imac -mabi=lp64 -mcmodel=medany
+CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany
 LD = riscv64-unknown-elf-ld
 LDF = -T src/link.ld
 AS = riscv64-unknown-elf-as
-ASF = -march=rv64imac -mabi=lp64
+ASF = -march=rv64gc -mabi=lp64d
 
 OC = riscv64-unknown-elf-objcopy
 
