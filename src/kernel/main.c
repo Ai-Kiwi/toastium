@@ -9,6 +9,10 @@ void kernel_main() {
     while(1) {}
 }
 
+//will have a static array for each update, e.g disk and uart. Drivers can add to this then from there kernel will loop over it and do whatever with it. This way drivers never talk to services and what not.
+
+
+
 
 
 //todo
@@ -19,4 +23,4 @@ void kernel_main() {
 //framebuffer
 //vertio disk handler
 //fat32 disk reader
-
+//make buffers for updates auto resize instead of fixed size
