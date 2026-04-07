@@ -1,7 +1,7 @@
 CC = riscv64-unknown-elf-gcc
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany
 LD = riscv64-unknown-elf-ld
-LDF = -T src/link.ld
+LDF = -T link.ld
 AS = riscv64-unknown-elf-as
 ASF = -march=rv64gc -mabi=lp64d
 
@@ -11,8 +11,8 @@ QEMU = qemu-system-riscv64
 QEMUF = -machine virt -bios default -m 512M -smp 1 -nographic #-drive file=disk.img,format=raw,if=virtio
 
 SRCDIRS := src
-SRC := $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.c))
-ASM := $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.s))
+SRC := $(shell find $(SRCDIRS) -type f -name "*.c")
+ASM := $(shell find $(SRCDIRS) -type f -name "*.s")
 
 
 BUILD    := build
