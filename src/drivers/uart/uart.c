@@ -1,0 +1,1 @@
+//This layout if so that if there is more then 1 uart chip it would have a folder for each chip under one uart folder, then that uart folder would have a interface which translates calls to whichever chip in question is needed
