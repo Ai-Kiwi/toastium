@@ -10,7 +10,7 @@ void kernel_main() {
 }
 
 //will have a static array for each update, e.g disk and uart. Drivers can add to this then from there kernel will loop over it and do whatever with it. This way drivers never talk to services and what not.
-
+//Will need to remember to make system where some like uart support looking while some others will result in kernel panic, depending on what in question has got to much happened
 
 
 
