@@ -1,11 +1,10 @@
-void kernel_main() {
-    volatile char* uart = (volatile char*)0x10000000;
-    
-    char* msg = "Hello from C!\n";
-    while (*msg) {
-        *uart = *msg++;
-    }
-    
+#include "../drivers/uart/uart.h"
+
+void kernel_main() {    
+    uart_print_chars("Kernel Starting\n");
+
+
+
     while(1) {}
 }
 
