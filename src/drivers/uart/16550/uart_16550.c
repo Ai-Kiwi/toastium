@@ -27,5 +27,5 @@ int uart_16550_try_fetch_char() {
 }
 
 void uart_16550_init() {
-    *UART_INTERRUPT_TOGGLE = 0x1;
+    *(volatile char*)(UART_INTERRUPT_TOGGLE) |= 0x1;
 }

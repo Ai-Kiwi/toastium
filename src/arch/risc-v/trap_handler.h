@@ -3,6 +3,4 @@
 
 #include "./../../kernel/irq.h"
 
-void enable_traps();
-
 #endif

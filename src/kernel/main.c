@@ -15,8 +15,7 @@ void kernel_main() {
     irq_enable(uart_irq, 1);
 
     //enable irq and general interrupts
-    enable_traps();
-
+    irq_init();
     
 
     while(1) {}
