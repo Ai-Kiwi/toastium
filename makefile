@@ -1,5 +1,9 @@
+ARCH ?= risc-v
+
 CC = riscv64-unknown-elf-gcc
-CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany
+CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany \
+	-I src/kernel \
+	-I src/arch/$(ARCH)
 LD = riscv64-unknown-elf-ld
 LDF = -T link.ld
 AS = riscv64-unknown-elf-as

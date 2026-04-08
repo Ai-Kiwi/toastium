@@ -1,9 +1,19 @@
 #include "../drivers/uart/uart.h"
+#include "irq.h"
+#include "kernel_irq.h"
+#include "trap_handler.h"
 
 void kernel_main() {    
     uart_print_chars("Kernel Starting\n");
 
+    //uart enable irq
+    IRQ_TYPES uart_irq = UART;
+    irq_enable(uart_irq, 1);
 
+    //enable irq and general interrupts
+    enable_traps();
+
+    
 
     while(1) {}
 }

@@ -7,3 +7,7 @@ void uart_print_chars(char *print_string) {
         uart_16550_output_char(p);
     }
 }
+
+void uart_poll_input() {
+    
+}

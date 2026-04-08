@@ -6,8 +6,8 @@ _start:
     la sp, _stack_top
 
     #bind for interrupts 
-    #la t0, trap_entry
-    #csrw mtvec, t0
+    la t0, trap_entry
+    csrw stvec, t0
     
     #clear out the bss
     la t0, _bss_bottom
