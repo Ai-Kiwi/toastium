@@ -10,6 +10,7 @@ void kernel_main() {
     //parse dbt
 
     //uart enable irq
+    uart_init();
     IRQ_TYPES uart_irq = UART;
     irq_enable(uart_irq, 1);
 

@@ -12,6 +12,6 @@ void uart_print_char(char *print_char) {
     uart_16550_output_char(print_char);
 }
 
-void uart_poll_input() {
-    
+void uart_init() {
+    uart_16550_init();
 }
