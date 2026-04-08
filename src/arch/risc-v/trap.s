@@ -10,4 +10,4 @@ trap_entry:
     call arch_trap_handler
 
     LOAD_REGISTERS_FROM_STACK
-    mret
+    sret

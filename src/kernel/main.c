@@ -2,9 +2,12 @@
 #include "irq.h"
 #include "kernel_irq.h"
 #include "trap_handler.h"
+#include "panic.h"
 
 void kernel_main() {    
     uart_print_chars("Kernel Starting\n");
+
+    //parse dbt
 
     //uart enable irq
     IRQ_TYPES uart_irq = UART;
