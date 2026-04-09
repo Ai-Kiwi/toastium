@@ -3,9 +3,15 @@
 #include "kernel_irq.h"
 #include "trap_handler.h"
 #include "panic.h"
+#include "stack.h"
+#include "safety.h"
 
 void kernel_main() {    
     uart_print_chars("Kernel Starting\n");
+
+    kernel_stack_init();
+
+    kernel_safety_test();
 
     //parse dbt
 
@@ -17,6 +23,9 @@ void kernel_main() {
     //enable irq and general interrupts
     irq_init();
     
+    kernel_safety_test();
+
+    uart_print_chars("Finished init, now running kernel\n");
 
     while(1) {}
 }
@@ -30,6 +39,7 @@ void kernel_main() {
 //todo
 //interrupt handler
 //virtual memory
+//page file for under stack so system can crash when data is written below allowed stack
 //program schedular
 //syscall
 //framebuffer

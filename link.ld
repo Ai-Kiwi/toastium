@@ -39,7 +39,12 @@ SECTIONS
 
     . = . + 16;
 
+
+
     .stack (NOLOAD) : ALIGN(16) {
+        . += 8;
+        _stack_bottom_test = .;
+        . += 8;
         _stack_bottom = .;
         . += 0x4000;   /* 16KB stack */
         _stack_top = .;
