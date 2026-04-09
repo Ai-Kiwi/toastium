@@ -6,7 +6,7 @@
 #define UART_STATUS_READY_RECEIVE (1 << 0)
 #define UART_INTERRUPT_TOGGLE ((volatile char*)0x10000001)
 
-void uart_16550_output_char(char *output_char) {
+void uart_16550_output_char(const char *output_char) {
     volatile char* uart = (volatile char*)UART_VALUE;
     volatile char* uart_status = (volatile char*)UART_STATUS;
 

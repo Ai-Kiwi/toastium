@@ -16,7 +16,7 @@ void arch_enable_irq(IRQ_TYPES irq_type, int priority) {
         *(volatile int*)(PLIC_BASE + 10 * 4) = 1; //set lowest priority for uart
         *(volatile int*)(PLIC_BASE + 0x2080) |= (1U << 10); //set interrupt for uart
     }else{
-        panic("ATTEMPT_TO_ENABLE_UNHANDLED_IRQ",irq_type);
+        PANIC("ATTEMPT_TO_ENABLE_UNHANDLED_IRQ",irq_type);
     }
 }
 
