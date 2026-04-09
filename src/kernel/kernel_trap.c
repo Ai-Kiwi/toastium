@@ -2,23 +2,6 @@
 #include "panic.h"
 #include "safety.h"
 
-void kernel_handle_trap(const kernel_trap_data *trap_data) {
-    kernel_safety_test();
-
-    switch (trap_data->trap_type){
-    case KTRAP_TYPE_EXCEPTION:
-        exception_trap(trap_data);
-        break;
-    case KTRAP_TYPE_INTERRUPT:
-        interrupt_trap(trap_data);
-        break;
-    default:
-        PANIC("KERNEL_TRAP_UNKOWN_TYPE",trap_data->trap_type);
-        break;
-    }
-
-}
-
 void interrupt_trap(const kernel_trap_data *trap_data) {
     switch (trap_data->code){
     case KTRAP_SOFTWARE_INTERRUPT:
@@ -67,6 +50,23 @@ void exception_trap(const kernel_trap_data *trap_data) {
     default:
         break;
     }
+}
+
+void kernel_handle_trap(const kernel_trap_data *trap_data) {
+    kernel_safety_test();
+
+    switch (trap_data->trap_type){
+    case KTRAP_TYPE_EXCEPTION:
+        exception_trap(trap_data);
+        break;
+    case KTRAP_TYPE_INTERRUPT:
+        interrupt_trap(trap_data);
+        break;
+    default:
+        PANIC("KERNEL_TRAP_UNKOWN_TYPE",trap_data->trap_type);
+        break;
+    }
+
 }
 
 //Will return trap action
