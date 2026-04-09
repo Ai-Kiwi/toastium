@@ -2,6 +2,8 @@
 #include "panic.h"
 #include "arch_irq.h"
 #include "safety.h"
+#include "kernel_trap.h"
+#include "def.h"
 
 typedef struct {
     unsigned long register_1;
@@ -35,14 +37,128 @@ typedef struct {
     unsigned long register_29;
     unsigned long register_30;
     unsigned long register_31;
-    unsigned long scause; //Address that caused trap
-    unsigned long sepc; //Why trap happened
+    unsigned long scause; //What caused the trap. (Trap code)
+    unsigned long sepc; //What instruction caused trap (Instruction location)
     unsigned long stval; //Extra trap info, e.g page fault says address in question
+    unsigned long sstatus; //Privilege level machine was in.
 } trap_info;
 
 
 void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack
     uart_print_chars("Trap has just happened\n"); // bad idea but just here for time being while debugging
     kernel_safety_test();
-    PANIC("UNHANDLED_TRAP_OCCURRED",trap_data->scause);
+
+    const long is_interrupt = trap_data->scause & BIT(63); //last bit
+    const long trap_code = (trap_data->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit
+    const long is_user_mode = trap_data->scause & BIT(8);
+
+    kernel_trap_data trap;
+    trap.fault_pc = trap_data->sepc;
+    trap.fault_address = trap_data->stval;
+    if (is_user_mode) {
+        trap.privilege = KTRAP_MODE_USER;
+    }else{
+        trap.privilege = KTRAP_MODE_SUPERVISOR;
+    }
+
+    if (is_interrupt) {
+        trap.trap_type = KTRAP_TYPE_INTERRUPT;
+        switch (trap_code){
+        case 1UL: //Supervisor software interrupt
+            trap.code = KTRAP_SOFTWARE_INTERRUPT;
+            trap.privilege = KTRAP_MODE_SUPERVISOR;
+            break;
+        case 3UL: //Machine software interrupt
+            trap.code = KTRAP_SOFTWARE_INTERRUPT;
+            trap.privilege = KTRAP_MODE_MACHINE;
+            break;
+        case 5UL: //Supervisor timer interrupt
+            trap.code = KTRAP_TIMER_INTERRUPT;
+            trap.privilege = KTRAP_MODE_SUPERVISOR;
+            break;
+        case 7UL: //Machine timer interrupt
+            trap.code = KTRAP_TIMER_INTERRUPT;
+            trap.privilege = KTRAP_MODE_MACHINE;
+            break;
+        case 9UL: //Supervisor external interrupt
+            trap.code = KTRAP_EXTERNAL_INTERRUPT;
+            trap.privilege = KTRAP_MODE_SUPERVISOR;
+            break;
+        case 11UL: //Machine external interrupt
+            trap.code = KTRAP_EXTERNAL_INTERRUPT;
+            trap.privilege = KTRAP_MODE_MACHINE;
+            break;
+        case 13UL: //Counter-overflow interrupt
+            //will code support for later when needed
+            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code);
+            break;
+        default:
+            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code);
+            break;
+        }
+    }else{
+        trap.trap_type = KTRAP_TYPE_EXCEPTION;
+        switch (trap_code){
+        case 0UL: //Instruction address misaligned
+            trap.code = KTRAP_ACCESS_MISALIGNED;
+            break;
+        case 1UL: //Instruction access fault
+            trap.code = KTRAP_ACCESS_MISALIGNED;
+            break;
+        case 2UL: //Illegal instruction
+            trap.code = KTRAP_INSTRUCTION_INVALID;
+            break;
+        case 3UL: //Breakpoint
+            trap.code = KTRAP_BREAKPOINT;
+            break;
+        case 4UL: //Load address misaligned
+            trap.code = KTRAP_ACCESS_MISALIGNED;
+            break;
+        case 5UL: //Load access fault
+            trap.code = KTRAP_ACCESS_FAULT;
+            break;
+        case 6UL: //Store/AMO address misaligned
+            trap.code = KTRAP_ACCESS_MISALIGNED;
+            break;
+        case 7UL: //Store/AMO access fault
+            trap.code = KTRAP_ACCESS_FAULT;
+            break;
+        case 8UL: //Environment call from U-mode
+            trap.code = KTRAP_SYSCALL;
+            trap.privilege = KTRAP_MODE_USER;
+            break;
+        case 9UL: //Environment call from S-mode
+            trap.code = KTRAP_SYSCALL;
+            trap.privilege = KTRAP_MODE_SUPERVISOR;
+            break;
+        case 11UL: //Environment call from M-mode
+            trap.code = KTRAP_SYSCALL;
+            trap.privilege = KTRAP_MODE_MACHINE;
+            break;
+        case 12UL: //Instruction page fault
+            trap.code = KTRAP_PAGE_FAULT;
+            break;
+        case 13UL: //Load page fault
+            trap.code = KTRAP_PAGE_FAULT;
+            break;
+        case 15UL: //Store/AMO page fault
+            trap.code = KTRAP_PAGE_FAULT;
+            break;
+        case 16UL: //Double trap
+            trap.code = KTRAP_DOUBLE_TRAP;
+            break;
+        case 18UL: //Software check
+            trap.code = KTRAP_SOFTWARE_CHECK;
+            break;
+        case 19UL: //Hardware error
+            trap.code = KTRAP_HARDWARE_ERROR;
+            break;
+        default:
+            PANIC("UNHANDLED_TRAP_EXCEPTION_OCCURRED",trap_code);
+            break;
+        }
+    }
+
+    kernel_handle_trap(&trap);
+    
 }
