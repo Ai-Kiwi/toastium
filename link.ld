@@ -45,9 +45,14 @@ SECTIONS
         . += 8;
         _stack_bottom_test = .;
         . += 8;
+        
         _stack_bottom = .;
         . += 0x4000;   /* 16KB stack */
         _stack_top = .;
+
+        . += 8;
+        _stack_top_test = .;
+        . += 8;
     }:data
 
     . = . + 16;

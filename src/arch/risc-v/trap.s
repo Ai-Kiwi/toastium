@@ -6,7 +6,8 @@
 trap_entry:
     SAVE_REGISTERS_TO_STACK
 
-    #setup restore once done
+    # setup restore once done
+    mv a0, sp
     call arch_trap_handler
 
     LOAD_REGISTERS_FROM_STACK
