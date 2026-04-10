@@ -5,6 +5,8 @@
 #include "panic.h"
 #include "stack.h"
 #include "safety.h"
+#include "process.h"
+#include "scheduler.h"
 
 void kernel_main() {    
     uart_print_chars("Kernel Starting\n");
@@ -15,6 +17,8 @@ void kernel_main() {
 
     //parse dbt
 
+    init_processes();
+    kernel_schedular_init();
     //uart enable irq
     uart_init();
     IRQ_TYPES uart_irq = UART;

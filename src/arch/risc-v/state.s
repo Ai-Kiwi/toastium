@@ -82,5 +82,15 @@
     ld x30, 232(sp)
     ld x31, 240(sp)
     fence rw, rw
+
+    ld a0, 248(sp)
+    ld a1, 256(sp)
+    ld a2, 264(sp)
+    ld a3, 272(sp)
+
+    #csrr a0, scause
+    csrw sepc, a1
+    #csrr a2, stval
+    #csrr a2, sstatus
     addi sp, sp, 272
 .endm

@@ -52,7 +52,7 @@ void exception_trap(const kernel_trap_data *trap_data) {
     }
 }
 
-void kernel_handle_trap(const kernel_trap_data *trap_data) {
+const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data) {
     kernel_safety_test();
 
     switch (trap_data->trap_type){

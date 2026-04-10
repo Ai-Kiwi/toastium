@@ -1,6 +1,7 @@
 #ifndef KERNEL_TRAP_H
 #define KERNEL_TRAP_H
 
+#include "types.h"
 typedef enum {
     KTRAP_MODE_USER,
     KTRAP_MODE_SUPERVISOR,
@@ -40,6 +41,16 @@ typedef struct {
     unsigned long fault_address;
 } kernel_trap_data;
 
-void kernel_handle_trap(const kernel_trap_data *trap_data);
+typedef enum {
+    KTRAP_RESPONSE_RESUME_PROCESS,
+    KTRAP_RESPONSE_HOLD_PROCESS
+} kernel_trap_response_type;
+
+typedef struct {
+    kernel_trap_response_type response_type;
+    kpid kernel_PID;
+} kernel_trap_response;
+
+const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data);
 
 #endif

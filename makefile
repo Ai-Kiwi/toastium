@@ -1,7 +1,7 @@
 ARCH ?= risc-v
 
 CC = riscv64-unknown-elf-gcc
-CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany \
+CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin \
 	-I src/kernel \
 	-I src/drivers \
 	-I src/include \
@@ -47,6 +47,14 @@ $(BIN): $(ELF)
 
 run: $(BIN)
 	$(QEMU) $(QEMUF) -kernel $(BIN)
+
+asm-debug: $(BIN)
+	$(QEMU) $(QEMUF) -kernel $(BIN) -d in_asm,cpu
+
+debug: $(BIN)
+	$(QEMU) $(QEMUF) -kernel $(BIN) -S -s
+#connect with riscv64-unknown-elf-gdb build/kernel.elf
+#target remote :1234
 
 clean:
 	rm -rf $(BUILD)

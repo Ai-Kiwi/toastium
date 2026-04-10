@@ -14,11 +14,11 @@ _start:
     la t1, _bss_top
     j clear_bss
 clear_bss:
-    beq t0, t1, clear_bss_done 
+    bgeu t0, t1, clear_bss_done 
     sd zero, 0(t0)
-    addi t0, t1, 8
+    addi t0, t0, 8
     j clear_bss
 clear_bss_done:
     call kernel_main
-    
+    wfi
 1: j 1b

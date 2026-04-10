@@ -4,6 +4,10 @@
 #include "safety.h"
 #include "kernel_trap.h"
 #include "def.h"
+#include "scheduler.h"
+#include "process.h"
+
+extern char after_trap_hold;
 
 typedef struct {
     unsigned long register_1;
@@ -43,6 +47,7 @@ typedef struct {
     unsigned long sstatus; //Privilege level machine was in.
 } trap_info;
 
+trap_info arch_processes_trap_info[max_process_count];
 
 void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack
     uart_print_chars("Trap has just happened\n"); // bad idea but just here for time being while debugging
@@ -159,6 +164,30 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
         }
     }
 
-    kernel_handle_trap(&trap);
+    kernel_trap_response trap_response = kernel_handle_trap(&trap);
     
+    switch (trap_response.response_type){
+    case KTRAP_RESPONSE_HOLD_PROCESS:
+        //need to swap out for another process
+        if (kernel_running_process != null_program_pid) {
+            arch_processes_trap_info[kernel_running_process] = *trap_data;
+        }        
+
+        kpid next_process = kernel_scheduler_next_process();
+
+        if (next_process == null_program_pid) {
+            trap_data->sepc = (unsigned long)&after_trap_hold; //run a forever wait loop as its idle
+        }else{
+            *trap_data = arch_processes_trap_info[next_process];
+        }
+        break;
+    case KTRAP_RESPONSE_RESUME_PROCESS:
+        if (kernel_running_process == null_program_pid) {
+            trap_data->sepc = (unsigned long)&after_trap_hold; //run a forever wait loop as its idle
+        }
+        break;
+    default:
+        PANIC("UNHANDLED_TRAP_RESPONSE",trap_response.response_type);
+        break;
+    }
 }
