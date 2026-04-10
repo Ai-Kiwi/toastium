@@ -1,24 +1,30 @@
 #include "kernel_trap.h"
 #include "panic.h"
 #include "safety.h"
+#include "scheduler.h"
 
-void interrupt_trap(const kernel_trap_data *trap_data) {
+const kernel_trap_response interrupt_trap(const kernel_trap_data *trap_data) {
+    kernel_trap_response trap_response;
     switch (trap_data->code){
     case KTRAP_SOFTWARE_INTERRUPT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_INTERRUPT",trap_data->trap_type);
         break;
     case KTRAP_TIMER_INTERRUPT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_TIMER_INTERRUPT",trap_data->trap_type);
+        trap_response.kernel_PID = kernel_scheduler_next_process();
+        trap_response.response_type = KTRAP_RESPONSE_HOLD_PROCESS;
         break;
     case KTRAP_EXTERNAL_INTERRUPT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT",trap_data->trap_type);
         break;
     default:
+        PANIC("KERNEL_TRAP_UNHANDLED_INTERRUPT",trap_data->trap_type);
         break;
     }
+    return trap_response;
 }
 
-void exception_trap(const kernel_trap_data *trap_data) {
+const kernel_trap_response exception_trap(const kernel_trap_data *trap_data) {
+    kernel_trap_response trap_response;
     switch (trap_data->code) {
     case KTRAP_ACCESS_MISALIGNED:
         PANIC("KERNEL_TRAP_UNIMPLENTED_ACCESS_MISALIGNED",trap_data->trap_type);
@@ -48,8 +54,10 @@ void exception_trap(const kernel_trap_data *trap_data) {
         PANIC("KERNEL_TRAP_UNIMPLENTED_HARDWARE_ERROR",trap_data->trap_type);
         break;
     default:
+        PANIC("KERNEL_TRAP_UNHANDLED_EXCEPTION",trap_data->trap_type);
         break;
     }
+    return trap_response;
 }
 
 const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data) {
@@ -57,10 +65,10 @@ const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data)
 
     switch (trap_data->trap_type){
     case KTRAP_TYPE_EXCEPTION:
-        exception_trap(trap_data);
+        return exception_trap(trap_data);
         break;
     case KTRAP_TYPE_INTERRUPT:
-        interrupt_trap(trap_data);
+        return interrupt_trap(trap_data);
         break;
     default:
         PANIC("KERNEL_TRAP_UNKOWN_TYPE",trap_data->trap_type);

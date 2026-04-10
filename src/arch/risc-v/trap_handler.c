@@ -1,4 +1,3 @@
-#include "../../drivers/uart/uart.h"
 #include "panic.h"
 #include "arch_irq.h"
 #include "safety.h"
@@ -50,7 +49,6 @@ typedef struct {
 trap_info arch_processes_trap_info[max_process_count];
 
 void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack
-    uart_print_chars("Trap has just happened\n"); // bad idea but just here for time being while debugging
     kernel_safety_test();
 
     const long is_interrupt = trap_data->scause & BIT(63); //last bit
