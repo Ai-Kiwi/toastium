@@ -41,5 +41,5 @@ void kernel_panic(const char *file, const long file_line, const char *function, 
     uart_print_hex(extra_value);
     uart_print_chars("\n");
 
-    freeze_system();
+    arch_freeze_system();
 }

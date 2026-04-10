@@ -7,6 +7,7 @@
 #include "safety.h"
 #include "process.h"
 #include "scheduler.h"
+#include "timer.h"
 
 void kernel_main() {    
     uart_print_chars("Kernel Starting\n");
@@ -21,8 +22,10 @@ void kernel_main() {
     kernel_schedular_init();
     //uart enable irq
     uart_init();
-    IRQ_TYPES uart_irq = UART;
-    irq_enable(uart_irq, 1);
+    irq_enable(KIRQ_UART);
+    irq_enable(KIRQ_TIMER);
+    irq_enable(KIRQ_SOFTWARE);
+    irq_enable(KIRQ_EXTERNAL);
 
     //enable irq and general interrupts
     irq_init();
@@ -30,6 +33,9 @@ void kernel_main() {
     kernel_safety_test();
 
     uart_print_chars("Finished init, now running kernel\n");
+
+    //makes timer to kick start the os
+    kernel_set_timer_future_ms(5);
 
     while(1) {}
 }

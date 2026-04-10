@@ -1,0 +1,21 @@
+//for now timer just stops program running and calls schedular.
+//later will have a system that has list of timers and looks at most recent and uses that.
+
+#define BASE_CLOCK_SPEED 10000000 //clocks per second
+
+#include "cpu.h"
+#include "panic.h"
+
+void kernel_set_timer(long clock_number) {
+    long response = arch_set_timer(clock_number);
+    if (response) {
+        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response);
+    }
+}
+
+void kernel_set_timer_future_ms(long ms) {
+    long response = arch_set_timer(arch_get_time_count() + ((BASE_CLOCK_SPEED / 1000) * ms));
+    if (response) {
+        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response);
+    }
+}

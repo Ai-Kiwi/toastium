@@ -1,9 +1,12 @@
 #include "kernel_trap.h"
 #include "def.h"
+#include "timer.h"
 
 kpid kernel_running_process;
 
 kpid kernel_scheduler_next_process() {
+    kernel_running_process = null_program_pid;
+    kernel_set_timer_future_ms(4);
     return null_program_pid;
 }
 
