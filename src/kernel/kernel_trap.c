@@ -10,6 +10,9 @@ const kernel_trap_response interrupt_trap(const kernel_trap_data *trap_data) {
         PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_INTERRUPT",trap_data->trap_type);
         break;
     case KTRAP_TIMER_INTERRUPT:
+        if (trap_data->privilege != KTRAP_MODE_SUPERVISOR){
+            PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data->privilege);
+        }
         trap_response.kernel_PID = kernel_scheduler_next_process();
         trap_response.response_type = KTRAP_RESPONSE_HOLD_PROCESS;
         break;
