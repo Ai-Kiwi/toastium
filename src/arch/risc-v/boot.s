@@ -19,6 +19,6 @@ clear_bss:
     addi t0, t0, 8
     j clear_bss
 clear_bss_done:
-    call kernel_main
+    call arch_main
     wfi
 1: j 1b

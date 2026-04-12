@@ -16,8 +16,8 @@ void kernel_main() {
 
     kernel_safety_test();
 
-    //parse dbt
-
+    
+    
     init_processes();
     kernel_schedular_init();
     //uart enable irq
@@ -26,7 +26,7 @@ void kernel_main() {
     irq_enable(KIRQ_TIMER);
     irq_enable(KIRQ_SOFTWARE);
     irq_enable(KIRQ_EXTERNAL);
-
+    
     //enable irq and general interrupts
     irq_init();
     
@@ -56,3 +56,5 @@ void kernel_main() {
 //vertio disk handler
 //fat32 disk reader
 //make buffers for updates auto resize instead of fixed size
+//program a console system (will likely be socket and caster)
+//program core utils for os
