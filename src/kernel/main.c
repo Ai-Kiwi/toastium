@@ -7,14 +7,17 @@
 #include "process/process.h"
 #include "process/scheduler.h"
 #include "kernel/timer/timer.h"
+#include "arch_device_tree/dtb.h"
 
 void kernel_main() {    
-    uart_print_chars("Kernel Starting\n");
+    uart_println_str("Kernel Starting");
 
+    //setup stack
     kernel_stack_init();
-
     kernel_safety_test();
 
+    //setup device tree
+    kernel_device_tree_init();
     
     
     init_processes();
@@ -31,7 +34,7 @@ void kernel_main() {
     
     kernel_safety_test();
 
-    uart_print_chars("Finished init, now running kernel\n");
+    uart_println_str("Finished init, now running kernel");
 
     //makes timer to kick start the os
     kernel_set_timer_future_ms(5);

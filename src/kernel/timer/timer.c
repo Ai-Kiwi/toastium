@@ -9,13 +9,13 @@
 void kernel_set_timer(long clock_number) {
     long response = arch_set_timer(clock_number);
     if (response) {
-        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response);
+        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response, 0, 0);
     }
 }
 
 void kernel_set_timer_future_ms(long ms) {
     long response = arch_set_timer(arch_get_time_count() + ((BASE_CLOCK_SPEED / 1000) * ms));
     if (response) {
-        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response);
+        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response, 0, 0);
     }
 }

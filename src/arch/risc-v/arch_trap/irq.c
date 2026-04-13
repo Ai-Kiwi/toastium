@@ -28,7 +28,7 @@ void arch_enable_irq(IRQ_TYPES irq_type) { //technically some of these are plic 
         asm volatile("csrs sie, %0" :: "r"BIT(9));
         break;
     default:
-        PANIC("ATTEMPT_TO_ENABLE_UNHANDLED_IRQ",irq_type);
+        PANIC("ATTEMPT_TO_ENABLE_UNHANDLED_IRQ",irq_type, 0, 0);
         break;
     }
 }

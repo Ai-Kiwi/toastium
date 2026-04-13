@@ -1,14 +1,30 @@
 #include "device_tree.h"
+#include "arch_device_tree/dtb.h"
 #include "drivers/uart/uart.h"
+#include "kernel/safety/safety.h"
 
 static device_info *kernel_device_list;
 static unsigned int *kernel_device_list_len;
 
-void kernel_device_tree_init(const device_info *device_list, unsigned int device_list_len) {
-    for (int i=0; i<device_list_len; i++) {
-        uart_print_chars("Property | Name : ");
+extern char *_unused_ram_start;
 
-        uart_print_chars(device_list[i].name);
+void kernel_device_tree_init() {
+    unsigned int device_list_len = arch_parse_dtb_ram((char *)&_unused_ram_start);
+    kernel_safety_test();
+
+    uart_println_str("printing out devices");
+
+    device_info *device = (device_info *)&_unused_ram_start;
+
+    for (int i=0; i<device_list_len; i++) {
+        uart_print_str("Property | Name : ");
+        uart_print_str(device[i].name);
+        uart_print_str(" | Path : ");
+        for (int p=0; p<device[i].node_depth; p++) {
+            uart_print_char(' / ');
+            uart_print_str((char *)device[i].parent_nodes[p]);
+        }
+        uart_println_str("");
     }
 
     //

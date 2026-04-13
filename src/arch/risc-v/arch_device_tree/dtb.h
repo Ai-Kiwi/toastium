@@ -4,11 +4,7 @@
 #include "arch_device_tree/dtb.h"
 #include "kernel/devices/device_tree.h"
 
-typedef struct {
-    device_info *device_list;
-    unsigned int device_list_len;
-} arch_dtb_data;
-
-void parse_dtb(char *device_tree_blob);
+void set_device_tree_block_location(char *new_device_tree_blob);
+unsigned int arch_parse_dtb_ram(char *output_location);
 
 #endif

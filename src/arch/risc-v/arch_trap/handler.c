@@ -93,10 +93,10 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
             break;
         case 13UL: //Counter-overflow interrupt
             //will code support for later when needed
-            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code);
+            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code, trap.fault_address, trap.fault_pc);
             break;
         default:
-            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code);
+            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code, trap.fault_address, trap.fault_pc);
             break;
         }
     }else{
@@ -157,7 +157,7 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
             trap.code = KTRAP_HARDWARE_ERROR;
             break;
         default:
-            PANIC("UNHANDLED_TRAP_EXCEPTION_OCCURRED",trap_code);
+            PANIC("UNHANDLED_TRAP_EXCEPTION_OCCURRED",trap_code, trap.fault_address, trap.fault_pc);
             break;
         }
     }
@@ -185,7 +185,7 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
         }
         break;
     default:
-        PANIC("UNHANDLED_TRAP_RESPONSE",trap_response.response_type);
+        PANIC("UNHANDLED_TRAP_RESPONSE",trap_response.response_type, trap_response.kernel_PID, 0);
         break;
     }
 }

@@ -8,7 +8,7 @@ PHDRS
 
 SECTIONS
 {
-    . = 0x80000000;
+    . = 0x80000000; /* Also change in board settings */
 
     .text : ALIGN(16) {
         *(.text.boot)
