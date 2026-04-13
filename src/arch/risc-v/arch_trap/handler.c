@@ -1,10 +1,10 @@
-#include "panic.h"
-#include "arch_irq.h"
-#include "safety.h"
-#include "kernel_trap.h"
+#include "kernel/safety/panic.h"
+#include "arch_trap/irq.h"
+#include "kernel/safety/safety.h"
+#include "kernel/trap/handler.h"
 #include "def.h"
-#include "scheduler.h"
-#include "process.h"
+#include "kernel/process/process.h"
+#include "kernel/process/scheduler.h"
 
 extern char after_trap_hold;
 

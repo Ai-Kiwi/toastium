@@ -1,4 +1,4 @@
-#include "panic.h"
+#include "kernel/safety/panic.h"
 
 extern char _stack_bottom_test, _stack_top_test;
 

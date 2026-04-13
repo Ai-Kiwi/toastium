@@ -1,13 +1,12 @@
-#include "../drivers/uart/uart.h"
-#include "irq.h"
-#include "kernel_irq.h"
-#include "trap_handler.h"
-#include "panic.h"
-#include "stack.h"
-#include "safety.h"
-#include "process.h"
-#include "scheduler.h"
-#include "timer.h"
+#include "drivers/uart/uart.h"
+#include "kernel/trap/irq.h"
+#include "kernel/trap/handler.h"
+#include "kernel/safety/panic.h"
+#include "kernel/memory/stack.h"
+#include "kernel/safety/safety.h"
+#include "process/process.h"
+#include "process/scheduler.h"
+#include "kernel/timer/timer.h"
 
 void kernel_main() {    
     uart_print_chars("Kernel Starting\n");

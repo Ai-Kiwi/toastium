@@ -1,5 +1,5 @@
 #include "device_tree.h"
-#include "uart/uart.h"
+#include "drivers/uart/uart.h"
 
 static device_info *kernel_device_list;
 static unsigned int *kernel_device_list_len;

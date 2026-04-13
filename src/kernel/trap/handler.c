@@ -1,7 +1,7 @@
-#include "kernel_trap.h"
-#include "panic.h"
-#include "safety.h"
-#include "scheduler.h"
+#include "kernel/trap/handler.h"
+#include "kernel/safety/panic.h"
+#include "kernel/safety/safety.h"
+#include "kernel/process/scheduler.h"
 
 const kernel_trap_response interrupt_trap(const kernel_trap_data *trap_data) {
     kernel_trap_response trap_response;

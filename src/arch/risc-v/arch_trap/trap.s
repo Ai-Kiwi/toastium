@@ -2,7 +2,7 @@
 .global trap_entry
 .global after_trap_hold
 .align 4
-.include "./src/arch/risc-v/state.s"
+.include "./src/arch/risc-v/arch_trap/state.s"
 
 trap_entry:
     SAVE_REGISTERS_TO_STACK

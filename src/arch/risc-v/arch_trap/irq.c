@@ -1,6 +1,6 @@
-#include "./../../kernel/irq.h"
-#include "../../drivers/uart/uart.h"
-#include "panic.h"
+#include "kernel/trap/irq.h"
+#include "drivers/uart/uart.h"
+#include "kernel/safety/panic.h"
 #include "def.h"
 
 //these values are S mode
@@ -12,7 +12,7 @@
 
 
 
-void arch_enable_irq(IRQ_TYPES irq_type) { //techanically some of these are plic and interupts so some shouldn't be here but they are merged, might unmerge later but would likely make more messy. 
+void arch_enable_irq(IRQ_TYPES irq_type) { //technically some of these are plic and interrupts so some shouldn't be here but they are merged, might unmerge later but would likely make more messy. 
     switch (irq_type){
     case KIRQ_UART:
         *(volatile int*)(PLIC_BASE + 10 * 4) = 1; //set lowest priority for uart

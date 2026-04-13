@@ -1,6 +1,6 @@
-#include "cpu.h"
-#include "uart/uart.h"
-#include "panic.h"
+#include "arch_cpu.h"
+#include "drivers/uart/uart.h"
+#include "kernel/safety/panic.h"
 
 void uart_print_hex(const long hex_value) {
     static const char hex_list[] = "0123456789ABCDEF";

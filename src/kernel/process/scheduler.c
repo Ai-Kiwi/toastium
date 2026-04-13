@@ -1,6 +1,6 @@
-#include "kernel_trap.h"
+#include "kernel/trap/handler.h"
 #include "def.h"
-#include "timer.h"
+#include "kernel/timer/timer.h"
 
 kpid kernel_running_process;
 

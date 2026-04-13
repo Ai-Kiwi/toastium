@@ -1,7 +1,9 @@
 #ifndef ARCH_DTB_H
 #define ARCH_DTB_H
 
-#include "device_tree.h"
+#include "arch_device_tree/dtb.h"
+#include "kernel/devices/device_tree.h"
+
 typedef struct {
     device_info *device_list;
     unsigned int device_list_len;

@@ -1,4 +1,4 @@
-#include "arch_irq.h"
+#include "arch_trap/irq.h"
 #include "irq.h"
 
 void irq_enable(IRQ_TYPES irq_type) {

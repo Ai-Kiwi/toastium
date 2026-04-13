@@ -2,8 +2,7 @@ ARCH ?= risc-v
 
 CC = riscv64-unknown-elf-gcc
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
-	-I src/kernel \
-	-I src/drivers \
+	-I src/ \
 	-I src/include \
 	-I src/arch/$(ARCH)
 LD = riscv64-unknown-elf-ld

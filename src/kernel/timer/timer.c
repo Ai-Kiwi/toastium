@@ -3,8 +3,8 @@
 
 #define BASE_CLOCK_SPEED 10000000 //clocks per second
 
-#include "cpu.h"
-#include "panic.h"
+#include "arch_cpu.h"
+#include "kernel/safety/panic.h"
 
 void kernel_set_timer(long clock_number) {
     long response = arch_set_timer(clock_number);

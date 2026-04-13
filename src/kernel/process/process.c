@@ -1,5 +1,5 @@
 #include "process.h"
-#include "trap_handler.h"
+#include "kernel/trap/handler.h"
 #include "def.h"
 
 kernel_process_info kernel_processes[max_process_count];

@@ -2,7 +2,7 @@
 #ifndef ARCH_CPU_H
 #define ARCH_CPU_H
 
-#include "./../../kernel/irq.h"
+#include "kernel/trap/irq.h"
 
 void arch_freeze_system();
 long arch_get_cycle_count();

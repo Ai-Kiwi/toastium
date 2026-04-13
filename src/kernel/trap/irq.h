@@ -1,5 +1,5 @@
-#ifndef IRQ_H
-#define IRQ_H
+#ifndef KERNEL_IRQ_H
+#define KERNEL_IRQ_H
 
 typedef enum {
     KIRQ_UART,
@@ -7,5 +7,8 @@ typedef enum {
     KIRQ_SOFTWARE,
     KIRQ_EXTERNAL
 } IRQ_TYPES;
+
+void irq_enable(IRQ_TYPES irq_type);
+void irq_init();
 
 #endif

@@ -1,8 +1,8 @@
-#include "uart/uart.h"
-#include "panic.h"
+#include "drivers/uart/uart.h"
+#include "kernel/safety/panic.h"
 #include "types.h"
-#include "device_tree.h"
-#include "arch_dtb.h"
+#include "kernel/devices/device_tree.h"
+#include "arch_device_tree/dtb.h"
 
 unsigned int read_int(char *pointer) {
     return (pointer[0] << 24) | (pointer[1] << 16) | (pointer[2] << 8) | pointer[3];
@@ -127,7 +127,7 @@ void parse_dtb(char *device_tree_blob) {
     arch_dtb_data response;
     response.device_list = device_list;
     response.device_list_len = device_list_len;
-    return response;
+    //return response;
 
 }
 
