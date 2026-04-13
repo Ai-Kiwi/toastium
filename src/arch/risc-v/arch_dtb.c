@@ -1,14 +1,8 @@
 #include "uart/uart.h"
 #include "panic.h"
 #include "types.h"
-
-void uart_print_char_hex(const char hex_value) {
-    static const char hex_list[] = "0123456789ABCDEF";
-    for (int i=1; i > -1; i=i-1) { //64/4=16
-        int digit_value = (hex_value >> (i * 4)) & 0xF;
-        uart_print_char(&hex_list[digit_value]);
-    }
-}
+#include "device_tree.h"
+#include "arch_dtb.h"
 
 unsigned int read_int(char *pointer) {
     return (pointer[0] << 24) | (pointer[1] << 16) | (pointer[2] << 8) | pointer[3];
@@ -57,69 +51,83 @@ void parse_dtb(char *device_tree_blob) {
         PANIC("INCORRECT_DTB_VERSION",header.comptaible_version);
     }
 
-    const char *node_stack[10];
+    static device_info device_list[0];
+    unsigned int device_list_len = 0;
+
+    char *node_stack[10];
     int node_stack_depth = 0;
 
     for (unsigned int byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
         unsigned int item_value = read_int(&device_tree_blob[byte_location]);
 
-        for (int s=0; s<node_stack_depth; s++) {
-            uart_print_chars("   ");
-        }
-
-
         switch (item_value){
         case 0x00000001: //node start
-            uart_print_chars("start node | ");
             node_stack[node_stack_depth] = (char *)byte_location;
             node_stack_depth += 1;
             if (node_stack_depth > 9) {PANIC("DTB_STACK_DEPTH_TO_HIGH", byte_location);}
             //read name
             int offset = 0;
             while (device_tree_blob[byte_location + offset + 4] != '\0'){
-                uart_print_char(&device_tree_blob[byte_location + offset + 4]);
                 offset += 1;
             }
             offset = ((offset+4) / 4) * 4;
             byte_location = byte_location + offset;
-            uart_print_chars("\n");
             break;
         case 0x00000002: //node end
-            node_stack[node_stack_depth] = 0;
             node_stack_depth -= 1;
             if (node_stack_depth < 0) {PANIC("DTB_STACK_DEPTH_LESS_ZERO", byte_location);}
-            uart_print_chars("end node\n");
             break;
         case 0x00000004: //no operation
-            uart_print_chars("No operation\n");
             continue;
         case 0x00000003: //property
-            uart_print_chars("Property | Name : ");
-            const unsigned int prop_size = read_int(&device_tree_blob[(byte_location + 4)]);
-            const unsigned int name_offset = read_int(&device_tree_blob[(byte_location + 8)]);
+            unsigned int prop_size = read_int(&device_tree_blob[(byte_location + 4)]);
+            unsigned int name_offset = read_int(&device_tree_blob[(byte_location + 8)]);
 
             //get name
-            const char *prop_name = &device_tree_blob[header.strings_offset + name_offset];
-            uart_print_chars(prop_name);
+            char *prop_name = &device_tree_blob[header.strings_offset + name_offset];
 
             //read the value data
-            uart_print_chars(" | VALUE : 0x");
-            for (int value_offset=0; value_offset < prop_size; value_offset++) {
-                uart_print_char_hex(device_tree_blob[(byte_location + 12 + value_offset)]);
-            }
             const int padded_len = ((prop_size + 3) / 4) * 4;
             byte_location += padded_len + 8;
-            uart_print_char("\n");
+
+            //add to list
+            {
+                device_info device;
+                device.node_depth = node_stack_depth;
+                device.name = prop_name;
+                device.value = &device_tree_blob[(byte_location + 12)];
+                device.value_len = prop_size;
+                char *parent_tree[node_stack_depth]; 
+                for (int i=0; i<node_stack_depth; i++) {
+                    parent_tree[i] = node_stack[node_stack_depth - 1 - i];
+                }
+                device.parent_nodes = *parent_tree;
+                //TODO: code to pass approach
+                //This approach is n(O^2), which is not great. 
+                //However for now it is staying, as cleanest alterative is likely 2 pass approach or some form of storing each following items as chained references. 
+                //Both add more code complexity for not much performance gain as DTB is pretty small.
+                device_info new_device_list[device_list_len+1];
+                for (int i=0; i<device_list_len; i++) {
+                    new_device_list[i] = device_list[i];
+                }
+                device_list_len +=1;
+                new_device_list[device_list_len] = device;
+            }
+
             break;
         case 0x00000009:
-            uart_print_chars("END\n");
             //end code
             break;
         default:
-            uart_print_chars("?");
             PANIC("DTB_UNEXPECTED_CODE", item_value);
         }
     }
-    uart_print_chars("\n");
+
+    //lacking the heap allocator which is needed ot actually append this data.
+    arch_dtb_data response;
+    response.device_list = device_list;
+    response.device_list_len = device_list_len;
+    return response;
+
 }
 
