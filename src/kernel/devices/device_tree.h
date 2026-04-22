@@ -9,6 +9,14 @@ typedef struct {
     unsigned int value_len;
 } device_info;
 
+typedef struct {
+    unsigned int size;
+    char *end_location;
+} device_info_dump_response;
+
 void kernel_device_tree_init();
+device_info *kernel_device_tree_pointer();
+unsigned int kernel_device_tree_length();
+char *kernel_device_tree_end_pointer();
 
 #endif

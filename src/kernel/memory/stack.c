@@ -1,4 +1,5 @@
 #include "kernel/safety/panic.h"
+#include "drivers/uart/uart.h"
 
 extern char _stack_bottom_test, _stack_top_test;
 
@@ -8,15 +9,17 @@ extern char _stack_bottom_test, _stack_top_test;
 void kernel_stack_init() {
     *(volatile unsigned long *)&_stack_bottom_test = stack_end_magic_number;
     *(volatile unsigned long *)&_stack_top_test = stack_top_magic_number;
+    uart_print_str("STACK TOP : ");
+    uart_println_ulong_hex((unsigned long)&_stack_top_test);
 }
 
 
 
 void kernel_stack_confirm_safe() {
     if (*(volatile unsigned long *)&_stack_bottom_test != stack_end_magic_number) {
-        PANIC("DATA_HAS_BEEN_WRITTEN_BELOW_STACK", *(volatile unsigned long *)&_stack_bottom_test, 0, 0);
+        PANIC("DATA_HAS_BEEN_WRITTEN_BELOW_STACK", *(volatile unsigned long *)&_stack_bottom_test, (long)_stack_bottom_test, 0);
     }
     if (*(volatile unsigned long *)&_stack_top_test != stack_top_magic_number) {
-        PANIC("DATA_HAS_BEEN_WRITTEN_ABOVE_STACK", *(volatile unsigned long *)&_stack_top_test, 0, 0);
+        PANIC("DATA_HAS_BEEN_WRITTEN_ABOVE_STACK", *(volatile unsigned long *)&_stack_top_test, (long)_stack_top_test, 0);
     }
 }

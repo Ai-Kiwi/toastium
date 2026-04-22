@@ -4,7 +4,7 @@
 #include "kernel/devices/device_tree.h"
 #include "arch_device_tree/dtb.h"
 
-unsigned int read_int(char *pointer) {
+unsigned int arch_dtb_read_int(char *pointer) {
     return (pointer[0] << 24) | (pointer[1] << 16) | (pointer[2] << 8) | pointer[3];
 }
 
@@ -28,7 +28,7 @@ void set_device_tree_block_location(char *new_device_tree_blob) {
     device_tree_blob = new_device_tree_blob;
 }
 
-unsigned int arch_parse_dtb_ram(char *output_location) {
+device_info_dump_response arch_parse_dtb_ram(char *output_location) {
     uart_println_str("Parsing DTB");
 
     if (!&device_tree_blob) {
@@ -38,18 +38,18 @@ unsigned int arch_parse_dtb_ram(char *output_location) {
     dtb_header header;
     header = *(volatile dtb_header*)&device_tree_blob;
 
-    header.magic_header = read_int(device_tree_blob);
-    header.total_size = read_int(&device_tree_blob[4]);
-    header.struct_offset = read_int(&device_tree_blob[8]);
-    header.strings_offset = read_int(&device_tree_blob[12]);
-    header.memory_offset = read_int(&device_tree_blob[16]);
-    header.version = read_int(&device_tree_blob[20]);
-    header.comptaible_version = read_int(&device_tree_blob[24]);
-    header.boot_cpu = read_int(&device_tree_blob[28]);
-    header.strings_size = read_int(&device_tree_blob[32]);
-    header.struct_size = read_int(&device_tree_blob[36]);
+    header.magic_header = arch_dtb_read_int(device_tree_blob);
+    header.total_size = arch_dtb_read_int(&device_tree_blob[4]);
+    header.struct_offset = arch_dtb_read_int(&device_tree_blob[8]);
+    header.strings_offset = arch_dtb_read_int(&device_tree_blob[12]);
+    header.memory_offset = arch_dtb_read_int(&device_tree_blob[16]);
+    header.version = arch_dtb_read_int(&device_tree_blob[20]);
+    header.comptaible_version = arch_dtb_read_int(&device_tree_blob[24]);
+    header.boot_cpu = arch_dtb_read_int(&device_tree_blob[28]);
+    header.strings_size = arch_dtb_read_int(&device_tree_blob[32]);
+    header.struct_size = arch_dtb_read_int(&device_tree_blob[36]);
 
-    unsigned int magic_code = read_int(device_tree_blob);
+    unsigned int magic_code = arch_dtb_read_int(device_tree_blob);
     if (header.magic_header != 0xD00DFEED) {
         PANIC("INCORRECT_DTB_MAGIC_HEADER",header.comptaible_version, 0, 0);
     }
@@ -65,7 +65,7 @@ unsigned int arch_parse_dtb_ram(char *output_location) {
     int node_stack_depth = 0;
 
     for (unsigned int byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
-        unsigned int item_value = read_int(&device_tree_blob[byte_location]);
+        unsigned int item_value = arch_dtb_read_int(&device_tree_blob[byte_location]);
 
         switch (item_value){
         case 0x00000001: //node start
@@ -87,16 +87,12 @@ unsigned int arch_parse_dtb_ram(char *output_location) {
         case 0x00000004: //no operation
             continue;
         case 0x00000003: //property
-            unsigned int prop_size = read_int(&device_tree_blob[(byte_location + 4)]);
-            unsigned int name_offset = read_int(&device_tree_blob[(byte_location + 8)]);
+            unsigned int prop_size = arch_dtb_read_int(&device_tree_blob[(byte_location + 4)]);
+            unsigned int name_offset = arch_dtb_read_int(&device_tree_blob[(byte_location + 8)]);
 
             //get name
             char *prop_name = &device_tree_blob[header.strings_offset + name_offset];
-
-            //read the value data
-            const int padded_len = ((prop_size + 3) / 4) * 4;
-            byte_location += padded_len + 8;
-
+            
             //add to list
             {
                 device_info device;
@@ -115,7 +111,9 @@ unsigned int arch_parse_dtb_ram(char *output_location) {
                 device_list_len +=1;
                 
             }
-
+            
+            const int padded_len = ((prop_size + 3) / 4) * 4;
+            byte_location += padded_len + 8;
             break;
         case 0x00000009:
             //end code
@@ -144,8 +142,12 @@ unsigned int arch_parse_dtb_ram(char *output_location) {
             parent_offset++;
         }
     }
+
+    device_info_dump_response response;
+    response.end_location = (char *)&parents_location[parent_offset+1];
+    response.size = device_list_len;
         
-    return device_list_len;
+    return response;
     //return response;
 
 }

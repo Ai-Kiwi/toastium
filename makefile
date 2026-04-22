@@ -1,14 +1,14 @@
 ARCH ?= risc-v
 
 CC = riscv64-unknown-elf-gcc
-CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
+CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
 	-I src/ \
 	-I src/include \
-	-I src/arch/$(ARCH)
+	-I src/arch/$(ARCH) 
 LD = riscv64-unknown-elf-ld
 LDF = -T link.ld
 AS = riscv64-unknown-elf-as
-ASF = -march=rv64gc -mabi=lp64d
+ASF = -march=rv64gc_zba_zbb -mabi=lp64d
 
 OC = riscv64-unknown-elf-objcopy
 
