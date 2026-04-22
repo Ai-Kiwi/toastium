@@ -97,11 +97,6 @@ void kernel_pager_init() {
     reserved_memory_region_size[reserved_memory_region_count] = (long)start_location - ram_start_location + 8 + (MAX_MEMORY_REGIONS * 24);
     reserved_memory_region_count++;
 
-    //TODO: remove this as was for testing
-    reserved_memory_region_start[reserved_memory_region_count] = start_location + 100000000;
-    reserved_memory_region_size[reserved_memory_region_count] = 100000;
-    reserved_memory_region_count++;
-
     //TODO: reocde this so it isn't O(n^2). This is expensive for this however realsticly this is very small and ran once so unlikely to cause large slow down. 
     for (int i=0; i < reserved_memory_region_count; i++) {
         unsigned long reserved_region_start = reserved_memory_region_start[i];
@@ -153,8 +148,6 @@ void kernel_pager_init() {
     }
 
     //TODO: code an overlap system
-
-
 
     //get count
     pager_bitmap_list[0] = memory_region_count;
