@@ -50,22 +50,3 @@ void kernel_main() {
 
     while(1) {}
 }
-
-//will have a static array for each update, e.g disk and uart. Drivers can add to this then from there kernel will loop over it and do whatever with it. This way drivers never talk to services and what not.
-//Will need to remember to make system where some like uart support looking while some others will result in kernel panic, depending on what in question has got to much happened
-
-
-
-
-//todo
-//interrupt handler
-//virtual memory
-//page file for under stack so system can crash when data is written below allowed stack
-//program schedular
-//syscall
-//framebuffer
-//vertio disk handler
-//fat32 disk reader
-//make buffers for updates auto resize instead of fixed size
-//program a console system (will likely be socket and caster)
-//program core utils for os

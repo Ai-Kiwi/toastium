@@ -32,11 +32,11 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
     uart_println_str("Parsing DTB");
 
     if (!&device_tree_blob) {
-        PANIC("BLANK_DTB_LOCATION",(unsigned long)&device_tree_blob, 0, 0);
+        PANIC("BLANK_DTB_LOCATION",(unsigned long)device_tree_blob, 0, 0);
     }
 
     dtb_header header;
-    header = *(volatile dtb_header*)&device_tree_blob;
+    header = *(volatile dtb_header*)device_tree_blob;
 
     header.magic_header = arch_dtb_read_int(device_tree_blob);
     header.total_size = arch_dtb_read_int(&device_tree_blob[4]);
@@ -67,12 +67,19 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
     for (unsigned int byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
         unsigned int item_value = arch_dtb_read_int(&device_tree_blob[byte_location]);
 
+        //uart_print_ulong_hex((unsigned long)byte_location);
+        //for (int i=0; i<node_stack_depth; i++) {
+        //    uart_print_str(" |");
+        //}
+
         switch (item_value){
         case 0x00000001: //node start
             node_stack[node_stack_depth] = (char *)&device_tree_blob[(byte_location + 4)];
             node_stack_depth += 1;
             if (node_stack_depth > 9) {PANIC("DTB_STACK_DEPTH_TO_HIGH", byte_location, 0, 0);}
             //read name
+            //uart_print_str("* ");
+            //uart_println_str(&device_tree_blob[byte_location + 4]);
             int offset = 0;
             while (device_tree_blob[byte_location + offset + 4] != '\0'){
                 offset += 1;
@@ -81,10 +88,12 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
             byte_location = byte_location + offset;
             break;
         case 0x00000002: //node end
+            //uart_println_str("node end");
             node_stack_depth -= 1;
             if (node_stack_depth < 0) {PANIC("DTB_STACK_DEPTH_LESS_ZERO", byte_location, 0, 0);}
             break;
         case 0x00000004: //no operation
+            //uart_println_str("nop");
             continue;
         case 0x00000003: //property
             unsigned int prop_size = arch_dtb_read_int(&device_tree_blob[(byte_location + 4)]);
@@ -92,6 +101,8 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
 
             //get name
             char *prop_name = &device_tree_blob[header.strings_offset + name_offset];
+            //uart_print_str("-PROP: ");
+            //uart_println_str(prop_name);
             
             //add to list
             {
@@ -116,7 +127,8 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
             byte_location += padded_len + 8;
             break;
         case 0x00000009:
-            //end code
+            //uart_println_str("end");
+            ///end code
             break;
         default:
             PANIC("DTB_UNEXPECTED_CODE", item_value, byte_location, 0);
@@ -146,6 +158,10 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
     device_info_dump_response response;
     response.end_location = (char *)&parents_location[parent_offset+1];
     response.size = device_list_len;
+
+    uart_print_str("DTB devices found : ");
+    uart_println_long((long)device_list_len);
+
         
     return response;
     //return response;

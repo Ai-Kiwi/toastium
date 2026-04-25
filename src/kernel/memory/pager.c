@@ -17,7 +17,7 @@ void kernel_pager_init() {
     const unsigned int device_list = kernel_device_tree_length();
     const long start_location = (long)kernel_device_tree_end_pointer();
     uart_print_ulong_hex(start_location);
-    uart_println_str(" ram");
+    uart_println_str(" page start location in memory");
 
     unsigned long reserved_memory_region_start[MAX_MEMORY_REGIONS];
     unsigned long reserved_memory_region_size[MAX_MEMORY_REGIONS];
@@ -249,11 +249,3 @@ void kernel_pager_release(char *page_location) {
     }
 
 }
-
-//release will look at next highest array of same location, then set that bit to make it free
-//after that it will then also lower the next free location if its less
-
-
-//talk about pointer possibly having missing location in write up
-//talk about having to code system to get next lowest bit
-//talk about how bitmap ended up swapping order

@@ -5,6 +5,9 @@
 //strings
 void uart_print_char(const char print_char) {
     uart_16550_output_char(print_char);
+    if (print_char == '\n') {
+        uart_16550_output_char('\r');
+    }
 }
 
 void uart_print_str(const char *print_string) {

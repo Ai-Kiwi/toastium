@@ -1,6 +1,14 @@
 ARCH ?= risc-v
+BOARD ?= qemu
 
 CC = riscv64-unknown-elf-gcc
+ifeq ($(BOARD), qemu)
+    CC += -DBOARD_TARGET=0
+else ifeq ($(BOARD), VF2L) #visionfive 2 lite
+    CC += -DBOARD_TARGET=1
+else
+    $(error Unknown BOARD=$(BOARD))
+endif
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
 	-I src/ \
 	-I src/include \
@@ -29,6 +37,10 @@ ELF := $(BUILD)/$(TARGET).elf
 
 
 all: $(BIN)
+	du -h $(BIN)
+
+link.ld: link.ld.S
+	$(CC) -E -P -DLINKER_SCRIPT=1 -I src/include -x c $< -o $@
 
 $(BUILD)/%.o: %.s
 	mkdir -p $(dir $@)
@@ -38,8 +50,8 @@ $(BUILD)/%.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) $(CCF) -c $< -o $@
 
-$(ELF): $(OBJ)
-	$(LD) $(LDF) $^ -o $@
+$(ELF): $(OBJ) link.ld
+	$(LD) $(LDF) $(OBJ) -o $@
 
 $(BIN): $(ELF)
 	$(OC) -O binary $^ $@
@@ -57,3 +69,4 @@ debug: $(BIN)
 
 clean:
 	rm -rf $(BUILD)
+	rm -f link.ld

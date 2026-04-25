@@ -1,3 +1,5 @@
+#include "board.h"
+
 ENTRY(_start)
 
 PHDRS
@@ -8,7 +10,15 @@ PHDRS
 
 SECTIONS
 {
-    . = 0x80000000; /* Also change in board settings */
+    /* Also change in board settings */
+    /* Visionfive2 lite */
+    /* . = 0x40200000; * / 
+    /* Qemu */
+    /* . = 0x80200000;  Also change in board settings */
+
+    . = ram_start_location;
+
+    _kernel_ram_start = .;
 
     .text : ALIGN(16) {
         *(.text.boot)
