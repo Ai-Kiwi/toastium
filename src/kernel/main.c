@@ -45,8 +45,8 @@ void kernel_main() {
 
     uart_println_str("Finished initialization, now running kernel");
 
+    irq_start();
+
     //makes timer to kick start the os
     kernel_set_timer_future_ms(5);
-
-    while(1) {}
 }

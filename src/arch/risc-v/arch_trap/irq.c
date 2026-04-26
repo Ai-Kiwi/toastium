@@ -34,6 +34,9 @@ void arch_enable_irq(IRQ_TYPES irq_type) { //technically some of these are plic 
 }
 
 void arch_irq_init() {
-    asm volatile("csrs sstatus, %0" :: "r"BIT(1)); //enable global interrupts (bit 3 on)
     *(volatile int*)(PLIC_threshold) = 0; //set threshold to trigger trap
+}
+
+void arch_irq_start() {
+    asm volatile("csrs sstatus, %0" :: "r"BIT(1)); //enable global interrupts (bit 3 on)
 }

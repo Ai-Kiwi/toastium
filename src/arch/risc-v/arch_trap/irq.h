@@ -6,5 +6,6 @@
 
 void arch_enable_irq(IRQ_TYPES irq_type);
 void arch_irq_init();
+void arch_irq_start();
 
 #endif

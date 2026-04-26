@@ -37,4 +37,7 @@ clear_bss:
     j clear_bss
 clear_bss_done:
     call arch_main
+    j idle_loop
+idle_loop:
     wfi
+    j idle_loop
