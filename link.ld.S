@@ -10,23 +10,19 @@ PHDRS
 
 SECTIONS
 {
-    /* Also change in board settings */
-    /* Visionfive2 lite */
-    /* . = 0x40200000; * / 
-    /* Qemu */
-    /* . = 0x80200000;  Also change in board settings */
-
-    . = ram_start_location;
-
-    _kernel_ram_start = .;
-
     .text : ALIGN(16) {
+        _kernel_start = .;
         *(.text.boot)
         *(.text*)
     }:execute
 
     .trap : ALIGN(16) {
         *(.text.trap)
+    }:execute
+
+    .idle_process : ALIGN(16) {
+        *(.text.idle_process)
+        . += 4096;
     }:execute
 
     .rodata : ALIGN(16) {
@@ -65,7 +61,14 @@ SECTIONS
         . += 8;
     }:data
 
-    . = . + 16;
+    . = . + 4096; //buffer added so when vma offset table rounded down 
+    //location doesn't go into data below it (stack)
 
-    _unused_ram_start = .;
+
+    .stack (NOLOAD) : ALIGN(4096) {
+        _kernel_vma_offset_table = .;
+        . += 4096;
+    }:data
+
+    _kernel_end = .;
 }

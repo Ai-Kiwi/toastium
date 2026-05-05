@@ -4,15 +4,17 @@
 //visionfive2 lite
 //# //also change start in linker
 
+// 1024*1024*1024*512 = 0x4000000000 (half of sv39 space for risc-v) 
+//0x4000000000 would be jump but top half is top half
+#define KERNEL_VMA_START 0xffffffc000000000 
+
 #define BOARD_TARGET_QEMU  0
 #define BOARD_TARGET_VISIONFIVE2_LITE 1
 
 #if BOARD_TARGET == BOARD_TARGET_QEMU
     #define UART_BASE 0x10000000
-    #define ram_start_location 0x80200000
-    #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
+ #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
     #define UART_BASE 0x10000000
-    #define ram_start_location 0x40200000
 #else
     #error "Unknown BOARD TARGET"
 #endif
@@ -22,7 +24,7 @@
 #ifndef __ASSEMBLER__
     #ifdef BOARD_TARGET == BOARD_TARGET_QEMU
         typedef unsigned char  uart_reg_t;
-        #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
+    #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
         typedef unsigned int uart_reg_t;
     #else
         #error "Unknown BOARD TARGET"

@@ -26,11 +26,14 @@ QEMUF = -machine virt -bios default -m 512M -smp 1 -nographic #-drive file=disk.
 SRCDIRS := src
 SRC := $(shell find $(SRCDIRS) -type f -name "*.c")
 ASM := $(shell find $(SRCDIRS) -type f -name "*.s")
+ASMWPC := $(shell find $(SRCDIRS) -type f -name "*.S")
 
 
 BUILD    := build
 OBJ := $(patsubst %.c, $(BUILD)/%.o, $(SRC))
 OBJ += $(patsubst %.s, $(BUILD)/%.o, $(ASM))
+OBJ += $(patsubst %.S, $(BUILD)/%.o, $(ASMWPC))
+
 TARGET = kernel
 BIN := $(BUILD)/$(TARGET).bin
 ELF := $(BUILD)/$(TARGET).elf
@@ -45,6 +48,10 @@ link.ld: link.ld.S
 $(BUILD)/%.o: %.s
 	mkdir -p $(dir $@)
 	$(AS) $(ASF) $< -o $@
+
+$(BUILD)/%.o: %.S
+	mkdir -p $(dir $@)
+	$(CC) -c -I src/include $< -o $@
 
 $(BUILD)/%.o: %.c
 	mkdir -p $(dir $@)
@@ -63,9 +70,9 @@ asm-debug: $(BIN)
 	$(QEMU) $(QEMUF) -kernel $(BIN) -d in_asm,cpu
 
 debug: $(BIN)
+	echo "connect with riscv64-unknown-elf-gdb build/kernel.elf"
+	echo "target remote :1234"
 	$(QEMU) $(QEMUF) -kernel $(BIN) -S -s
-#connect with riscv64-unknown-elf-gdb build/kernel.elf
-#target remote :1234
 
 clean:
 	rm -rf $(BUILD)

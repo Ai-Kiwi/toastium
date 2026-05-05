@@ -9,9 +9,19 @@
 #include "kernel/timer/timer.h"
 #include "arch_device_tree/dtb.h"
 #include "kernel/memory/pager.h"
+#include "include/board.h"
+
+extern char _kernel_end, _kernel_start;
 
 void kernel_main() {    
+    uart_init();
     uart_println_str("Initializing kernel...");
+
+    uart_print_str("kernel loaded at : 0x");
+    uart_print_ulong_hex((unsigned long)&_kernel_start + KERNEL_VMA_START);
+    uart_print_str(" - 0x");
+    uart_println_ulong_hex((unsigned long)&_kernel_end + KERNEL_VMA_START);
+
 
     //setup stack
     uart_println_str("Initializing stack");
@@ -20,7 +30,7 @@ void kernel_main() {
 
     //setup device tree
     uart_println_str("Initializing device tree");
-    kernel_device_tree_init();
+    kernel_device_tree_init((char*)&_kernel_end);
     
     uart_println_str("Initializing process handler");    
     init_processes();
@@ -34,7 +44,6 @@ void kernel_main() {
     
     //uart enable irq
     uart_println_str("Initializing irq");
-    uart_init();
     irq_enable(KIRQ_UART);
     irq_enable(KIRQ_TIMER);
     irq_enable(KIRQ_SOFTWARE);

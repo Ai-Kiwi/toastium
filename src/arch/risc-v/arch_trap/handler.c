@@ -5,8 +5,7 @@
 #include "def.h"
 #include "kernel/process/process.h"
 #include "kernel/process/scheduler.h"
-
-extern char after_trap_hold;
+#include "drivers/uart/uart.h"
 
 typedef struct {
     unsigned long register_1;
@@ -48,7 +47,7 @@ typedef struct {
 
 trap_info arch_processes_trap_info[max_process_count];
 
-void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack
+void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack    
     kernel_safety_test();
 
     const long is_interrupt = trap_data->scause & BIT(63); //last bit
@@ -106,7 +105,7 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
             trap.code = KTRAP_ACCESS_MISALIGNED;
             break;
         case 1UL: //Instruction access fault
-            trap.code = KTRAP_ACCESS_MISALIGNED;
+            trap.code = KTRAP_ACCESS_FAULT;
             break;
         case 2UL: //Illegal instruction
             trap.code = KTRAP_INSTRUCTION_INVALID;
@@ -173,16 +172,9 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
 
         kpid next_process = kernel_scheduler_next_process();
 
-        if (next_process == null_program_pid) {
-            trap_data->sepc = (unsigned long)&after_trap_hold; //run a forever wait loop as its idle
-        }else{
-            *trap_data = arch_processes_trap_info[next_process];
-        }
+        *trap_data = arch_processes_trap_info[next_process];
         break;
     case KTRAP_RESPONSE_RESUME_PROCESS:
-        if (kernel_running_process == null_program_pid) {
-            trap_data->sepc = (unsigned long)&after_trap_hold; //run a forever wait loop as its idle
-        }
         break;
     default:
         PANIC("UNHANDLED_TRAP_RESPONSE",trap_response.response_type, trap_response.kernel_PID, 0);

@@ -8,17 +8,15 @@ static device_info *kernel_device_list;
 static char *kernel_device_end = 0;
 static unsigned int kernel_device_list_len = 0;
 
-extern char _unused_ram_start;
-
-void kernel_device_tree_init() {
-    device_info_dump_response device_dump_info = arch_parse_dtb_ram((char *)&_unused_ram_start);
+void kernel_device_tree_init(char *kernel_end) {
+    device_info_dump_response device_dump_info = arch_parse_dtb_ram(kernel_end);
     kernel_device_list_len = device_dump_info.size;
     kernel_device_end = device_dump_info.end_location;
     kernel_safety_test();
 
     uart_println_str("printing out devices");
 
-    kernel_device_list = (device_info *)&_unused_ram_start;
+    kernel_device_list = (device_info *)kernel_end;
 
     //for (int i=0; i<kernel_device_list_len; i++) {
     //    uart_print_str("Property | Name : ");

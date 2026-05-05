@@ -10,6 +10,8 @@ void init_processes() {
         process.alive = TRUE;
         kernel_processes[i] = process;
     }
+
+    //TODO: create and setup a idle process at 0. Will do nothing except forever loop waiting for interrupt.
 }
 
 void start_process() {

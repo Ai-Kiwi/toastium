@@ -5,10 +5,13 @@
 #include "drivers/uart/uart.h"
 #include "include/board.h"
 #include "include/def.h"
+#include "include/board.h"
 
 volatile long* pager_bitmap_list = 0;
 int last_free_bitmap = 0;
 int last_free_page_number = 0;
+
+extern char _kernel_end, _kernel_start;
 
 #define MAX_MEMORY_REGIONS 64
 
@@ -51,6 +54,7 @@ void kernel_pager_init() {
             if (memory_reg) {
                 int *base_value = (int *)device_info[i].value; 
                 unsigned long location = arch_dtb_read_int((char *)&base_value[0]) << 32 | arch_dtb_read_int((char *)&base_value[1]);
+                location = location + KERNEL_VMA_START;
                 unsigned long size = arch_dtb_read_int((char *)&base_value[2]) << 32 | arch_dtb_read_int((char *)&base_value[3]);
 
                 if (reserved == FALSE) {
@@ -93,8 +97,8 @@ void kernel_pager_init() {
     uart_println_str("Removing reserved from memory region");
 
     //place a fake reserved memory address in so kernel or dtb or anything hard coded doesn't get overriden
-    reserved_memory_region_start[reserved_memory_region_count] = ram_start_location;
-    reserved_memory_region_size[reserved_memory_region_count] = (long)start_location - ram_start_location + 8 + (MAX_MEMORY_REGIONS * 24);
+    reserved_memory_region_start[reserved_memory_region_count] = (unsigned long)_kernel_start;
+    reserved_memory_region_size[reserved_memory_region_count] = (long)start_location - (unsigned long)_kernel_start + 8 + (MAX_MEMORY_REGIONS * 24);
     reserved_memory_region_count++;
 
     //TODO: reocde this so it isn't O(n^2). This is expensive for this however realsticly this is very small and ran once so unlikely to cause large slow down. 

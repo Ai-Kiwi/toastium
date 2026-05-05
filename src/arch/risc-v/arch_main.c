@@ -3,7 +3,7 @@
 #include "kernel/main.h"
 #include "kernel/safety/panic.h"
 
-
+extern char _kernel_end;
 
 void arch_main(long hart_id, unsigned long device_tree_blob_address) {
     uart_println_str("Getting ready for kernel start");

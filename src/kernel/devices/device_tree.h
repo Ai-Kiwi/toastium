@@ -14,7 +14,7 @@ typedef struct {
     char *end_location;
 } device_info_dump_response;
 
-void kernel_device_tree_init();
+void kernel_device_tree_init(char *kernel_end);
 device_info *kernel_device_tree_pointer();
 unsigned int kernel_device_tree_length();
 char *kernel_device_tree_end_pointer();
