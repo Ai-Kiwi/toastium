@@ -100,14 +100,11 @@ finish_vma_setup:
     //flush TLB so it applies
     sfence.vma zero, zero
 
-    //.option push
-    //.option norelax
     la t3, jump_blank_first_half_vma_table
     li t2, KERNEL_VMA_START
     add t3, t3, t2
     jalr zero, 0(t3) //make the jump to real location
 
-    //.option pop
 
 jump_blank_first_half_vma_table:
     la t0, _kernel_vma_offset_table
