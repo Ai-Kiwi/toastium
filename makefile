@@ -69,6 +69,8 @@ $(BIN): $(ELF)
 	$(OC) -O binary $^ $@
 
 run: $(BIN)
+#tell the panic to be recompiled, means that git hash version will get updated.
+	touch src/kernel/safety/panic.c
 	$(QEMU) $(QEMUF) -kernel $(BIN)
 
 asm-debug: $(BIN)

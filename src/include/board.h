@@ -19,6 +19,12 @@
     #error "Unknown BOARD TARGET"
 #endif
 
+#ifndef GIT_VERSION_HASH
+    #define COMPILE_VERSION "Unknown"
+#else
+    #define COMPILE_VERSION GIT_VERSION_HASH
+#endif
+
 //c only stuff so linker works
 #ifndef LINKER_SCRIPT
 #ifndef __ASSEMBLER__

@@ -20,10 +20,9 @@ void kernel_panic(const char *file, const long file_line, const char *function, 
 
     //file, function and line
     uart_print_str("GIT VERSION HASH : ");
-    uart_print_str(GIT_VERSION_HASH);
+    uart_print_str(COMPILE_VERSION);
     uart_print_str(", COMPILE DATE : ");
     uart_println_str(__DATE__);
-
 
     //file, function and line
     uart_print_str("LOCATION : ");
