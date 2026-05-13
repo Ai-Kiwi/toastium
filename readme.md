@@ -1,5 +1,5 @@
 # Toastium
-(pronounced Toast-Is-Utterly-aMazing)
+(Stands for Toast-Is-Utterly-aMazing)
 
 An operating system that I have been developing for learning purposes.
 
