@@ -22,6 +22,9 @@ OC = riscv64-unknown-elf-objcopy
 
 QEMU = qemu-system-riscv64
 QEMUF = -machine virt -bios default -m 512M -smp 1 -nographic #-drive file=disk.img,format=raw,if=virtio
+#QEMUF = -machine virt -bios default -m 512M -smp 1 -serial stdio -display sdl -device ramfb
+
+
 
 SRCDIRS := src
 SRC := $(shell find $(SRCDIRS) -type f -name "*.c")
