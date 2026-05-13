@@ -59,12 +59,12 @@ void kernel_pager_init() {
 
                 if (reserved == FALSE) {
                     //remove regions that are touching
-                    for (int i=0; i<memory_region_count; i++) {
+                    for (int j=0; j<memory_region_count; j++) {
                         uart_println_str("Memory region already defined");
-                        if (memory_region_start[i] == location) {
-                            if (memory_region_size[i] < size) {
+                        if (memory_region_start[j] == location) {
+                            if (memory_region_size[j] < size) {
                                 uart_println_str("Memory region size increased");
-                                memory_region_size[i] = size;
+                                memory_region_size[j] = size;
                             }
                             continue;
                         } 
