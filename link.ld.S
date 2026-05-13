@@ -51,7 +51,7 @@ SECTIONS
         . += 8;
         _stack_bottom_test = .;
         . += 8;
-        
+
         _stack_bottom = .;
         . += 0x4000;   /* 16KB stack */
         _stack_top = .;
@@ -61,7 +61,7 @@ SECTIONS
         . += 8;
     }:data
 
-    . = . + 4096; //buffer added so when vma offset table rounded down 
+    . = . + 4096; //buffer added so when vma offset table rounded down
     //location doesn't go into data below it (stack)
 
 

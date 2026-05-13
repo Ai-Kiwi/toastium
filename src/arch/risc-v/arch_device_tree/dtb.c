@@ -103,7 +103,7 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
             char *prop_name = &device_tree_blob[header.strings_offset + name_offset];
             //uart_print_str("-PROP: ");
             //uart_println_str(prop_name);
-            
+
             //add to list
             {
                 device_info device;
@@ -115,14 +115,14 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
                     device_parents[device_list_len][i] = (char *)node_stack[node_stack_depth - 1 - i];
                 }
                 //TODO: code to pass approach
-                //This approach is n(O^2), which is not great. 
-                //However for now it is staying, as cleanest alterative is likely 2 pass approach or some form of storing each following items as chained references. 
+                //This approach is n(O^2), which is not great.
+                //However for now it is staying, as cleanest alterative is likely 2 pass approach or some form of storing each following items as chained references.
                 //Both add more code complexity for not much performance gain as DTB is pretty small.
                 device_list[device_list_len] = device;
                 device_list_len +=1;
-                
+
             }
-            
+
             const int padded_len = ((prop_size + 3) / 4) * 4;
             byte_location += padded_len + 8;
             break;
@@ -162,7 +162,7 @@ device_info_dump_response arch_parse_dtb_ram(char *output_location) {
     uart_print_str("DTB devices found : ");
     uart_println_long((long)device_list_len);
 
-        
+
     return response;
     //return response;
 

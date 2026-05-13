@@ -11,8 +11,8 @@ void uart_16550_output_char(const char output_char) {
     volatile uart_reg_t* uart = (volatile uart_reg_t*)UART_BASE_LOCATION;
     volatile uart_reg_t* uart_status = &uart[5];
 
-    
-    //for (volatile int i=0; i<1000000; i++) {} 
+
+    //for (volatile int i=0; i<1000000; i++) {}
 
     while (!(*uart_status & UART_STATUS_READY_SEND)) {}
 

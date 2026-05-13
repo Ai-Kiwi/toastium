@@ -51,7 +51,7 @@ const kernel_trap_response exception_trap(const kernel_trap_data *trap_data) {
         PANIC("KERNEL_TRAP_DOUBLE_TRAP",trap_data->privilege, trap_data->fault_address, trap_data->fault_pc);
         break;
     case KTRAP_SOFTWARE_CHECK:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_CHECK",trap_data->privilege, trap_data->fault_address, trap_data->fault_pc); 
+        PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_CHECK",trap_data->privilege, trap_data->fault_address, trap_data->fault_pc);
         break;
     case KTRAP_HARDWARE_ERROR:
         PANIC("KERNEL_TRAP_UNIMPLENTED_HARDWARE_ERROR",trap_data->privilege, trap_data->fault_address, trap_data->fault_pc);
@@ -84,5 +84,5 @@ const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data)
 //Take action first, like kill program or what not. Or other things like add disk write to queue
 //Return response, decide if program immediately resumes or schedular is run
 
-//if program runs or resumes it depends on trap that was called. 
+//if program runs or resumes it depends on trap that was called.
 //For some calls like syscalls with for example disk write, there will be non block and block operations, this decides if to return or reschedule

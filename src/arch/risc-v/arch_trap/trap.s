@@ -5,7 +5,7 @@
 .include "./src/arch/risc-v/arch_trap/state.s"
 
 trap_entry:
-    SAVE_REGISTERS_TO_STACK #TODO: make this include floating point, also 90% sure stack pointer won't work propperly 
+    SAVE_REGISTERS_TO_STACK #TODO: make this include floating point, also 90% sure stack pointer won't work propperly
 
     # setup restore once done
     mv a0, sp

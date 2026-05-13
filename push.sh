@@ -7,4 +7,4 @@ sudo cp build/kernel.bin mount/boot/kernel.bin &&
 sync &&
 sleep 2 &&
 sudo umount mount &&
-sudo eject LABEL=TOASTIUM 
+sudo eject LABEL=TOASTIUM

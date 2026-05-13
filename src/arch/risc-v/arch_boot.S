@@ -24,7 +24,7 @@ setup_vma:
 
     //setup stack top
     la t0, _stack_top
-    addi sp, t0, 0 
+    addi sp, t0, 0
 
     //setup virtual memory maps
     la t0, _kernel_vma_offset_table //location for vma table
@@ -79,7 +79,7 @@ setup_vmn_table:
 
 finish_vma_setup:
 
-    //t0 is base vma table location 
+    //t0 is base vma table location
     //ASID needs to be highest number as this will be reserved for kernel process
     la t1, _kernel_vma_offset_table
     li t2, 4096
@@ -129,9 +129,9 @@ real_start:
 
     //setup stack top
     la t0, _stack_top
-    addi sp, t0, 0 
+    addi sp, t0, 0
 
-    //bind for new interrupts 
+    //bind for new interrupts
     la t0, trap_entry
     csrw stvec, t0
 
@@ -141,7 +141,7 @@ real_start:
     j clear_bss
 
 clear_bss:
-    bgeu t0, t1, start_os 
+    bgeu t0, t1, start_os
     sd zero, 0(t0)
     addi t0, t0, 8
     j clear_bss

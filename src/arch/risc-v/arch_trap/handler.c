@@ -47,7 +47,7 @@ typedef struct {
 
 trap_info arch_processes_trap_info[max_process_count];
 
-void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack    
+void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack
     kernel_safety_test();
 
     const long is_interrupt = trap_data->scause & BIT(63); //last bit
@@ -162,13 +162,13 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
     }
 
     kernel_trap_response trap_response = kernel_handle_trap(&trap);
-    
+
     switch (trap_response.response_type){
     case KTRAP_RESPONSE_HOLD_PROCESS:
         //need to swap out for another process
         if (kernel_running_process != null_program_pid) {
             arch_processes_trap_info[kernel_running_process] = *trap_data;
-        }        
+        }
 
         kpid next_process = kernel_scheduler_next_process();
 

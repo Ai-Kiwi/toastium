@@ -13,7 +13,7 @@
 
 extern char _kernel_end, _kernel_start;
 
-void kernel_main() {    
+void kernel_main() {
     uart_init();
     uart_println_str("Initializing kernel...");
 
@@ -31,17 +31,17 @@ void kernel_main() {
     //setup device tree
     uart_println_str("Initializing device tree");
     kernel_device_tree_init((char*)&_kernel_end);
-    
-    uart_println_str("Initializing process handler");    
+
+    uart_println_str("Initializing process handler");
     init_processes();
     kernel_schedular_init();
-    
+
     //enable irq and general interrupts
     irq_init();
 
     uart_println_str("Initializing pager");
     kernel_pager_init();
-    
+
     //uart enable irq
     uart_println_str("Initializing irq");
     irq_enable(KIRQ_UART);

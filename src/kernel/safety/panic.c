@@ -16,7 +16,7 @@ void kernel_panic(const char *file, const long file_line, const char *function, 
     uart_println_str("");
     uart_println_str("Here is some info relating to what went wrong...");
     uart_println_str("-------------------------------------------------------------------------");
-    
+
     //file, function and line
     uart_print_str("LOCATION : ");
     uart_print_str(file);

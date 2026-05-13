@@ -30,7 +30,7 @@ typedef enum {
     KTRAP_DOUBLE_TRAP,
     KTRAP_SOFTWARE_CHECK,
     KTRAP_HARDWARE_ERROR,
-    
+
 } kernel_trap_code;
 
 typedef struct {

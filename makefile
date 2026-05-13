@@ -12,7 +12,7 @@ endif
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
 	-I src/ \
 	-I src/include \
-	-I src/arch/$(ARCH) 
+	-I src/arch/$(ARCH)
 LD = riscv64-unknown-elf-ld
 LDF = -T link.ld
 AS = riscv64-unknown-elf-as

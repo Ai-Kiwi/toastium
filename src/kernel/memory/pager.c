@@ -43,8 +43,8 @@ typedef struct {
 } memory_region_list;
 
 void find_memory_regions(
-    const unsigned int device_list, 
-    const device_info *device_info, 
+    const unsigned int device_list,
+    const device_info *device_info,
     memory_region_list *memory_regions
 ) {
     for (int i=0; i< device_list; i++) {
@@ -59,7 +59,7 @@ void find_memory_regions(
             continue;
         }
 
-        int *base_value = (int *)device_info[i].value; 
+        int *base_value = (int *)device_info[i].value;
         unsigned long high = arch_dtb_read_int((char *)&base_value[0]) << 32;
         unsigned long low = arch_dtb_read_int((char *)&base_value[1]);
         unsigned long location = high | low;
@@ -107,7 +107,7 @@ void remove_reserved_memory_regions(memory_region_list *memory_regions) {
             }else if (reserved_region->start > free_region->start && reserved_region_end < free_region_end) { //inside
                 free_region->size -= free_region_end - reserved_region->start;
 
-                memory_regions->free_regions[memory_regions->free_count].start = reserved_region_end; 
+                memory_regions->free_regions[memory_regions->free_count].start = reserved_region_end;
                 memory_regions->free_regions[memory_regions->free_count].size = free_region_end - reserved_region_end;
                 memory_regions->free_count++;
                 j--;
@@ -147,13 +147,13 @@ void kernel_pager_init() {
     memory_locations.reserved_count++;
 
 
-    //TODO: recode this so it isn't O(n^2). 
-    //This is expensive for this however realistically ran once and small dataset means small cost. 
+    //TODO: recode this so it isn't O(n^2).
+    //This is expensive for this however realistically ran once and small dataset means small cost.
     remove_reserved_memory_regions(&memory_locations);
 
     //log contents
     for (int i=0; i < memory_locations.free_count; i++) {
-        memory_region *region = &memory_locations.free_regions[i]; 
+        memory_region *region = &memory_locations.free_regions[i];
         //move by region count if its where bitmap locations data is stored
         uart_print_str("memory region from 0x");
         uart_print_ulong_hex(region->start);
@@ -177,7 +177,7 @@ void kernel_pager_init() {
 
     //set page data in index locations.
     for (int i=0; i < memory_locations.free_count; i++) {
-        memory_region *region = &memory_locations.free_regions[i]; 
+        memory_region *region = &memory_locations.free_regions[i];
         unsigned long page_region_start = ((region->start / 4096) + 1) * 4096; //round towards page chunks
         unsigned long page_count = region->size / 4096;
         int page_offset = ((page_count / 8) / 4096) + 2;
