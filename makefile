@@ -9,6 +9,8 @@ else ifeq ($(BOARD), VF2L) #visionfive 2 lite
 else
     $(error Unknown BOARD=$(BOARD))
 endif
+GIT_VERSION_HASH := $(shell git describe --always --dirty)
+CC += -DGIT_VERSION_HASH=\"$(GIT_VERSION_HASH)\"
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
 	-I src/ \
 	-I src/include \

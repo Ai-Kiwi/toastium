@@ -1,6 +1,7 @@
 #include "arch_cpu.h"
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
+#include "include/board.h"
 
 void kernel_panic(const char *file, const long file_line, const char *function, const char *message, long extra_value_1, long extra_value_2, long extra_value_3) {
     uart_println_str("");
@@ -16,6 +17,13 @@ void kernel_panic(const char *file, const long file_line, const char *function, 
     uart_println_str("");
     uart_println_str("Here is some info relating to what went wrong...");
     uart_println_str("-------------------------------------------------------------------------");
+
+    //file, function and line
+    uart_print_str("GIT VERSION HASH : ");
+    uart_print_str(GIT_VERSION_HASH);
+    uart_print_str(", COMPILE DATE : ");
+    uart_println_str(__DATE__);
+
 
     //file, function and line
     uart_print_str("LOCATION : ");
