@@ -10,6 +10,7 @@
 #include "arch_device_tree/dtb.h"
 #include "kernel/memory/pager.h"
 #include "include/board.h"
+#include "kernel/memory/allocator.h"
 
 extern char _kernel_end, _kernel_start;
 
@@ -32,15 +33,18 @@ void kernel_main() {
     uart_println_str("Initializing device tree");
     kernel_device_tree_init((char*)&_kernel_end);
 
+    uart_println_str("Initializing pager");
+    kernel_pager_init();
+
+    uart_println_str("Initializing allocator");
+    kernel_allocator_init();
+
     uart_println_str("Initializing process handler");
     init_processes();
     kernel_schedular_init();
 
     //enable irq and general interrupts
     irq_init();
-
-    uart_println_str("Initializing pager");
-    kernel_pager_init();
 
     //uart enable irq
     uart_println_str("Initializing irq");

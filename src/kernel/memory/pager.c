@@ -7,6 +7,8 @@
 #include "include/def.h"
 #include "include/board.h"
 
+//for pager bitmap 0 is free 1 is in use
+
 volatile long* pager_bitmap_list = 0;
 int last_free_bitmap = 0;
 int last_free_page_number = 0;
@@ -184,7 +186,7 @@ void kernel_pager_init() {
         page_count -= page_offset;
 
         pager_bitmap_list[1 + (i*3)] = page_count; //page count
-        pager_bitmap_list[2 + (i*3)] = page_region_start; //bitmap location
+        pager_bitmap_list[2 + (i*3)] = region->start; //bitmap location
         pager_bitmap_list[3 + (i*3)] = page_region_start; //page location
 
         uart_print_str("0x");
@@ -201,14 +203,14 @@ void kernel_pager_init() {
     }
 }
 
-volatile char *kernel_pager_acquire() { //will add count later unsigned long byte_count
+unsigned long kernel_pager_acquire() { //will add count later unsigned long byte_count
     //unsigned page_count = (byte_count+4095) / 4096;
 
     const long page_list_count = pager_bitmap_list[0];
     for (int i=last_free_bitmap; i< page_list_count; i++){
         const long page_count = pager_bitmap_list[1 + (i*3)];
-        unsigned long *bitmap = (unsigned long *)pager_bitmap_list[2 + (i*3)];
-        char *base_page = (char *)pager_bitmap_list[3 + (i*3)];
+        volatile unsigned long *bitmap = (volatile unsigned long *)pager_bitmap_list[2 + (i*3)];
+        unsigned long base_page = pager_bitmap_list[3 + (i*3)];
 
         int page_start = i==last_free_bitmap ? last_free_page_number/64 : 0;
 
@@ -218,21 +220,22 @@ volatile char *kernel_pager_acquire() { //will add count later unsigned long byt
                 int free_page = (j * 64) + bit;
                 last_free_bitmap = i;
                 last_free_page_number = free_page;
-                bitmap[j] = bitmap[j] | BIT(bit); //mark used
-                volatile char *page_pointer = (volatile char*)base_page + (free_page * 4096);
-                volatile unsigned long *page_pointer_long = (volatile unsigned long*)page_pointer;
+                bitmap[j] |= BIT(bit); //mark used
+                unsigned long page_location = base_page + (free_page * 4096);
+                volatile unsigned long *page_pointer_long = (volatile unsigned long*)page_location;
                 //blank out table
                 for (int k=0; k < 4096/8; k++) {
                     page_pointer_long[k] = 0UL;
                 }
-                return page_pointer;
+                return page_location;
             }
         }
     }
     PANIC("OUT_OF_FREE_PAGES",0,0,0);
 }
 
-void kernel_pager_release(char *page_location) {
+void kernel_pager_release(unsigned long location) {
+    char *page_location = (char *)location;
     const long page_list_count = pager_bitmap_list[0];
 
     long closest_page_count = 0;
@@ -268,7 +271,7 @@ void kernel_pager_release(char *page_location) {
         PANIC("DOUBLE_FREE_PAGE",(long)page_location, (long)page_number, (long)closest_bitmap);
     }
 
-    closest_bitmap[bitmap_number] |= BIT(bit_number);
+    closest_bitmap[bitmap_number] &= ~BIT(bit_number);
 
     if (last_free_bitmap > closet_page_number || (last_free_page_number > page_number && last_free_bitmap == closet_page_number)) {
         last_free_bitmap = closet_page_number;
