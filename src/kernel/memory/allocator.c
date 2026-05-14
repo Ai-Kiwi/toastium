@@ -179,7 +179,7 @@ unsigned long kernel_allocator_bump(unsigned long size) {
 
     unsigned long response = current_bump_page + current_bump_upto;
 
-    current_bump_upto + ((size+7)/8);
+    current_bump_upto += ((size+7)/8) * 8;
 
     return response;
 }
