@@ -29,9 +29,9 @@
 #ifndef LINKER_SCRIPT
 #ifndef __ASSEMBLER__
     #ifdef BOARD_TARGET == BOARD_TARGET_QEMU
-        typedef unsigned char  uart_reg_t;
+        typedef u8  uart_reg_t;
     #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
-        typedef unsigned int uart_reg_t;
+        typedef u32 uart_reg_t;
     #else
         #error "Unknown BOARD TARGET"
     #endif

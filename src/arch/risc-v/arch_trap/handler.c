@@ -8,41 +8,41 @@
 #include "drivers/uart/uart.h"
 
 typedef struct {
-    unsigned long register_1;
-    unsigned long register_2;
-    unsigned long register_3;
-    unsigned long register_4;
-    unsigned long register_5;
-    unsigned long register_6;
-    unsigned long register_7;
-    unsigned long register_8;
-    unsigned long register_9;
-    unsigned long register_10;
-    unsigned long register_11;
-    unsigned long register_12;
-    unsigned long register_13;
-    unsigned long register_14;
-    unsigned long register_15;
-    unsigned long register_16;
-    unsigned long register_17;
-    unsigned long register_18;
-    unsigned long register_19;
-    unsigned long register_20;
-    unsigned long register_21;
-    unsigned long register_22;
-    unsigned long register_23;
-    unsigned long register_24;
-    unsigned long register_25;
-    unsigned long register_26;
-    unsigned long register_27;
-    unsigned long register_28;
-    unsigned long register_29;
-    unsigned long register_30;
-    unsigned long register_31;
-    unsigned long scause; //What caused the trap. (Trap code)
-    unsigned long sepc; //What instruction caused trap (Instruction location)
-    unsigned long stval; //Extra trap info, e.g page fault says address in question
-    unsigned long sstatus; //Privilege level machine was in.
+    u64 register_1;
+    u64 register_2;
+    u64 register_3;
+    u64 register_4;
+    u64 register_5;
+    u64 register_6;
+    u64 register_7;
+    u64 register_8;
+    u64 register_9;
+    u64 register_10;
+    u64 register_11;
+    u64 register_12;
+    u64 register_13;
+    u64 register_14;
+    u64 register_15;
+    u64 register_16;
+    u64 register_17;
+    u64 register_18;
+    u64 register_19;
+    u64 register_20;
+    u64 register_21;
+    u64 register_22;
+    u64 register_23;
+    u64 register_24;
+    u64 register_25;
+    u64 register_26;
+    u64 register_27;
+    u64 register_28;
+    u64 register_29;
+    u64 register_30;
+    u64 register_31;
+    u64 scause; //What caused the trap. (Trap code)
+    u64 sepc; //What instruction caused trap (Instruction location)
+    u64 stval; //Extra trap info, e.g page fault says address in question
+    u64 sstatus; //Privilege level machine was in.
 } trap_info;
 
 trap_info arch_processes_trap_info[max_process_count];
@@ -50,9 +50,9 @@ trap_info arch_processes_trap_info[max_process_count];
 void arch_trap_handler(trap_info *trap_data) {//will have pointer input here that points to reg data on stack
     kernel_safety_test();
 
-    const long is_interrupt = trap_data->scause & BIT(63); //last bit
-    const long trap_code = (trap_data->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit
-    const long is_user_mode = trap_data->scause & BIT(8);
+    const u64 is_interrupt = trap_data->scause & BIT(63); //last bit
+    const u64 trap_code = (trap_data->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit
+    const u64 is_user_mode = trap_data->scause & BIT(8);
 
     kernel_trap_data trap;
     trap.fault_pc = trap_data->sepc;

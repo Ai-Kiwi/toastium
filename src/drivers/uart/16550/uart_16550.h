@@ -2,8 +2,10 @@
 #ifndef UART_16550_H
 #define UART_16550_H
 
-void uart_16550_output_char(const char output_char);
-int uart_16550_try_fetch_char();
+#include "include/types.h"
+
+void uart_16550_output_u8(const u8 output_u8);
+int uart_16550_try_fetch_u8();
 void uart_16550_init();
 
 #endif

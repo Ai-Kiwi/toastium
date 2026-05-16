@@ -37,8 +37,8 @@ typedef struct {
     kernel_trap_type trap_type;
     privilege_mode privilege;
     kernel_trap_code code;
-    unsigned long fault_pc;
-    unsigned long fault_address;
+    u64 fault_pc;
+    u64 fault_address;
 } kernel_trap_data;
 
 typedef enum {

@@ -6,15 +6,15 @@
 #include "arch_cpu.h"
 #include "kernel/safety/panic.h"
 
-void kernel_set_timer(long clock_number) {
-    long response = arch_set_timer(clock_number);
+void kernel_set_timer(u64 clock_number) {
+    u64 response = arch_set_timer(clock_number);
     if (response) {
         PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response, 0, 0);
     }
 }
 
-void kernel_set_timer_future_ms(long ms) {
-    long response = arch_set_timer(arch_get_time_count() + ((BASE_CLOCK_SPEED / 1000) * ms));
+void kernel_set_timer_future_ms(u64 ms) {
+    u64 response = arch_set_timer(arch_get_time_count() + ((BASE_CLOCK_SPEED / 1000) * ms));
     if (response) {
         PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response, 0, 0);
     }

@@ -3,7 +3,7 @@
 #include "kernel/safety/panic.h"
 #include "include/board.h"
 
-void kernel_panic(const char *file, const long file_line, const char *function, const char *message, long extra_value_1, long extra_value_2, long extra_value_3) {
+void kernel_panic(const u8 *file, const s64 file_line, const u8 *function, const u8 *message, s64 extra_value_1, s64 extra_value_2, s64 extra_value_3) {
     uart_println_str("");
     uart_println_str(" _  ________ _____  _   _ ______ _        _____        _   _ _____ _____ ");
     uart_println_str("| |/ /  ____|  __ \\| \\ | |  ____| |      |  __ \\ /\\   | \\ | |_   _/ ____|");
@@ -28,7 +28,7 @@ void kernel_panic(const char *file, const long file_line, const char *function, 
     uart_print_str("LOCATION : ");
     uart_print_str(file);
     uart_print_str(":");
-    uart_print_long(file_line);
+    uart_print_s64(file_line);
     uart_print_str(" (");
     uart_print_str(function);
     uart_println_str(")");
@@ -39,21 +39,21 @@ void kernel_panic(const char *file, const long file_line, const char *function, 
 
     //print out hex code for number
     uart_print_str("VALUE 1  : 0x");
-    uart_print_ulong_hex(extra_value_1);
+    uart_print_u64_hex(extra_value_1);
     uart_print_str(" - (");
-    uart_print_long(extra_value_1);
+    uart_print_s64(extra_value_1);
     uart_println_str(")");
 
     uart_print_str("VALUE 2 : 0x");
-    uart_print_ulong_hex(extra_value_2);
+    uart_print_u64_hex(extra_value_2);
     uart_print_str(" - (");
-    uart_print_long(extra_value_2);
+    uart_print_s64(extra_value_2);
     uart_println_str(")");
 
     uart_print_str("VALUE 3 : 0x");
-    uart_print_ulong_hex(extra_value_3);
+    uart_print_u64_hex(extra_value_3);
     uart_print_str(" - (");
-    uart_print_long(extra_value_3);
+    uart_print_s64(extra_value_3);
     uart_println_str(")");
 
     arch_freeze_system();

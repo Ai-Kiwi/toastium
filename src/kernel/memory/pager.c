@@ -9,17 +9,17 @@
 
 //for pager bitmap 0 is free 1 is in use
 
-volatile long* pager_bitmap_list = 0;
+volatile s64* pager_bitmap_list = 0;
 int last_free_bitmap = 0;
 int last_free_page_number = 0;
 
-extern char _kernel_end, _kernel_start;
+extern u8 _kernel_end, _kernel_start;
 
 #define MAX_MEMORY_REGIONS 64
 
 void fetch_node_type(device_info *node, bool8 *memory_reg, bool8 *reserved) {
     for (int n=0; n < node->node_depth; n++) {
-        char *parent_node = node->parent_nodes[n];
+        u8 *parent_node = node->parent_nodes[n];
         if (str_starts_with(parent_node, "reserved-memory")) {
             *reserved = TRUE;
             *memory_reg = TRUE;
@@ -33,19 +33,19 @@ void fetch_node_type(device_info *node, bool8 *memory_reg, bool8 *reserved) {
 }
 
 typedef struct {
-    unsigned long start;
-    unsigned long size;
+    u64 start;
+    u64 size;
 } memory_region;
 
 typedef struct {
     memory_region *reserved_regions;
     memory_region *free_regions;
-    unsigned int reserved_count;
-    unsigned int free_count;
+    u32 reserved_count;
+    u32 free_count;
 } memory_region_list;
 
 void find_memory_regions(
-    const unsigned int device_list,
+    const u32 device_list,
     const device_info *device_info,
     memory_region_list *memory_regions
 ) {
@@ -62,14 +62,14 @@ void find_memory_regions(
         }
 
         int *base_value = (int *)device_info[i].value;
-        unsigned long high = arch_dtb_read_int((char *)&base_value[0]) << 32;
-        unsigned long low = arch_dtb_read_int((char *)&base_value[1]);
-        unsigned long location = high | low;
+        u64 high = arch_dtb_read_int((u8 *)&base_value[0]) << 32;
+        u64 low = arch_dtb_read_int((u8 *)&base_value[1]);
+        u64 location = high | low;
         location += KERNEL_VMA_START;
 
-        high = arch_dtb_read_int((char *)&base_value[2]) << 32;
-        low = arch_dtb_read_int((char *)&base_value[3]);
-        unsigned long size = high | low;
+        high = arch_dtb_read_int((u8 *)&base_value[2]) << 32;
+        low = arch_dtb_read_int((u8 *)&base_value[3]);
+        u64 size = high | low;
 
         if (reserved) {
             memory_regions->reserved_regions[memory_regions->reserved_count].start = location;
@@ -86,11 +86,11 @@ void find_memory_regions(
 void remove_reserved_memory_regions(memory_region_list *memory_regions) {
     for (int i=0; i < memory_regions->reserved_count; i++) {
         memory_region *reserved_region = &memory_regions->reserved_regions[i];
-        unsigned long reserved_region_end = reserved_region->start + reserved_region->size;
+        u64 reserved_region_end = reserved_region->start + reserved_region->size;
 
         for (int j=0; j < memory_regions->free_count; j++) {
             memory_region *free_region =  &memory_regions->free_regions[j];
-            unsigned long free_region_end = free_region->start + free_region->size;
+            u64 free_region_end = free_region->start + free_region->size;
 
             //test overlap cases
             if (reserved_region->start <= free_region->start && reserved_region_end >= free_region_end) { //complete overlap/same size
@@ -120,11 +120,11 @@ void remove_reserved_memory_regions(memory_region_list *memory_regions) {
 
 void kernel_pager_init() {
     const device_info *device_info = kernel_device_tree_pointer();
-    const unsigned int device_list = kernel_device_tree_length();
-    const long start_location = (long)kernel_device_tree_end_pointer();
+    const u32 device_list = kernel_device_tree_length();
+    const s64 start_location = (s64)kernel_device_tree_end_pointer();
 
-    unsigned long bitmap_location = (((long)start_location+7)/8)*8; //round to byte boundary
-    pager_bitmap_list = (volatile long *)bitmap_location;
+    u64 bitmap_location = (((s64)start_location+7)/8)*8; //round to byte boundary
+    pager_bitmap_list = (volatile s64 *)bitmap_location;
 
 
     memory_region reserved_memory_locations[MAX_MEMORY_REGIONS];
@@ -141,8 +141,8 @@ void kernel_pager_init() {
     uart_println_str("Removing reserved from memory region");
 
     //reserve kernel space
-    unsigned long start = (unsigned long)_kernel_start;
-    unsigned long end = (long)start_location - (unsigned long)_kernel_start
+    u64 start = (u64)_kernel_start;
+    u64 end = (s64)start_location - (u64)_kernel_start
      + 8 + (MAX_MEMORY_REGIONS * 24); //reserve for page index locations data
     memory_locations.reserved_regions[memory_locations.reserved_count].start = start;
     memory_locations.reserved_regions[memory_locations.reserved_count].size = end;
@@ -158,13 +158,13 @@ void kernel_pager_init() {
         memory_region *region = &memory_locations.free_regions[i];
         //move by region count if its where bitmap locations data is stored
         uart_print_str("memory region from 0x");
-        uart_print_ulong_hex(region->start);
+        uart_print_u64_hex(region->start);
         uart_print_str(" and size of ");
-        uart_print_ulong(region->size);
+        uart_print_u64(region->size);
         uart_print_str("   -   0x");
-        uart_print_ulong_hex(region->start);
+        uart_print_u64_hex(region->start);
         uart_print_str("-0x");
-        uart_println_ulong_hex(region->start + region->size - 1);
+        uart_println_u64_hex(region->start + region->size - 1);
     }
 
 
@@ -180,8 +180,8 @@ void kernel_pager_init() {
     //set page data in index locations.
     for (int i=0; i < memory_locations.free_count; i++) {
         memory_region *region = &memory_locations.free_regions[i];
-        unsigned long page_region_start = ((region->start / 4096) + 1) * 4096; //round towards page chunks
-        unsigned long page_count = region->size / 4096;
+        u64 page_region_start = ((region->start / 4096) + 1) * 4096; //round towards page chunks
+        u64 page_count = region->size / 4096;
         int page_offset = ((page_count / 8) / 4096) + 2;
         page_count -= page_offset;
 
@@ -190,27 +190,27 @@ void kernel_pager_init() {
         pager_bitmap_list[3 + (i*3)] = page_region_start; //page location
 
         uart_print_str("0x");
-        uart_print_ulong_hex(region->start);
+        uart_print_u64_hex(region->start);
         uart_print_str(" can store ");
-        uart_print_ulong(page_count);
+        uart_print_u64(page_count);
         uart_println_str(" pages");
 
         //mark all as blank
-        long *bitmap_pointer = (volatile long *)region->start;
+        s64 *bitmap_pointer = (volatile s64 *)region->start;
         for (int j=0; j < (page_count+63)/64; j++) {
             bitmap_pointer[j] = 0;
         }
     }
 }
 
-unsigned long kernel_pager_acquire() { //will add count later unsigned long byte_count
+u64 kernel_pager_acquire() { //will add count later u64 byte_count
     //unsigned page_count = (byte_count+4095) / 4096;
 
-    const long page_list_count = pager_bitmap_list[0];
+    const s64 page_list_count = pager_bitmap_list[0];
     for (int i=last_free_bitmap; i< page_list_count; i++){
-        const long page_count = pager_bitmap_list[1 + (i*3)];
-        volatile unsigned long *bitmap = (volatile unsigned long *)pager_bitmap_list[2 + (i*3)];
-        unsigned long base_page = pager_bitmap_list[3 + (i*3)];
+        const s64 page_count = pager_bitmap_list[1 + (i*3)];
+        volatile u64 *bitmap = (volatile u64 *)pager_bitmap_list[2 + (i*3)];
+        u64 base_page = pager_bitmap_list[3 + (i*3)];
 
         int page_start = i==last_free_bitmap ? last_free_page_number/64 : 0;
 
@@ -221,11 +221,11 @@ unsigned long kernel_pager_acquire() { //will add count later unsigned long byte
                 last_free_bitmap = i;
                 last_free_page_number = free_page;
                 bitmap[j] |= BIT(bit); //mark used
-                unsigned long page_location = base_page + (free_page * 4096);
-                volatile unsigned long *page_pointer_long = (volatile unsigned long*)page_location;
+                u64 page_location = base_page + (free_page * 4096);
+                volatile u64 *page_pointer_s64 = (volatile u64*)page_location;
                 //blank out table
                 for (int k=0; k < 4096/8; k++) {
-                    page_pointer_long[k] = 0UL;
+                    page_pointer_s64[k] = 0UL;
                 }
                 return page_location;
             }
@@ -234,19 +234,19 @@ unsigned long kernel_pager_acquire() { //will add count later unsigned long byte
     PANIC("OUT_OF_FREE_PAGES",0,0,0);
 }
 
-void kernel_pager_release(unsigned long location) {
-    char *page_location = (char *)location;
-    const long page_list_count = pager_bitmap_list[0];
+void kernel_pager_release(u64 location) {
+    u8 *page_location = (u8 *)location;
+    const s64 page_list_count = pager_bitmap_list[0];
 
-    long closest_page_count = 0;
-    unsigned long *closest_bitmap = 0;
-    char *closest_page_list = 0;
+    s64 closest_page_count = 0;
+    u64 *closest_bitmap = 0;
+    u8 *closest_page_list = 0;
     int closet_page_number = 0;
 
     for (int i=0; i< page_list_count; i++){
-        const unsigned long page_count = pager_bitmap_list[1 + (i*3)];
-        unsigned long *bitmap = (unsigned long *)pager_bitmap_list[2 + (i*3)];
-        const char *base_page = (char *)pager_bitmap_list[3 + (i*3)];
+        const u64 page_count = pager_bitmap_list[1 + (i*3)];
+        u64 *bitmap = (u64 *)pager_bitmap_list[2 + (i*3)];
+        const u8 *base_page = (u8 *)pager_bitmap_list[3 + (i*3)];
 
         if (base_page > closest_page_list && page_location >= base_page) {
             closest_page_count = page_count;
@@ -255,20 +255,20 @@ void kernel_pager_release(unsigned long location) {
             closet_page_number = i;
         }
     }
-    long page_number = (page_location - closest_page_list) / 4096;
-    long bitmap_number = page_number / 64;
-    long bit_number = page_number % 64;
+    s64 page_number = (page_location - closest_page_list) / 4096;
+    s64 bitmap_number = page_number / 64;
+    s64 bit_number = page_number % 64;
 
     if (closest_bitmap == 0) {
-        PANIC("PAGE_REMOVE_NO_OVERRIDE",(unsigned long)page_location, closest_page_count, (unsigned long)closest_page_list);
+        PANIC("PAGE_REMOVE_NO_OVERRIDE",(u64)page_location, closest_page_count, (u64)closest_page_list);
     }
 
     if (page_number < 0 || page_number >= closest_page_count) {
-        PANIC("ATTEMPT_REMOVE_PAGE_OUT_OF_RANGE",page_number, closest_page_count, (unsigned long)closest_page_list);
+        PANIC("ATTEMPT_REMOVE_PAGE_OUT_OF_RANGE",page_number, closest_page_count, (u64)closest_page_list);
     }
 
     if (closest_bitmap[bitmap_number] & BIT(bit_number)) {
-        PANIC("DOUBLE_FREE_PAGE",(long)page_location, (long)page_number, (long)closest_bitmap);
+        PANIC("DOUBLE_FREE_PAGE",(s64)page_location, (s64)page_number, (s64)closest_bitmap);
     }
 
     closest_bitmap[bitmap_number] &= ~BIT(bit_number);

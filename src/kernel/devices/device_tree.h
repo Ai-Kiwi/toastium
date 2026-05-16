@@ -1,22 +1,24 @@
 #ifndef DEVICE_TREE_H
 #define DEVICE_TREE_H
 
+#include "include/types.h"
+
 typedef struct {
-    char **parent_nodes; //backwards, first item is closest parents
+    u8 **parent_nodes; //backwards, first item is closest parents
     int node_depth;
-    char *name;
-    char *value;
-    unsigned int value_len;
+    u8 *name;
+    u8 *value;
+    u32 value_len;
 } device_info;
 
 typedef struct {
-    unsigned int size;
-    char *end_location;
+    u32 size;
+    u8 *end_location;
 } device_info_dump_response;
 
-void kernel_device_tree_init(char *kernel_end);
+void kernel_device_tree_init(u8 *kernel_end);
 device_info *kernel_device_tree_pointer();
-unsigned int kernel_device_tree_length();
-char *kernel_device_tree_end_pointer();
+u32 kernel_device_tree_length();
+u8 *kernel_device_tree_end_pointer();
 
 #endif

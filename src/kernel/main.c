@@ -12,16 +12,16 @@
 #include "include/board.h"
 #include "kernel/memory/allocator.h"
 
-extern char _kernel_end, _kernel_start;
+extern u8 _kernel_end, _kernel_start;
 
 void kernel_main() {
     uart_init();
     uart_println_str("Initializing kernel...");
 
     uart_print_str("kernel loaded at : 0x");
-    uart_print_ulong_hex((unsigned long)&_kernel_start + KERNEL_VMA_START);
+    uart_print_u64_hex((u64)&_kernel_start + KERNEL_VMA_START);
     uart_print_str(" - 0x");
-    uart_println_ulong_hex((unsigned long)&_kernel_end + KERNEL_VMA_START);
+    uart_println_u64_hex((u64)&_kernel_end + KERNEL_VMA_START);
 
 
     //setup stack
@@ -31,7 +31,7 @@ void kernel_main() {
 
     //setup device tree
     uart_println_str("Initializing device tree");
-    kernel_device_tree_init((char*)&_kernel_end);
+    kernel_device_tree_init((u8*)&_kernel_end);
 
     uart_println_str("Initializing pager");
     kernel_pager_init();

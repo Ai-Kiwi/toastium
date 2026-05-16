@@ -7,7 +7,7 @@
 #define UART_STATUS_READY_SEND (1 << 5)
 #define UART_STATUS_READY_RECEIVE (1 << 0)
 
-void uart_16550_output_char(const char output_char) {
+void uart_16550_output_u8(const u8 output_u8) {
     volatile uart_reg_t* uart = (volatile uart_reg_t*)UART_BASE_LOCATION;
     volatile uart_reg_t* uart_status = &uart[5];
 
@@ -16,12 +16,12 @@ void uart_16550_output_char(const char output_char) {
 
     while (!(*uart_status & UART_STATUS_READY_SEND)) {}
 
-    *uart = output_char;
+    *uart = output_u8;
 }
 
-int uart_16550_try_fetch_char() {
-    //volatile unsigned int* uart = (volatile int*)UART_VALUE;
-    //volatile unsigned int* uart_status = (volatile int*)UART_STATUS;
+int uart_16550_try_fetch_u8() {
+    //volatile u32* uart = (volatile int*)UART_VALUE;
+    //volatile u32* uart_status = (volatile int*)UART_STATUS;
 
     //if (*uart_status & UART_STATUS_READY_RECEIVE) {
     //    return *uart;

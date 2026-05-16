@@ -2,7 +2,7 @@
 #define KERNEL_PAGER_H
 
 void kernel_pager_init();
-unsigned long kernel_pager_acquire();
-void kernel_pager_release(unsigned long location);
+u64 kernel_pager_acquire();
+void kernel_pager_release(u64 location);
 
 #endif

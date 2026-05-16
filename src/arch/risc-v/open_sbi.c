@@ -1,7 +1,9 @@
-long open_sbi_set_timer(long clock_to_run) {
-    register long a0 asm("a0") = clock_to_run;
-    register long a6 asm("a6") = 0;
-    register long a7 asm("a7") = 0x54494D45;
+#include "include/types.h"
+
+u64 open_sbi_set_timer(u64 clock_to_run) {
+    register u64 a0 asm("a0") = clock_to_run;
+    register u64 a6 asm("a6") = 0;
+    register u64 a7 asm("a7") = 0x54494D45;
     asm("ecall"
         : "+r"(a0) //outputs
         : "r"(a6), "r"(a7) //inputs
