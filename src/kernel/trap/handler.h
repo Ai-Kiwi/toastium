@@ -48,7 +48,7 @@ typedef enum {
 
 typedef struct {
     kernel_trap_response_type response_type;
-    kpid kernel_PID;
+    pid next_process;
 } kernel_trap_response;
 
 const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data);

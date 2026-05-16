@@ -170,7 +170,7 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
             arch_processes_trap_info[kernel_running_process] = *trap_data;
         }
 
-        kpid next_process = kernel_scheduler_next_process();
+        pid next_process = kernel_scheduler_next_process();
 
         *trap_data = arch_processes_trap_info[next_process];
         break;

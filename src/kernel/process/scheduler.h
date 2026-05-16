@@ -3,9 +3,9 @@
 
 #include "types.h"
 
-kpid kernel_scheduler_next_process();
+pid kernel_scheduler_next_process();
 void kernel_schedular_init();
 
-extern kpid kernel_running_process;
+extern pid kernel_running_process;
 
 #endif

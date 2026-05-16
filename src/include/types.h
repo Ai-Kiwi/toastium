@@ -11,7 +11,6 @@ typedef unsigned char u8;
 typedef unsigned int u32;
 typedef unsigned long u64;
 
-typedef u32 kpid;
 typedef u32 pid;
 
 typedef u8 bool8;
