@@ -36,8 +36,8 @@ void uart_println_str(const u8 *print_string) {
 //hex
 void uart_print_u64_hex(const u64 hex_value) {
     static const u8 hex_list[] = "0123456789ABCDEF";
-    for (int i=15; i > -1; i=i-1) {
-        int digit_value = (hex_value >> (i * 4)) & 0xF;
+    for (s32 i=15; i > -1; i=i-1) {
+        s32 digit_value = (hex_value >> (i * 4)) & 0xF;
         uart_print_char(hex_list[digit_value]);
     }
 }
@@ -49,8 +49,8 @@ void uart_println_u64_hex(const u64 hex_value) {
 
 void uart_print_u32_hex(const u32 hex_value) {
     static const u8 hex_list[] = "0123456789ABCDEF";
-    for (int i=7; i > -1; i=i-1) {
-        int digit_value = (hex_value >> (i * 4)) & 0xF;
+    for (s32 i=7; i > -1; i=i-1) {
+        s32 digit_value = (hex_value >> (i * 4)) & 0xF;
         uart_print_char(hex_list[digit_value]);
     }
 }
@@ -62,8 +62,8 @@ void uart_println_u32_hex(const u32 hex_value) {
 
 void uart_print_char_hex(const u64 hex_value) {
     static const u8 hex_list[] = "0123456789ABCDEF";
-    for (int i=1; i > -1; i=i-1) {
-        int digit_value = (hex_value >> (i * 4)) & 0xF;
+    for (s32 i=1; i > -1; i=i-1) {
+        s32 digit_value = (hex_value >> (i * 4)) & 0xF;
         uart_print_char(hex_list[digit_value]);
     }
 }
@@ -76,8 +76,8 @@ void uart_println_u8_hex(const u64 hex_value) {
 //numbers
 void uart_print_u64(u64 number) {
     u8 digits[20] = {};
-    int bottom = 0;
-    for (int i=19; i > -1; i=i-1) {
+    s32 bottom = 0;
+    for (s32 i=19; i > -1; i=i-1) {
         u8 digit = number % 10;
         digits[i] = digit;
         number /= 10;
@@ -87,7 +87,7 @@ void uart_print_u64(u64 number) {
         }
     }
     static const u8 hex_list[] = "0123456789";
-    for (int i=bottom; i < 20; i++) {
+    for (s32 i=bottom; i < 20; i++) {
         uart_print_char(hex_list[digits[i]]);
     }
 }
@@ -115,7 +115,7 @@ void uart_print_s64(s64 number) {
         }
     }
     static const u8 hex_list[] = "0123456789";
-    for (int i=bottom; i < 20; i++) {
+    for (s32 i=bottom; i < 20; i++) {
         uart_print_char(hex_list[digits[i]]);
     }
 }

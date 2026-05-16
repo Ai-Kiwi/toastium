@@ -17,7 +17,7 @@ u32 max_count_per_page(u64 size) {
 }
 
 void kernel_allocator_init() {
-    for (int i=0; i<256; i++) {
+    for (s32 i=0; i<256; i++) {
         root_index_page[i] = 0;
     }
 
@@ -81,7 +81,7 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
 
         current_index_entry++;
 
-        for (int i=0; i<entry_per_page; i++) {
+        for (s32 i=0; i<entry_per_page; i++) {
             if (current_index_entry>=max_index_page_bitmap_entrys) { //test if spilled over
                 current_index_entry = 1; //first is used for next index page
                 if (!current_index_page[0]) { //create new index page
@@ -91,7 +91,7 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
             }
 
             if (current_index_page[current_index_entry] != 0xFFFFFFFFFFFFFFFF) {
-                int bit = __builtin_ctzl(~current_index_page[current_index_entry]);
+                s32 bit = __builtin_ctzl(~current_index_page[current_index_entry]);
                 if (current_index_page[current_index_entry] == 0) {
                     bit = 0;
                 }
@@ -153,7 +153,7 @@ void kernel_allocator_release(u64 location) {
     u64 index_table_postion = bitmap_entry_number % max_index_page_bitmap_entrys;
 
     volatile u64 *bitmap = (volatile u64 *)root_index_page[compressed_size];
-    for (int i=0; i<index_table_number; i++) { //move to index paged stored on
+    for (s32 i=0; i<index_table_number; i++) { //move to index paged stored on
         if (!bitmap[0]) {
             PANIC("ALLOCATOR_RELEASE_NO_INDEX_TABLE_LEAF",0,0,0);
         }

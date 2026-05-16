@@ -19,11 +19,11 @@ void kernel_device_tree_init(u8 *kernel_end) {
 
     kernel_device_list = (device_info *)kernel_end;
 
-    //for (int i=0; i<kernel_device_list_len; i++) {
+    //for (s32 i=0; i<kernel_device_list_len; i++) {
     //    uart_print_str("Property | Name : ");
     //    uart_print_str(kernel_device_list[i].name);
     //    uart_print_str(" | Path : ");
-    //    for (int p=0; p<kernel_device_list[i].node_depth; p++) {
+    //    for (s32 p=0; p<kernel_device_list[i].node_depth; p++) {
     //        uart_print_u8(' / ');
     //        uart_print_str((u8 *)kernel_device_list[i].parent_nodes[p]);
     //    }

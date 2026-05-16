@@ -62,13 +62,13 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
     u32 device_list_len = 0;
 
     u8 *node_stack[10];
-    int node_stack_depth = 0;
+    s32 node_stack_depth = 0;
 
     for (u32 byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
         u32 item_value = arch_dtb_read_int(&device_tree_blob[byte_location]);
 
         //uart_print_u64_hex((u64)byte_location);
-        //for (int i=0; i<node_stack_depth; i++) {
+        //for (s32 i=0; i<node_stack_depth; i++) {
         //    uart_print_str(" |");
         //}
 
@@ -80,7 +80,7 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
             //read name
             //uart_print_str("* ");
             //uart_println_str(&device_tree_blob[byte_location + 4]);
-            int offset = 0;
+            s32 offset = 0;
             while (device_tree_blob[byte_location + offset + 4] != '\0'){
                 offset += 1;
             }
@@ -111,7 +111,7 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
                 device.name = prop_name;
                 device.value = &device_tree_blob[(byte_location + 12)];
                 device.value_len = prop_size;
-                for (int i=0; i<node_stack_depth; i++) {
+                for (s32 i=0; i<node_stack_depth; i++) {
                     device_parents[device_list_len][i] = (u8 *)node_stack[node_stack_depth - 1 - i];
                 }
                 //TODO: code to pass approach
@@ -123,7 +123,7 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
 
             }
 
-            const int padded_len = ((prop_size + 3) / 4) * 4;
+            const s32 padded_len = ((prop_size + 3) / 4) * 4;
             byte_location += padded_len + 8;
             break;
         case 0x00000009:
@@ -141,15 +141,15 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
 
     //lacking the heap allocator which is needed ot actually append this data.
     device_info *device_output = (device_info *)output_location;
-    for (int i=0; i<device_list_len; i++) {
+    for (s32 i=0; i<device_list_len; i++) {
         device_output[i] = device_list[i];
     }
     //add parents
     u8 **parents_location = (u8 **)&device_output[device_list_len];
-    int parent_offset = 0;
-    for (int i=0; i<device_list_len; i++) {
+    s32 parent_offset = 0;
+    for (s32 i=0; i<device_list_len; i++) {
         device_output[i].parent_nodes = parents_location + parent_offset;
-        for (int p=0; p < device_output[i].node_depth; p++) {
+        for (s32 p=0; p < device_output[i].node_depth; p++) {
             parents_location[parent_offset] = (u8 *)(device_parents[i][p]);
             parent_offset++;
         }

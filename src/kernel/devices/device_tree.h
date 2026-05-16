@@ -5,7 +5,7 @@
 
 typedef struct {
     u8 **parent_nodes; //backwards, first item is closest parents
-    int node_depth;
+    s32 node_depth;
     u8 *name;
     u8 *value;
     u32 value_len;

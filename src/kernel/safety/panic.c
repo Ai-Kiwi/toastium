@@ -37,7 +37,7 @@ void kernel_panic(const u8 *file, const s64 file_line, const u8 *function, const
     uart_print_str("REASON   : ");
     uart_println_str(message);
 
-    //print out hex code for number
+    //prs32 out hex code for number
     uart_print_str("VALUE 1  : 0x");
     uart_print_u64_hex(extra_value_1);
     uart_print_str(" - (");

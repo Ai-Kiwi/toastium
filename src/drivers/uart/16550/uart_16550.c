@@ -12,14 +12,14 @@ void uart_16550_output_u8(const u8 output_u8) {
     volatile uart_reg_t* uart_status = &uart[5];
 
 
-    //for (volatile int i=0; i<1000000; i++) {}
+    //for (volatile s32 i=0; i<1000000; i++) {}
 
     while (!(*uart_status & UART_STATUS_READY_SEND)) {}
 
     *uart = output_u8;
 }
 
-int uart_16550_try_fetch_u8() {
+s32 uart_16550_try_fetch_u8() {
     //volatile u32* uart = (volatile int*)UART_VALUE;
     //volatile u32* uart_status = (volatile int*)UART_STATUS;
 

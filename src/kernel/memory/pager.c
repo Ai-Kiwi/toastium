@@ -10,15 +10,15 @@
 //for pager bitmap 0 is free 1 is in use
 
 volatile s64* pager_bitmap_list = 0;
-int last_free_bitmap = 0;
-int last_free_page_number = 0;
+s32 last_free_bitmap = 0;
+s32 last_free_page_number = 0;
 
 extern u8 _kernel_end, _kernel_start;
 
 #define MAX_MEMORY_REGIONS 64
 
 void fetch_node_type(device_info *node, bool8 *memory_reg, bool8 *reserved) {
-    for (int n=0; n < node->node_depth; n++) {
+    for (s32 n=0; n < node->node_depth; n++) {
         u8 *parent_node = node->parent_nodes[n];
         if (str_starts_with(parent_node, "reserved-memory")) {
             *reserved = TRUE;
@@ -49,7 +49,7 @@ void find_memory_regions(
     const device_info *device_info,
     memory_region_list *memory_regions
 ) {
-    for (int i=0; i< device_list; i++) {
+    for (s32 i=0; i< device_list; i++) {
         if (!str_starts_with(device_info[i].name, "reg")) {
             continue;
         }
@@ -61,7 +61,7 @@ void find_memory_regions(
             continue;
         }
 
-        int *base_value = (int *)device_info[i].value;
+        s32 *base_value = (s32 *)device_info[i].value;
         u64 high = arch_dtb_read_int((u8 *)&base_value[0]) << 32;
         u64 low = arch_dtb_read_int((u8 *)&base_value[1]);
         u64 location = high | low;
@@ -84,11 +84,11 @@ void find_memory_regions(
 }
 
 void remove_reserved_memory_regions(memory_region_list *memory_regions) {
-    for (int i=0; i < memory_regions->reserved_count; i++) {
+    for (s32 i=0; i < memory_regions->reserved_count; i++) {
         memory_region *reserved_region = &memory_regions->reserved_regions[i];
         u64 reserved_region_end = reserved_region->start + reserved_region->size;
 
-        for (int j=0; j < memory_regions->free_count; j++) {
+        for (s32 j=0; j < memory_regions->free_count; j++) {
             memory_region *free_region =  &memory_regions->free_regions[j];
             u64 free_region_end = free_region->start + free_region->size;
 
@@ -154,7 +154,7 @@ void kernel_pager_init() {
     remove_reserved_memory_regions(&memory_locations);
 
     //log contents
-    for (int i=0; i < memory_locations.free_count; i++) {
+    for (s32 i=0; i < memory_locations.free_count; i++) {
         memory_region *region = &memory_locations.free_regions[i];
         //move by region count if its where bitmap locations data is stored
         uart_print_str("memory region from 0x");
@@ -178,11 +178,11 @@ void kernel_pager_init() {
     pager_bitmap_list[0] = memory_locations.free_count;
 
     //set page data in index locations.
-    for (int i=0; i < memory_locations.free_count; i++) {
+    for (s32 i=0; i < memory_locations.free_count; i++) {
         memory_region *region = &memory_locations.free_regions[i];
         u64 page_region_start = ((region->start / 4096) + 1) * 4096; //round towards page chunks
         u64 page_count = region->size / 4096;
-        int page_offset = ((page_count / 8) / 4096) + 2;
+        s32 page_offset = ((page_count / 8) / 4096) + 2;
         page_count -= page_offset;
 
         pager_bitmap_list[1 + (i*3)] = page_count; //page count
@@ -197,7 +197,7 @@ void kernel_pager_init() {
 
         //mark all as blank
         s64 *bitmap_pointer = (volatile s64 *)region->start;
-        for (int j=0; j < (page_count+63)/64; j++) {
+        for (s32 j=0; j < (page_count+63)/64; j++) {
             bitmap_pointer[j] = 0;
         }
     }
@@ -207,24 +207,24 @@ u64 kernel_pager_acquire() { //will add count later u64 byte_count
     //unsigned page_count = (byte_count+4095) / 4096;
 
     const s64 page_list_count = pager_bitmap_list[0];
-    for (int i=last_free_bitmap; i< page_list_count; i++){
+    for (s32 i=last_free_bitmap; i< page_list_count; i++){
         const s64 page_count = pager_bitmap_list[1 + (i*3)];
         volatile u64 *bitmap = (volatile u64 *)pager_bitmap_list[2 + (i*3)];
         u64 base_page = pager_bitmap_list[3 + (i*3)];
 
-        int page_start = i==last_free_bitmap ? last_free_page_number/64 : 0;
+        s32 page_start = i==last_free_bitmap ? last_free_page_number/64 : 0;
 
-        for (int j=page_start; j<page_count/64; j++) { //TODO: actually does skip some but messy to use, will revisit
+        for (s32 j=page_start; j<page_count/64; j++) { //TODO: actually does skip some but messy to use, will revisit
             if (bitmap[j] != 0xFFFFFFFFFFFFFFFF) {
-                int bit = __builtin_ctzl(~bitmap[j]);
-                int free_page = (j * 64) + bit;
+                s32 bit = __builtin_ctzl(~bitmap[j]);
+                s32 free_page = (j * 64) + bit;
                 last_free_bitmap = i;
                 last_free_page_number = free_page;
                 bitmap[j] |= BIT(bit); //mark used
                 u64 page_location = base_page + (free_page * 4096);
                 volatile u64 *page_pointer_s64 = (volatile u64*)page_location;
                 //blank out table
-                for (int k=0; k < 4096/8; k++) {
+                for (s32 k=0; k < 4096/8; k++) {
                     page_pointer_s64[k] = 0UL;
                 }
                 return page_location;
@@ -241,9 +241,9 @@ void kernel_pager_release(u64 location) {
     s64 closest_page_count = 0;
     u64 *closest_bitmap = 0;
     u8 *closest_page_list = 0;
-    int closet_page_number = 0;
+    s32 closet_page_number = 0;
 
-    for (int i=0; i< page_list_count; i++){
+    for (s32 i=0; i< page_list_count; i++){
         const u64 page_count = pager_bitmap_list[1 + (i*3)];
         u64 *bitmap = (u64 *)pager_bitmap_list[2 + (i*3)];
         const u8 *base_page = (u8 *)pager_bitmap_list[3 + (i*3)];

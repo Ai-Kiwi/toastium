@@ -5,7 +5,7 @@
 kernel_process_info kernel_processes[max_process_count];
 
 void init_processes() {
-    for (int i=0; i<max_process_count; i++) {
+    for (s32 i=0; i<max_process_count; i++) {
         kernel_process_info process;
         process.alive = TRUE;
         kernel_processes[i] = process;
