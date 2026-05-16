@@ -6,3 +6,8 @@
  - Using int instead of size_t. Same for long and char.
  - dtb is hard coded in a lot of locations. Will cause issues when switching between arch and is messy right now for different systems
  - pager can't handle overlap or same memory locations. Both for reserved and free
+ - Allocator should be changed to store the header data once at top of page data instead of per entry
+ - pager should support multipages
+ - Allocator should use multipages when support is added
+ - pager should have double past location buffer
+ - allocator no cache system for last free
