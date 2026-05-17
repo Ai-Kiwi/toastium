@@ -13,7 +13,7 @@ u64 process_upto = 0;
 u64 *process_radix_root = 0;
 
 process_info *kernel_process_from_id(pid process_id) {
-
+    return (process_info *)kernel_radix_get_child((u64)process_radix_root, process_upto, pid_levels, pid_level_depth);
 }
 
 process_info *new_blank_process() {
