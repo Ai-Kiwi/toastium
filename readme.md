@@ -6,6 +6,7 @@ An operating system that I have been developing for learning purposes. Designed 
 ## Current Features
  - Bootloader (U-Boot + OpenSBI for RISC-V)
  - Pager
+ - Allocator
  - DTB parser
  - Interrupt/exception handler (Internally referred to as Traps)
  - Virtual memory
