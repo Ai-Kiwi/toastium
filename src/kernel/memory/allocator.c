@@ -2,6 +2,7 @@
 #include "kernel/memory/pager.h"
 #include "include/types.h"
 #include "include/def.h"
+#include "drivers/uart/uart.h"
 
 //worth noting, zero is free here, one is in use. This is flipped of pager.
 
@@ -108,14 +109,14 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
 
                 const u64 entry_size = 8 + pow2_size;
 
-                volatile u64 *header = (volatile u64 *)(current_data_page + (entry_size * local_page_number));
+                volatile u64 *header = (volatile u64 *)((u64)(current_data_page) + (entry_size * local_page_number));
                 *header = (global_page_number * 256) + compressed_size;
-
-                return (u64)header + 8;
+                return ((u64)header) + 8;
             }
 
             current_index_entry++;
         }
+        current_page_data_number++;
     }
 
     //flip to not

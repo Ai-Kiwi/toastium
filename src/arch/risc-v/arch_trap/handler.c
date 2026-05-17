@@ -177,7 +177,7 @@ void arch_trap_handler(trap_info *trap_data) {//will have pointer input here tha
     case KTRAP_RESPONSE_RESUME_PROCESS:
         break;
     default:
-        PANIC("UNHANDLED_TRAP_RESPONSE",trap_response.response_type, trap_response.kernel_PID, 0);
+        PANIC("UNHANDLED_TRAP_RESPONSE",trap_response.response_type, trap_response.next_process, 0);
         break;
     }
 }

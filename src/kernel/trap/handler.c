@@ -13,7 +13,7 @@ const kernel_trap_response interrupt_trap(const kernel_trap_data *trap_data) {
         if (trap_data->privilege != KTRAP_MODE_SUPERVISOR){
             PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data->privilege, trap_data->fault_address, trap_data->fault_pc);
         }
-        trap_response.kernel_PID = kernel_scheduler_next_process();
+        trap_response.next_process = kernel_scheduler_next_process();
         trap_response.response_type = KTRAP_RESPONSE_HOLD_PROCESS;
         break;
     case KTRAP_EXTERNAL_INTERRUPT:

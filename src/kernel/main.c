@@ -11,6 +11,7 @@
 #include "kernel/memory/pager.h"
 #include "include/board.h"
 #include "kernel/memory/allocator.h"
+#include "kernel/memory/radix.h"
 
 extern u8 _kernel_end, _kernel_start;
 
