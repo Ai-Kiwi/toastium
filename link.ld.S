@@ -2,6 +2,9 @@
 
 ENTRY(_start)
 
+//fair amount of stuff in here breaks with KERNEL_PAGE_SIZE changing. 
+//Or not completely breaks but assumptions break.
+
 PHDRS
 {
   execute PT_LOAD FLAGS(5); /* 5 = Read (4) + Execute (1) */
@@ -18,11 +21,6 @@ SECTIONS
 
     .trap : ALIGN(16) {
         *(.text.trap)
-    }:execute
-
-    .idle_process : ALIGN(16) {
-        *(.text.idle_process)
-        . += 4096;
     }:execute
 
     .rodata : ALIGN(16) {

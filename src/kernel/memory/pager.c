@@ -180,9 +180,9 @@ void kernel_pager_init() {
     //set page data in index locations.
     for (s32 i=0; i < memory_locations.free_count; i++) {
         memory_region *region = &memory_locations.free_regions[i];
-        u64 page_region_start = ((region->start / 4096) + 1) * 4096; //round towards page chunks
-        u64 page_count = region->size / 4096;
-        s32 page_offset = ((page_count / 8) / 4096) + 2;
+        u64 page_region_start = ((region->start / KERNEL_PAGE_SIZE) + 1) * KERNEL_PAGE_SIZE; //round towards page chunks
+        u64 page_count = region->size / KERNEL_PAGE_SIZE;
+        s32 page_offset = ((page_count / 8) / KERNEL_PAGE_SIZE) + 2;
         page_count -= page_offset;
 
         pager_bitmap_list[1 + (i*3)] = page_count; //page count
@@ -204,7 +204,7 @@ void kernel_pager_init() {
 }
 
 u64 kernel_pager_acquire() { //will add count later u64 byte_count
-    //unsigned page_count = (byte_count+4095) / 4096;
+    //unsigned page_count = (byte_count+4095) / KERNEL_PAGE_SIZE;
 
     const s64 page_list_count = pager_bitmap_list[0];
     for (s32 i=last_free_bitmap; i< page_list_count; i++){
@@ -221,10 +221,10 @@ u64 kernel_pager_acquire() { //will add count later u64 byte_count
                 last_free_bitmap = i;
                 last_free_page_number = free_page;
                 bitmap[j] |= BIT(bit); //mark used
-                u64 page_location = base_page + (free_page * 4096);
+                u64 page_location = base_page + (free_page * KERNEL_PAGE_SIZE);
                 volatile u64 *page_pointer_s64 = (volatile u64*)page_location;
                 //blank out table
-                for (s32 k=0; k < 4096/8; k++) {
+                for (s32 k=0; k < KERNEL_PAGE_SIZE/8; k++) {
                     page_pointer_s64[k] = 0UL;
                 }
                 return page_location;
@@ -255,7 +255,7 @@ void kernel_pager_release(u64 location) {
             closet_page_number = i;
         }
     }
-    s64 page_number = (page_location - closest_page_list) / 4096;
+    s64 page_number = (page_location - closest_page_list) / KERNEL_PAGE_SIZE;
     s64 bitmap_number = page_number / 64;
     s64 bit_number = page_number % 64;
 

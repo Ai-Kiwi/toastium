@@ -6,7 +6,7 @@
 
 //worth noting, zero is free here, one is in use. This is flipped of pager.
 
-#define max_index_page_bitmap_entrys ((4096 - 8) / 8)
+#define max_index_page_bitmap_entrys ((KERNEL_PAGE_SIZE - 8) / 8)
 
 u64 root_index_page[256];
 u64 current_bump_page;
@@ -14,7 +14,7 @@ u64 current_bump_upto;
 
 u32 max_count_per_page(u64 size) {
     u64 entry_size = size + 8; //add headers
-    return 4096 / entry_size;
+    return KERNEL_PAGE_SIZE / entry_size;
 }
 
 void kernel_allocator_init() {
@@ -49,7 +49,7 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
         pow2_size = pow2_size << 1;
         compressed_size++;
     }
-    if (pow2_size >= 4096) {
+    if (pow2_size >= KERNEL_PAGE_SIZE) {
         PANIC("ATTEMPT_ALLOCATE_LARGER_THEN_PAGE",pow2_size,0,0);
     }
 
@@ -169,11 +169,11 @@ void kernel_allocator_release(u64 location) {
 }
 
 u64 kernel_allocator_bump(u64 size) {
-    if (size > 4096) {
+    if (size > KERNEL_PAGE_SIZE) {
         PANIC("ALLOCATOR_BUMP_LARGER_THEN_PAGE",0,0,0);
     }
 
-    if (current_bump_upto + size >= 4096) {
+    if (current_bump_upto + size >= KERNEL_PAGE_SIZE) {
         current_bump_page = kernel_pager_acquire();
         current_bump_upto = 0;
     }
