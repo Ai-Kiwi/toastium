@@ -8,5 +8,6 @@ u64 kernel_radix_get_child(u64 address, u64 key, u8 depth, u8 level_depth);
 u64 kernel_radix_create_child(u64 address, u64 key, u64 child_address, u8 depth, u8 level_depth);
 bool8 kernel_radix_remove_child(u64 address, u64 key, u8 depth, u8 level_depth);
 u64 kernel_radix_create_tree(u8 level_depth);
+void kernel_radix_delete(u64 address, bool8 remove_leaves, u8 depth, u8 level_depth);
 
 #endif

@@ -1,6 +1,7 @@
 #include "include/types.h"
 #include "kernel/memory/allocator.h"
 #include "drivers/uart/uart.h"
+#include "kernel/safety/panic.h"
 
 u64 kernel_radix_get_child(u64 address, u64 key, u8 depth, u8 level_depth) {
     u64 *address_table = (u64 *)address;
@@ -19,6 +20,10 @@ u64 kernel_radix_get_child(u64 address, u64 key, u8 depth, u8 level_depth) {
 u64 kernel_radix_create_child(u64 address, u64 key, u64 child_address, u8 depth, u8 level_depth) {
     u64 mask = (1UL << level_depth) - 1;
     u64 size = (1UL << level_depth);
+    if (key >= (1UL << (level_depth * depth))) {
+        PANIC("ADDRESS_KEY_LARGER_THEN_RADIX",key,depth,level_depth);
+    }
+
     u64 *address_table = (u64 *)address;
     for (s32 i = 1; i < depth; i++) {
         u64 index = (key >> ((depth-i) * level_depth)) & mask;
@@ -39,6 +44,39 @@ u64 kernel_radix_create_child(u64 address, u64 key, u64 child_address, u8 depth,
     address_table[index] = child_address;
 
     return old_address;
+}
+
+void kernel_radix_delete(u64 address, bool8 remove_leaves, u8 depth, u8 level_depth) {
+    u64 size = (1UL << level_depth);
+    uart_print_str("Clearing address : ");
+    uart_println_u64_hex(address);
+
+    u64 *address_table = (u64 *)address;
+
+    if (depth > 1) {
+        for (s32 i=0; i<size; i++) {
+            u64 child_address = (u64)address_table[i];
+            if (child_address > 0) {
+                uart_print_str("Child address : ");
+                uart_println_u64_hex(child_address);
+                uart_print_u64(depth);
+                kernel_radix_delete(child_address, remove_leaves, depth - 1, level_depth);
+                kernel_allocator_release(child_address);
+            }
+        }
+    }else{
+        if (remove_leaves == TRUE) {
+            for (s32 i=0; i<size; i++) {
+                u64 child_address = (u64)address_table[i];
+                if (child_address > 0) {
+                    uart_print_str("Clearing entry : ");
+                    uart_println_u64_hex(child_address);
+                    uart_println_u64_hex(*(u64 *)child_address);
+                    kernel_allocator_release(child_address);
+                }
+            }
+        }
+    }
 }
 
 bool8 kernel_radix_remove_child(u64 address, u64 key, u8 depth, u8 level_depth) {
