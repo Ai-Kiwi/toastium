@@ -162,7 +162,7 @@ void kernel_allocator_release(u64 location) {
     }
 
     //offset 1 because first is location of next index page
-    bitmap[bitmap_entry_number + 1] &= ~BIT(bitmap_entry_bit);
+    bitmap[index_table_postion + 1] &= ~BIT(bitmap_entry_bit);
 
     //another place multicore support is lacking
     //needs atomic so can't be edited twice at same time
