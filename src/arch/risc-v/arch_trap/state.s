@@ -41,7 +41,7 @@
     csrr a0, scause
     csrr a1, sepc
     csrr a2, stval
-    csrr a2, sstatus
+    csrr a3, sstatus
     sd a0, 248(sp)
     sd a1, 256(sp)
     sd a2, 264(sp)
