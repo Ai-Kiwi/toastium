@@ -38,5 +38,6 @@ void arch_irq_init() {
 }
 
 void arch_irq_start() {
-    asm volatile("csrs sstatus, %0" :: "r"BIT(1)); //enable global interrupts (bit 3 on)
-}
+    //don't enable interupts as shouldn't happen when kernel is running interupt only on user process handling interupt
+    //asm volatile("csrs sstatus, %0" :: "r"BIT(1)); //enable global interrupts (bit 3 on)
+} 
