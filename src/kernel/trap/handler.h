@@ -51,6 +51,6 @@ typedef struct {
     pid next_process;
 } kernel_trap_response;
 
-const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data);
+const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data, const arch_trap_state arch_trap_state);
 
 #endif

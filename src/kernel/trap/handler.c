@@ -2,6 +2,7 @@
 #include "kernel/safety/panic.h"
 #include "kernel/safety/safety.h"
 #include "kernel/process/scheduler.h"
+#include "arch_trap/handler.h"
 
 const kernel_trap_response interrupt_trap(const kernel_trap_data *trap_data) {
     kernel_trap_response trap_response;
@@ -63,7 +64,7 @@ const kernel_trap_response exception_trap(const kernel_trap_data *trap_data) {
     return trap_response;
 }
 
-const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data) {
+const kernel_trap_response kernel_handle_trap(const kernel_trap_data *trap_data, const arch_trap_state arch_trap_state) {
     kernel_safety_test();
 
     switch (trap_data->trap_type){
