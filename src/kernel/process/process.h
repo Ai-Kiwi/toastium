@@ -2,13 +2,13 @@
 #define PROCESS_H
 
 #include "types.h"
+#include "kernel/process/blocks.h"
 
 void init_processes();
 
 typedef struct {
     pid process_id;
-    //some form of info on what its waiting for
-    bool8 alive;
+    process_block block_waiting;
 } process_info;
 
 #endif
