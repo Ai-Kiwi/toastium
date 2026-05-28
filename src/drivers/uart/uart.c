@@ -60,7 +60,7 @@ void uart_println_u32_hex(const u32 hex_value) {
     uart_print_char('\n');
 }
 
-void uart_print_char_hex(const u64 hex_value) {
+void uart_print_u8_hex(const u8 hex_value) {
     static const u8 hex_list[] = "0123456789ABCDEF";
     for (s32 i=1; i > -1; i=i-1) {
         s32 digit_value = (hex_value >> (i * 4)) & 0xF;
@@ -68,8 +68,8 @@ void uart_print_char_hex(const u64 hex_value) {
     }
 }
 
-void uart_println_u8_hex(const u64 hex_value) {
-    uart_print_char_hex(hex_value);
+void uart_println_u8_hex(const u8 hex_value) {
+    uart_print_u8_hex(hex_value);
     uart_print_char('\n');
 }
 

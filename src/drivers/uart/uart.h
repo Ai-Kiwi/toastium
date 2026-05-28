@@ -18,8 +18,8 @@ void uart_println_u64_hex(const u64 hex_value);
 void uart_print_u32_hex(const u32 hex_value);
 void uart_println_u32_hex(const u32 hex_value);
 
-void uart_print_u8_hex(const u64 hex_value);
-void uart_println_u8_hex(const u64 hex_value);
+void uart_print_u8_hex(const u8 hex_value);
+void uart_println_u8_hex(const u8 hex_value);
 
 void uart_print_u64(u64 number);
 void uart_println_u64(u64 number);
