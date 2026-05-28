@@ -12,6 +12,7 @@
 #include "include/board.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/memory/radix.h"
+#include "include/endian.h"
 
 extern u8 _kernel_end, _kernel_start;
 
@@ -24,6 +25,7 @@ void kernel_main() {
     uart_print_str(" - 0x");
     uart_println_u64_hex((u64)&_kernel_end + KERNEL_VMA_START);
 
+    init_endian_conversion();
 
     //setup stack
     uart_println_str("Initializing stack");
