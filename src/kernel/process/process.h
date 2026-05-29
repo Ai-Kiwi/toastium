@@ -7,7 +7,7 @@
 
 void init_processes();
 
-typedef struct {
+typedef __attribute__((alignas(64))) struct {
     pid process_id;
     process_block block_waiting; //process needs to be in kernel space for a block to be waiting
     bool8 in_kernel_space;
