@@ -5,15 +5,21 @@
 .include "./src/arch/risc-v/arch_trap/state.s"
 
 trap_entry:
-    SAVE_REGISTERS_TO_STACK #TODO: make this include floating point, also 90% sure stack pointer won't work propperly
+    STORE_TRAP_FRAME #TODO: make this include floating point, also 90% sure stack pointer won't work propperly
 
     # setup restore once done
     mv a0, sp
-    call arch_trap_handler
+    call kernel_handle_trap #outputs to a0 response
 
-    LOAD_REGISTERS_FROM_STACK
+    bgtz a0, run_process_kernel_trap
+
+
+    j resume_process
+
+run_process_kernel_trap:
+    call 
+
+
+resume_process:
+    LOAD_TRAP_FRAME
     sret
-
-after_trap_hold:
-    wfi
-    j after_trap_hold

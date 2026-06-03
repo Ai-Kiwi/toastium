@@ -37,7 +37,10 @@ void arch_irq_init() {
     *(volatile int*)(PLIC_threshold) = 0; //set threshold to trigger trap
 }
 
-void arch_irq_start() {
-    //don't enable interupts as shouldn't happen when kernel is running interupt only on user process handling interupt
-    //asm volatile("csrs sstatus, %0" :: "r"BIT(1)); //enable global interrupts (bit 3 on)
-} 
+void arch_irq_enable() {
+    __asm__ volatile ("csrsi sstatus, 0x2");
+}
+
+void arch_irq_disable() {
+    __asm__ volatile ("csrci sstatus, 0x2");
+}
