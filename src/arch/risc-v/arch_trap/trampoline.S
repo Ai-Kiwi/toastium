@@ -1,3 +1,6 @@
+#include "state.S"
+
+
 #save to state to processor kernel core stack
 
 #run trap parser
@@ -34,12 +37,13 @@
 trap_entry:
     STORE_TRAP_FRAME
 
-    call kernel_parse_trap #c handler
+    call kernel_handle_trap #c handler. Dumps response to a0
 
-    bge
+    bgtz a0, process_trap_handler
 
-
-
+process_trap_handler:
+    call kernel_trap_process_kernel
+    j trap_exit
 
 trap_exit:
     LOAD_TRAP_FRAME

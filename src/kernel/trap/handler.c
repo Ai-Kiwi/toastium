@@ -3,6 +3,7 @@
 #include "kernel/safety/safety.h"
 #include "kernel/process/scheduler.h"
 #include "kernel/trap/handler.h"
+#include "arch_trap/parser.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel

@@ -1,8 +1,9 @@
+#include "board.h"
+#include "state.S"
 .section .text.trap
 .global trap_entry
 .global after_trap_hold
 .align 4
-.include "./src/arch/risc-v/arch_trap/state.s"
 
 trap_entry:
     STORE_TRAP_FRAME #TODO: make this include floating point, also 90% sure stack pointer won't work propperly

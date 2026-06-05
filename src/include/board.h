@@ -7,6 +7,7 @@
 // 1024*1024*1024*512 = 0x4000000000 (half of sv39 space for risc-v)
 //0x4000000000 would be jump but top half is top half
 #define KERNEL_VMA_START 0xffffffc000000000
+#define TRAPFRAME_ADDRESS 0x0000003FFFFFF000
 
 #define BOARD_TARGET_QEMU  0
 #define BOARD_TARGET_VISIONFIVE2_LITE 1

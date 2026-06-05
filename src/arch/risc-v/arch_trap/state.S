@@ -1,12 +1,14 @@
+#include "board.h"
+
 .global STORE_TRAP_FRAME
 .global LOAD_TRAP_FRAME
+
 
 # Uses 272 so it sticks to being align to 16
 
 .macro STORE_TRAP_FRAME
     csrw sscratch, x1
-    li x1, trap_frame
-    addi x1, x1, -272
+    li x1, TRAPFRAME_ADDRESS
     #sd x1, 0(x1)
     sd x2, 8(x1)
     sd x3, 16(x1)
@@ -58,7 +60,7 @@
 .endm
 
 .macro LOAD_TRAP_FRAME
-    li x1, trap_frame
+    li x1, TRAPFRAME_ADDRESS
     ld x2, 8(x1)
     ld x3, 16(x1)
     ld x4, 24(x1)

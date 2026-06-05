@@ -7,9 +7,11 @@
 #include "kernel/process/scheduler.h"
 #include "drivers/uart/uart.h"
 #include "arch_trap/handler.h"
+#include "include/board.h"
+#include "parser.h"
 
 void arch_parse_trap_data(kernel_trap_data trap) {//will have pointer input here that points to reg data on stack
-    arch_trap_frame *trap_frame_data = (arch_trap_frame *)TRAP_FRAME;
+    arch_trap_frame *trap_frame_data = (arch_trap_frame *)TRAPFRAME_ADDRESS;
 
     const u64 is_interrupt = trap_frame_data->scause & BIT(63); //last bit
     const u64 trap_code = (trap_frame_data->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit

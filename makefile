@@ -56,7 +56,7 @@ $(BUILD)/%.o: %.s
 
 $(BUILD)/%.o: %.S
 	mkdir -p $(dir $@)
-	$(CC) -c -I src/include $< -o $@
+	$(CC) $(CCF) -c -I src/include $< -o $@
 
 $(BUILD)/%.o: %.c
 	mkdir -p $(dir $@)
