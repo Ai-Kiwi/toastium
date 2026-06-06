@@ -97,7 +97,7 @@ finish_vma_setup:
     //apply table location and info
     csrw satp, t1
 
-    //flush TLB so it applies
+    //flush TLB so it applies changes which we have made (not satp but VMA table)
     sfence.vma zero, zero
 
     la t3, jump_blank_first_half_vma_table
