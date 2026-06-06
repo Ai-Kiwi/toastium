@@ -1,6 +1,6 @@
 # List of poorly coded things/things to change
  - Gigabyte pages for kernel data
- - No read/write/execute guard on virtual memory regions
+ - No read/write/execute guard on virtual memory regions for kernelspace
  - No memory overlap handling for pager memory regions
  - bitmaps overlap with page size meaning data will be passed to user in virtual memory
  - Using int instead of size_t. Same for long and char.
@@ -11,3 +11,5 @@
  - Allocator should use multipages when support is added
  - pager should have double past location buffer
  - allocator no cache system for last free
+ - virtual memory assigns page by page not in bulk
+ - virtual memory doesn't support mega or giga pages
