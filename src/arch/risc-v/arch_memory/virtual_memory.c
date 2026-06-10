@@ -7,34 +7,27 @@
 #include "kernel/memory/pager.h"
 #include "kernel/safety/panic.h"
 #include "kernel/process/process.h"
-
-#define VMA_READ  (1 << 1)
-#define VMA_WRITE (1 << 2)
-#define VMA_EXEC  (1 << 3)
-
-#define VMA_VALID (1 << 0)
-#define VMA_USER  (1 << 4)
-#define VMA_GLOBAL  (1 << 5)
+#include "virtual_memory.h"
 
 u64 arch_virtual_memory_create_root_table() {
     u64 new_page_address = kernel_pager_acquire();
     return new_page_address;
 }
 
-void arch_virtual_memory_assign_page(process_info process, u64 virtual_address, u64 physical_address, u64 argument_flags) {
+void arch_virtual_memory_assign_page(u64 root_table, u64 process_asid, u64 virtual_address, u64 physical_address, u64 argument_flags) {
     u64 ppn0_offset; //least significant
     u64 ppn1_offset;
     u64 ppn2_offset; //most significant
 
     if (virtual_address % 4096) {
-        PANIC("VMA_ASSIGN_NOT_PAGE_ALIGN", (s64)process.virtual_memory_root_table, (s64)virtual_address, (s64)physical_address);
+        PANIC("VMA_ASSIGN_NOT_PAGE_ALIGN", (s64)root_table, (s64)virtual_address, (s64)physical_address);
     }
 
     u64 ranged_virtual_address = virtual_address;
     //move down if kernel space address
     if (ranged_virtual_address > 0x4000000000) {
         if (ranged_virtual_address < 0xffffffc000000000) {
-            PANIC("VMA_ASSIGN_BETWEEN_USERSPACE_AND_KERNELSPACE", (s64)process.virtual_memory_root_table, (s64)virtual_address, (s64)physical_address)
+            PANIC("VMA_ASSIGN_BETWEEN_USERSPACE_AND_KERNELSPACE", (s64)root_table, (s64)virtual_address, (s64)physical_address)
         }
         ranged_virtual_address = ranged_virtual_address - (0xffffffc000000000 - 0x4000000000);
     }
@@ -47,7 +40,7 @@ void arch_virtual_memory_assign_page(process_info process, u64 virtual_address, 
     ppn1_offset = ppn1_offset % 512;
     ppn2_offset = ppn2_offset % 512;
 
-    u64 *ppn2_table = (u64 *)process.virtual_memory_root_table;
+    u64 *ppn2_table = (u64 *)root_table;
     if (ppn2_table[ppn2_offset] & 0x1 == 0) {
         u64 new_page_address = kernel_pager_acquire();
         new_page_address = new_page_address / 4096;
@@ -74,15 +67,15 @@ void arch_virtual_memory_assign_page(process_info process, u64 virtual_address, 
 
     ppn0_table[ppn0_offset] = ((physical_address / 4096) << 10) | argument_flags | VMA_VALID;
 
-    asm volatile ("sfence.vma %0, %1" :: "r"(virtual_address), "r"(process.virtual_memory_number) : "memory"); //push cache update, only to current asid
+    asm volatile ("sfence.vma %0, %1" :: "r"(virtual_address), "r"(process_asid) : "memory"); //push cache update, only to current asid
 }
 
-void arch_virtual_memory_assign_kernel_page(process_info process, u64 virtual_address, u64 physical_address, u64 argument_flags) {
-    arch_virtual_memory_assign_page(process, virtual_address, physical_address, argument_flags);
+void arch_virtual_memory_assign_kernel_page(u64 root_table, u64 process_cache_number, u64 virtual_address, u64 physical_address, u64 argument_flags) {
+    arch_virtual_memory_assign_page(root_table, process_cache_number, virtual_address, physical_address, argument_flags);
 }
 
-void arch_virtual_memory_assign_user_page(process_info process, u64 virtual_address, u64 physical_address, u64 argument_flags) {
-    arch_virtual_memory_assign_page(process, virtual_address, physical_address, argument_flags | VMA_USER);
+void arch_virtual_memory_assign_user_page(u64 root_table, u64 process_cache_number, u64 virtual_address, u64 physical_address, u64 argument_flags) {
+    arch_virtual_memory_assign_page(root_table, process_cache_number, virtual_address, physical_address, argument_flags | VMA_USER);
 }
 
 void arch_virtual_memory_change_table(process_info process) {

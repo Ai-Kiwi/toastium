@@ -49,4 +49,7 @@ typedef enum {
 
 u64 kernel_handle_trap();
 
+void kernel_trap_frame_set_process(process_info *process);
+void kernel_trap_frame_set_kernel(process_info *process);
+
 #endif

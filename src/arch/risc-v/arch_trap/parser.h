@@ -3,7 +3,7 @@
 
 #include "kernel/trap/handler.h"
 #include "include/types.h"
-typedef struct {
+typedef struct { //each split into page so doesn't need to be 64 byte aligned
     u64 register_1;
     u64 register_2;
     u64 register_3;
@@ -39,7 +39,10 @@ typedef struct {
     u64 sepc; //What instruction caused trap (Instruction location)
     u64 stval; //Extra trap info, e.g page fault says address in question
     u64 sstatus; //Privilege level machine was in.
-} arch_trap_frame;
+    u64 process_pointer;
+    u64 satp;
+    u64 hart_id;
+} arch_trapframe;
 
 void arch_parse_trap_data(kernel_trap_data trap);
 

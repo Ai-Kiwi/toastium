@@ -12,4 +12,6 @@ pid kernel_scheduler_next_process() {
 
 void kernel_schedular_init() {
     kernel_running_process = null_program_pid;
+    //make sure to set process trapframe hart_id to correct value, both kernel and userspace
+
 }
