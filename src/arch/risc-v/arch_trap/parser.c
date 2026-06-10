@@ -9,7 +9,7 @@
 #include "include/board.h"
 #include "parser.h"
 
-void arch_parse_trap_data(kernel_trap_data trap) {//will have pointer input here that points to reg data on stack
+void arch_parse_trap_data(kernel_trap_data trap) {//will have ptr input here that points to reg data on stack
     arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
 
     const u64 is_interrupt = trap_frame_data->scause & BIT(63); //last bit
@@ -17,7 +17,7 @@ void arch_parse_trap_data(kernel_trap_data trap) {//will have pointer input here
     const u64 is_user_mode = trap_frame_data->scause & BIT(8);
 
     trap.fault_pc = trap_frame_data->sepc;
-    trap.fault_address = trap_frame_data->stval;
+    trap.fault_addr = trap_frame_data->stval;
     if (is_user_mode) {
         trap.privilege = KTRAP_MODE_USER;
     }else{
@@ -51,18 +51,18 @@ void arch_parse_trap_data(kernel_trap_data trap) {//will have pointer input here
             trap.code = KTRAP_EXTERNAL_INTERRUPT;
             trap.privilege = KTRAP_MODE_MACHINE;
             break;
-        case 13UL: //Counter-overflow interrupt
+        case 13UL: //cnter-overflow interrupt
             //will code support for later when needed
-            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code, trap.fault_address, trap.fault_pc);
+            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code, trap.fault_addr, trap.fault_pc);
             break;
         default:
-            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code, trap.fault_address, trap.fault_pc);
+            PANIC("UNHANDLED_TRAP_INTERRUPT_OCCURRED",trap_code, trap.fault_addr, trap.fault_pc);
             break;
         }
     }else{
         trap.trap_type = KTRAP_TYPE_EXCEPTION;
         switch (trap_code){
-        case 0UL: //Instruction address misaligned
+        case 0UL: //Instruction addr misaligned
             trap.code = KTRAP_ACCESS_MISALIGNED;
             break;
         case 1UL: //Instruction access fault
@@ -117,7 +117,7 @@ void arch_parse_trap_data(kernel_trap_data trap) {//will have pointer input here
             trap.code = KTRAP_HARDWARE_ERROR;
             break;
         default:
-            PANIC("UNHANDLED_TRAP_EXCEPTION_OCCURRED",trap_code, trap.fault_address, trap.fault_pc);
+            PANIC("UNHANDLED_TRAP_EXCEPTION_OCCURRED",trap_code, trap.fault_addr, trap.fault_pc);
             break;
         }
     }

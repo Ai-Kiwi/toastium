@@ -27,9 +27,9 @@
 //input args will later be changed as move to disk reading happens
 //returns response code
 u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
-    u64 page_count = (size_bytes / KERNEL_PAGE_SIZE) + 1;
+    u64 page_cnt = (size_bytes / KERNEL_PAGE_SIZE) + 1;
 
-    u64 leading_zeros = __builtin_clzl(page_count);
+    u64 leading_zeros = __builtin_clzl(page_cnt);
     u64 compressed_size = (63-leading_zeros);
 
     u64 needed_depth = (compressed_size / 4) + 1;
@@ -37,19 +37,19 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
     //setup a way so that it can be read as one sequential set despite being loaded as 
     u64 table_root = kernel_radix_create_tree(4); //one nibble
 
-    u64 pointer_location = 0x0;
+    u64 ptr_location = 0x0;
 
-    u64 chunk_number = pointer_location / KERNEL_PAGE_SIZE;
-    u64 location_in_chunk = pointer_location % KERNEL_PAGE_SIZE;
+    u64 chunk_num = ptr_location / KERNEL_PAGE_SIZE;
+    u64 location_in_chunk = ptr_location % KERNEL_PAGE_SIZE;
 
-    u64 *page_data = (u64 *)kernel_radix_get_child(table_root, chunk_number, needed_depth, 4);
+    u64 *page_data = (u64 *)kernel_radix_get_child(table_root, chunk_num, needed_depth, 4);
 
     //load data into pages
-    for (u64 page_number=0; page_number < size_bytes / KERNEL_PAGE_SIZE; page_number++) {
+    for (u64 page_num=0; page_num < size_bytes / KERNEL_PAGE_SIZE; page_num++) {
         u64 *chunk_data = (u64 *)kernel_pager_acquire(); 
-        u64 chunk_pointer = (u64)kernel_radix_create_child(table_root, page_number, (u64)chunk_data, needed_depth, 4);
+        u64 chunk_ptr = (u64)kernel_radix_create_child(table_root, page_num, (u64)chunk_data, needed_depth, 4);
         for (u64 j=0; j < KERNEL_PAGE_SIZE/8; j++) {
-            u64 data_location = (page_number * KERNEL_PAGE_SIZE) + (j * 8);
+            u64 data_location = (page_num * KERNEL_PAGE_SIZE) + (j * 8);
 
             if (data_location >= size_bytes) {
                 break;
@@ -66,9 +66,9 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
         return KEP_RNSR;
     }
 
-    u32 *magic_pointer = (u32 *)first_page;
+    u32 *magic_ptr = (u32 *)first_page;
 
-    if (big_endian_u32_to_host(*magic_pointer) == 0x7F454c46) {
+    if (big_endian_u32_to_host(*magic_ptr) == 0x7F454c46) {
         uart_println_str("ELF_PARSER : Invalid magic header");
         return KEP_IMH;
     }
@@ -95,10 +95,10 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
     //0x08 further arch ABI details for my os ignored
     //0x09 - 0x0F padding not used
 
-    u16 *elf_type_pointer = (u16 *)first_page[0x10];
+    u16 *elf_type_ptr = (u16 *)first_page[0x10];
     u16 elf_type = elf_little_endian == TRUE ?
-    little_endian_u16_to_host(*elf_type_pointer) :
-    big_endian_u16_to_host(*elf_type_pointer);
+    little_endian_u16_to_host(*elf_type_ptr) :
+    big_endian_u16_to_host(*elf_type_ptr);
 
     if (elf_type != ELF_TYPE_EXECUTABLE) {
         uart_println_str("ELF_PARSER : Unsupported elf type");
@@ -106,10 +106,10 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
     }
 
 
-    u16 *elf_machine_pointer = (u16 *)first_page[0x12];
+    u16 *elf_machine_ptr = (u16 *)first_page[0x12];
     u16 elf_machine = elf_little_endian == TRUE ?
-    little_endian_u16_to_host(*elf_machine_pointer) :
-    big_endian_u16_to_host(*elf_machine_pointer);
+    little_endian_u16_to_host(*elf_machine_ptr) :
+    big_endian_u16_to_host(*elf_machine_ptr);
 
     if (elf_machine != ELF_MACHINE_RISC_V) {
         uart_println_str("ELF_PARSER : Unsupported architecture machine");
@@ -122,20 +122,20 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
     //This means that the offset and location will change
     //this applies to many below so if 32bit support needs to be looped over
 
-    u64 *entry_location_pointer = (u64 *)first_page[0x18];
+    u64 *entry_location_ptr = (u64 *)first_page[0x18];
     u64 entry_location = elf_little_endian == TRUE ?
-    little_endian_u64_to_host(*entry_location_pointer) :
-    big_endian_u64_to_host(*entry_location_pointer);
+    little_endian_u64_to_host(*entry_location_ptr) :
+    big_endian_u64_to_host(*entry_location_ptr);
 
-    u64 *start_program_header_table_pointer = (u64 *)first_page[0x20];
+    u64 *start_program_header_table_ptr = (u64 *)first_page[0x20];
     u64 start_program_header_table = elf_little_endian == TRUE ?
-    little_endian_u64_to_host(*start_program_header_table_pointer) :
-    big_endian_u64_to_host(*start_program_header_table_pointer);
+    little_endian_u64_to_host(*start_program_header_table_ptr) :
+    big_endian_u64_to_host(*start_program_header_table_ptr);
 
-    u64 *start_section_header_table_pointer = (u64 *)first_page[0x28];
+    u64 *start_section_header_table_ptr = (u64 *)first_page[0x28];
     u64 start_section_header_table = elf_little_endian == TRUE ?
-    little_endian_u64_to_host(*start_section_header_table_pointer) :
-    big_endian_u64_to_host(*start_section_header_table_pointer);
+    little_endian_u64_to_host(*start_section_header_table_ptr) :
+    big_endian_u64_to_host(*start_section_header_table_ptr);
 
     //TODO: 0x30 contains flags on features of arch needed for it to run
     //currently this is just ignored. Planning to make it read and decline if not needed in future
@@ -146,20 +146,20 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
 
     //size of program header table at 0x36 can just ignore again. Fixed size
 
-    u16 *program_header_entry_count_pointer = (u16 *)first_page[0x12];
-    u16 program_header_entry_count = elf_little_endian == TRUE ?
-    little_endian_u16_to_host(*program_header_entry_count_pointer) :
-    big_endian_u16_to_host(*program_header_entry_count_pointer);
+    u16 *program_header_entry_cnt_ptr = (u16 *)first_page[0x12];
+    u16 program_header_entry_cnt = elf_little_endian == TRUE ?
+    little_endian_u16_to_host(*program_header_entry_cnt_ptr) :
+    big_endian_u16_to_host(*program_header_entry_cnt_ptr);
 
-    u16 *section_header_table_entry_count_pointer = (u16 *)first_page[0x12];
-    u16 section_header_table_entry_count = elf_little_endian == TRUE ?
-    little_endian_u16_to_host(*section_header_table_entry_count_pointer) :
-    big_endian_u16_to_host(*section_header_table_entry_count_pointer);
+    u16 *section_header_table_entry_cnt_ptr = (u16 *)first_page[0x12];
+    u16 section_header_table_entry_cnt = elf_little_endian == TRUE ?
+    little_endian_u16_to_host(*section_header_table_entry_cnt_ptr) :
+    big_endian_u16_to_host(*section_header_table_entry_cnt_ptr);
 
-    u16 *index_section_header_table_entry_count_pointer = (u16 *)first_page[0x12];
-    u16 index_section_header_table_entry_count = elf_little_endian == TRUE ?
-    little_endian_u16_to_host(*index_section_header_table_entry_count_pointer) :
-    big_endian_u16_to_host(*index_section_header_table_entry_count_pointer);
+    u16 *idx_section_header_table_entry_cnt_ptr = (u16 *)first_page[0x12];
+    u16 idx_section_header_table_entry_cnt = elf_little_endian == TRUE ?
+    little_endian_u16_to_host(*idx_section_header_table_entry_cnt_ptr) :
+    big_endian_u16_to_host(*idx_section_header_table_entry_cnt_ptr);
 
 
 
@@ -169,7 +169,7 @@ u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
     //get a array of header data then will iterate on that.
     //hard part is keeping in mind page locations for performance.
 
-    for (s32 i = 0; i < program_header_entry_count; i++) {
+    for (s32 i = 0; i < program_header_entry_cnt; i++) {
 
     }
 

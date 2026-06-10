@@ -31,7 +31,7 @@ void kernel_device_tree_init(u8 *kernel_end) {
     //}
 }
 
-device_info *kernel_device_tree_pointer() {
+device_info *kernel_device_tree_ptr() {
     if (!kernel_device_list_len) {
         PANIC("DEVICE_TREE_FETCHED_BUT_NOT_INIT",0,0,0);
     }
@@ -46,7 +46,7 @@ u32 kernel_device_tree_length() {
     return kernel_device_list_len;
 }
 
-u8 *kernel_device_tree_end_pointer() {
+u8 *kernel_device_tree_end_ptr() {
     if (!kernel_device_list_len) {
         PANIC("DEVICE_TREE_FETCHED_BUT_NOT_INIT",0,0,0);
     }

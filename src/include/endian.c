@@ -77,8 +77,8 @@ u16 little_endian_u16_to_host(u16 little_endian) {
 
 void init_endian_conversion() {
     endian_type = 1;
-    u8 *pointer = (u8 *)&endian_type;
-    if (*pointer == 0) {
+    u8 *ptr = (u8 *)&endian_type;
+    if (*ptr == 0) {
         endian_type = BIG_ENDIAN;
     }else{
         endian_type = LITTLE_ENDIAN;

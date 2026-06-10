@@ -6,7 +6,7 @@
 .align 4
 
 trap_entry:
-    STORE_TRAP_FRAME #TODO: make this include floating point, also 90% sure stack pointer won't work propperly
+    STORE_TRAP_FRAME #TODO: make this include floating point, also 90% sure stack ptr won't work propperly
 
     # setup restore once done
     mv a0, sp

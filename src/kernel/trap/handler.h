@@ -18,7 +18,7 @@ typedef enum {
     KTRAP_SOFTWARE_INTERRUPT,
     KTRAP_TIMER_INTERRUPT,
     KTRAP_EXTERNAL_INTERRUPT,
-    //COUNTER_OVERFLOW_INTERRUPT, unhandled for now until needed
+    //cntER_OVERFLOW_INTERRUPT, unhandled for now until needed
 
     //Exception
     KTRAP_ACCESS_MISALIGNED,
@@ -38,7 +38,7 @@ typedef struct {
     privilege_mode privilege;
     kernel_trap_code code;
     u64 fault_pc;
-    u64 fault_address;
+    u64 fault_addr;
 } kernel_trap_data;
 
 typedef enum {
@@ -49,7 +49,5 @@ typedef enum {
 
 u64 kernel_handle_trap();
 
-void kernel_trap_frame_set_process(process_info *process);
-void kernel_trap_frame_set_kernel(process_info *process);
 
 #endif

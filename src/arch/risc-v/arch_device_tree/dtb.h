@@ -4,9 +4,9 @@
 #include "arch_device_tree/dtb.h"
 #include "kernel/devices/device_tree.h"
 
-void set_device_tree_block_location(u8 *new_device_tree_blob);
+void arch_set_dtb_location(u8 *new_dtb);
 device_info_dump_response arch_parse_dtb_ram(u8 *output_location);
-u32 arch_dtb_read_int(u8 *pointer);
+u32 arch_dtb_read_int(u8 *ptr);
 
 
 #endif

@@ -13,8 +13,8 @@ typedef struct {
     bool8 in_kernel_space;
     arch_trapframe *userspace_trap_frame;
     arch_trapframe *kernelspace_trap_frame;
-    u64 *virtual_memory_root_table;
-    u16 virtual_memory_number; // in risc-v also known as ASID
-} __attribute__((aligned(64))) process_info;
+    u64 *vma_table;
+    u16 asid; // in risc-v also known as ASID
+} __attribute__((aligned(64))) kernel_process;
 
 #endif

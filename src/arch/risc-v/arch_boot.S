@@ -34,14 +34,14 @@ setup_vma:
 
     li t6, 2048 // 2048 stored
 
-    addi t1, zero, 0 //loop number
+    addi t1, zero, 0 //loop num
 
     j setup_vmn_table
 
 setup_vmn_table:
     //t0 : vma location
-    //t1 : loop number (bytes)
-    //t2 : loop number
+    //t1 : loop num (bytes)
+    //t2 : loop num
     //t3 : output location
     //t4 : page entry
     //t5 : PPN DATA
@@ -80,7 +80,7 @@ setup_vmn_table:
 finish_vma_setup:
 
     //t0 is base vma table location
-    //ASID needs to be highest number as this will be reserved for kernel process
+    //ASID needs to be highest num as this will be reserved for kernel process
     la t1, _kernel_vma_offset_table
     li t2, 4096
     div t1, t1, t2

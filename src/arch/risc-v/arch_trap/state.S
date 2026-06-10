@@ -92,7 +92,7 @@
     ld x30, 232(x1)
     ld x31, 240(x1)
 
-    #loads in x1 last as being used as pointer right now
+    #loads in x1 last as being used as ptr right now
     ld x1, 0(x1)
     fence rw, rw
 .endm

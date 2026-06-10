@@ -73,15 +73,15 @@ void uart_println_u8_hex(const u8 hex_value) {
     uart_print_char('\n');
 }
 
-//numbers
-void uart_print_u64(u64 number) {
+//nums
+void uart_print_u64(u64 num) {
     u8 digits[20] = {};
     s32 bottom = 0;
     for (s32 i=19; i > -1; i=i-1) {
-        u8 digit = number % 10;
+        u8 digit = num % 10;
         digits[i] = digit;
-        number /= 10;
-        if (number == 0) {
+        num /= 10;
+        if (num == 0) {
             bottom = i;
             break;
         }
@@ -92,24 +92,24 @@ void uart_print_u64(u64 number) {
     }
 }
 
-void uart_println_u64(u64 number) {
-    uart_print_u64(number);
+void uart_println_u64(u64 num) {
+    uart_print_u64(num);
     uart_print_char('\n');
 }
 
-void uart_print_s64(s64 number) {
-    if (number < 0) {
+void uart_print_s64(s64 num) {
+    if (num < 0) {
         uart_print_char('-');
-        number = -number;
+        num = -num;
     }
 
     u8 digits[20] = {};
     s32 bottom = 0;
     for (s32 i=19; i > -1; i=i-1) {
-        u8 digit = number % 10;
+        u8 digit = num % 10;
         digits[i] = digit;
-        number /= 10;
-        if (number == 0) {
+        num /= 10;
+        if (num == 0) {
             bottom = i;
             break;
         }
@@ -120,8 +120,8 @@ void uart_print_s64(s64 number) {
     }
 }
 
-void uart_println_s64(s64 number) {
-    uart_print_s64(number);
+void uart_println_s64(s64 num) {
+    uart_print_s64(num);
     uart_print_char('\n');
 }
 

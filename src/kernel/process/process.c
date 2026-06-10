@@ -12,23 +12,23 @@
 u64 process_upto = 0;
 u64 *process_radix_root = 0;
 
-process_info *kernel_process_from_id(pid process_id) {
-    return (process_info *)kernel_radix_get_child((u64)process_radix_root, process_id, pid_levels, pid_level_depth);
+kernel_process *kernel_process_from_id(pid process_id) {
+    return (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_id, pid_levels, pid_level_depth);
 }
 
-process_info *new_blank_process() {
-    process_info *current_process; //Non zero
+kernel_process *new_blank_process() {
+    kernel_process *current_process; //Non zero
     while (TRUE){
-        current_process = (process_info *)kernel_radix_get_child((u64)process_radix_root, process_upto, pid_levels, pid_level_depth);
+        current_process = (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_upto, pid_levels, pid_level_depth);
         if (!current_process) {
             break;
         }
         process_upto++;
     }
-    process_info new_process;
+    kernel_process new_process;
     new_process.process_id = process_upto;
 
-    process_info *process = (process_info *)kernel_allocator_acquire(sizeof(process_info));
+    kernel_process *process = (kernel_process *)kernel_allocator_acquire(sizeof(kernel_process));
     *process = new_process;
 
     u64 old_child = (u64)kernel_radix_create_child((u64)process_radix_root,process->process_id,(u64)process,pid_levels,pid_level_depth);
@@ -37,7 +37,7 @@ process_info *new_blank_process() {
     }
 
     process_upto++;//increase for next process
-    return (process_info *)process;
+    return (kernel_process *)process;
 }
 
 
@@ -47,7 +47,7 @@ void init_processes() {
 
     process_upto = 0;
     //process 0 is idle process
-    process_info *idle_process = new_blank_process();
+    kernel_process *idle_process = new_blank_process();
     if (idle_process->process_id != 0) {
         PANIC("IDLE_PROCESS_NO_ZERO_ID",idle_process->process_id,0,0);
     }

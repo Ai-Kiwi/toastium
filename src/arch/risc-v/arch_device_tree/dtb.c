@@ -4,8 +4,8 @@
 #include "kernel/devices/device_tree.h"
 #include "arch_device_tree/dtb.h"
 
-u32 arch_dtb_read_int(u8 *pointer) {
-    return (pointer[0] << 24) | (pointer[1] << 16) | (pointer[2] << 8) | pointer[3];
+u32 arch_dtb_read_int(u8 *ptr) {
+    return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
 }
 
 typedef struct {
@@ -22,34 +22,34 @@ typedef struct {
 } dtb_header;
 
 
-u8 *device_tree_blob = 0;
+u8 *dtb = 0;
 
-void set_device_tree_block_location(u8 *new_device_tree_blob) {
-    device_tree_blob = new_device_tree_blob;
+void arch_set_dtb_location(u8 *new_dtb) {
+    dtb = new_dtb;
 }
 
 device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
     uart_println_str("Parsing DTB");
 
-    if (!&device_tree_blob) {
-        PANIC("BLANK_DTB_LOCATION",(u64)device_tree_blob, 0, 0);
+    if (!&dtb) {
+        PANIC("BLANK_DTB_LOCATION",(u64)dtb, 0, 0);
     }
 
     dtb_header header;
-    header = *(volatile dtb_header*)device_tree_blob;
+    header = *(volatile dtb_header*)dtb;
 
-    header.magic_header = arch_dtb_read_int(device_tree_blob);
-    header.total_size = arch_dtb_read_int(&device_tree_blob[4]);
-    header.struct_offset = arch_dtb_read_int(&device_tree_blob[8]);
-    header.strings_offset = arch_dtb_read_int(&device_tree_blob[12]);
-    header.memory_offset = arch_dtb_read_int(&device_tree_blob[16]);
-    header.version = arch_dtb_read_int(&device_tree_blob[20]);
-    header.comptaible_version = arch_dtb_read_int(&device_tree_blob[24]);
-    header.boot_cpu = arch_dtb_read_int(&device_tree_blob[28]);
-    header.strings_size = arch_dtb_read_int(&device_tree_blob[32]);
-    header.struct_size = arch_dtb_read_int(&device_tree_blob[36]);
+    header.magic_header = arch_dtb_read_int(dtb);
+    header.total_size = arch_dtb_read_int(&dtb[4]);
+    header.struct_offset = arch_dtb_read_int(&dtb[8]);
+    header.strings_offset = arch_dtb_read_int(&dtb[12]);
+    header.memory_offset = arch_dtb_read_int(&dtb[16]);
+    header.version = arch_dtb_read_int(&dtb[20]);
+    header.comptaible_version = arch_dtb_read_int(&dtb[24]);
+    header.boot_cpu = arch_dtb_read_int(&dtb[28]);
+    header.strings_size = arch_dtb_read_int(&dtb[32]);
+    header.struct_size = arch_dtb_read_int(&dtb[36]);
 
-    u32 magic_code = arch_dtb_read_int(device_tree_blob);
+    u32 magic_code = arch_dtb_read_int(dtb);
     if (header.magic_header != 0xD00DFEED) {
         PANIC("INCORRECT_DTB_MAGIC_HEADER",header.comptaible_version, 0, 0);
     }
@@ -65,7 +65,7 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
     s32 node_stack_depth = 0;
 
     for (u32 byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
-        u32 item_value = arch_dtb_read_int(&device_tree_blob[byte_location]);
+        u32 item_value = arch_dtb_read_int(&dtb[byte_location]);
 
         //uart_print_u64_hex((u64)byte_location);
         //for (s32 i=0; i<node_stack_depth; i++) {
@@ -74,14 +74,14 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
 
         switch (item_value){
         case 0x00000001: //node start
-            node_stack[node_stack_depth] = (u8 *)&device_tree_blob[(byte_location + 4)];
+            node_stack[node_stack_depth] = (u8 *)&dtb[(byte_location + 4)];
             node_stack_depth += 1;
             if (node_stack_depth > 9) {PANIC("DTB_STACK_DEPTH_TO_HIGH", byte_location, 0, 0);}
             //read name
             //uart_print_str("* ");
-            //uart_println_str(&device_tree_blob[byte_location + 4]);
+            //uart_println_str(&dtb[byte_location + 4]);
             s32 offset = 0;
-            while (device_tree_blob[byte_location + offset + 4] != '\0'){
+            while (dtb[byte_location + offset + 4] != '\0'){
                 offset += 1;
             }
             offset = ((offset+4) / 4) * 4;
@@ -96,11 +96,11 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
             //uart_println_str("nop");
             continue;
         case 0x00000003: //property
-            u32 prop_size = arch_dtb_read_int(&device_tree_blob[(byte_location + 4)]);
-            u32 name_offset = arch_dtb_read_int(&device_tree_blob[(byte_location + 8)]);
+            u32 prop_size = arch_dtb_read_int(&dtb[(byte_location + 4)]);
+            u32 name_offset = arch_dtb_read_int(&dtb[(byte_location + 8)]);
 
             //get name
-            u8 *prop_name = &device_tree_blob[header.strings_offset + name_offset];
+            u8 *prop_name = &dtb[header.strings_offset + name_offset];
             //uart_print_str("-PROP: ");
             //uart_println_str(prop_name);
 
@@ -109,7 +109,7 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
                 device_info device;
                 device.node_depth = node_stack_depth;
                 device.name = prop_name;
-                device.value = &device_tree_blob[(byte_location + 12)];
+                device.value = &dtb[(byte_location + 12)];
                 device.value_len = prop_size;
                 for (s32 i=0; i<node_stack_depth; i++) {
                     device_parents[device_list_len][i] = (u8 *)node_stack[node_stack_depth - 1 - i];
