@@ -1,7 +1,6 @@
 #ifndef ARCH_DTB_H
 #define ARCH_DTB_H
 
-#include "arch_device_tree/dtb.h"
 #include "kernel/devices/device_tree.h"
 
 void arch_set_dtb_location(u8 *new_dtb);
