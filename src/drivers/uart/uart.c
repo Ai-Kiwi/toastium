@@ -4,14 +4,14 @@
 #include "include/types.h"
 
 //strings
-void uart_print_char(const u8 print_char) {
+void uart_print_char(const char print_char) {
     uart_16550_output_u8(print_char);
     if (print_char == '\n') {
         uart_16550_output_u8('\r');
     }
 }
 
-void uart_print_str(const u8 *print_string) {
+void uart_print_str(const char *print_string) {
     for (u8 *p = print_string; *p != '\0' ; p++) {
         uart_16550_output_u8(*p);
     }
@@ -23,12 +23,12 @@ void uart_init() {
 
 
 //All utils below built off this man one.
-void uart_println_char(const u8 print_char) {
+void uart_println_char(const char print_char) {
     uart_print_char(print_char);
     uart_print_char('\n');
 }
 
-void uart_println_str(const u8 *print_string) {
+void uart_println_str(const char *print_string) {
     uart_print_str(print_string);
     uart_print_char('\n');
 }

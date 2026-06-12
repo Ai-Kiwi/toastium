@@ -3,14 +3,14 @@
 
 #include "include/types.h"
 
-void uart_print_str(const u8 *print_string);
-void uart_print_char(const u8 print_char);
+void uart_print_str(const char *print_string);
+void uart_print_char(const char print_char);
 void uart_init();
 
 
 //utils, will be moved to debug service when needed as this becomes real driver
-void uart_println_str(const u8 *print_string);
-void uart_println_char(const u8 print_char) ;
+void uart_println_str(const char *print_string);
+void uart_println_char(const char print_char) ;
 
 void uart_print_u64_hex(const u64 hex_value);
 void uart_println_u64_hex(const u64 hex_value);

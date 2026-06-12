@@ -3,7 +3,7 @@
 #include "kernel/safety/panic.h"
 #include "include/board.h"
 
-void kernel_panic(const u8 *file, const s64 file_line, const u8 *function, const u8 *message, s64 extra_value_1, s64 extra_value_2, s64 extra_value_3) {
+void kernel_panic(const char *file, const s64 file_line, const u8 *function, const u8 *message, s64 extra_value_1, s64 extra_value_2, s64 extra_value_3) {
     uart_println_str("");
     uart_println_str(" _  ________ _____  _   _ ______ _        _____        _   _ _____ _____ ");
     uart_println_str("| |/ /  ____|  __ \\| \\ | |  ____| |      |  __ \\ /\\   | \\ | |_   _/ ____|");
