@@ -168,3 +168,6 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
 
 }
 
+u64 arch_dtb_get_hart_count() {
+    return 1;
+}

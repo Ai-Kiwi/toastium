@@ -32,9 +32,13 @@ void kernel_main() {
     kernel_stack_init();
     kernel_safety_test();
 
+    uart_println_str("fetching core count");
+    u64 hart_count = arch_dtb_get_hart_count();
+    u64 dtb_location = ((u64)&_kernel_end) + (hart_count * HART_KERNEL_STACK_SIZE) + 8;
+
     //setup device tree
     uart_println_str("Initializing device tree");
-    kernel_device_tree_init((u8*)&_kernel_end);
+    kernel_device_tree_init((u8*)dtb_location);
 
     uart_println_str("Initializing pager");
     kernel_pager_init();

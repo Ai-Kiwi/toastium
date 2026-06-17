@@ -40,8 +40,6 @@ typedef struct { //each split into page so doesn't need to be 64 byte aligned
     u64 stval; //Extra trap info, e.g page fault says address in question
     u64 sstatus; //Privilege level machine was in.
     u64 process_ptr;
-    u64 satp;
-    u64 hart_id;
 } arch_trapframe;
 
 void arch_parse_trap_data(kernel_trap_data trap);

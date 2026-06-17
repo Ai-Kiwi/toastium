@@ -66,7 +66,3 @@ void kill_process(pid process_id) {
     //arch_processes_trap_info[kernel_process_id] = ;
 
 }
-
-
-
-

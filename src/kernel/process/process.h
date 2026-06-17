@@ -14,7 +14,8 @@ typedef struct {
     arch_trapframe *userspace_trap_frame;
     arch_trapframe *kernelspace_trap_frame;
     u64 *vma_table;
-    u16 asid; // in risc-v also known as ASID
+    u16 runing_hart_id;
+    u16 vma_addr_space_id; // in risc-v also known as ASID
 } __attribute__((aligned(64))) kernel_process;
 
 #endif

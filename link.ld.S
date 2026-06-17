@@ -68,5 +68,8 @@ SECTIONS
         . += 4096;
     }:data
 
+    . = ALIGN(4096);
+
     _kernel_end = .;
+    _hart_stacks_start = .;
 }

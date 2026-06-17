@@ -7,8 +7,8 @@
 void kernel_trap_process_kernel() {
     //need to some how get process
 
-    //process_info *ptr_process = (process_info *)process_trapframe->process_ptr;
     arch_trapframe *process_trapframe = (arch_trapframe *)TRAPFRAME_ADDRESS;
+    kernel_process *process = (kernel_process *)process_trapframe->process_ptr;
 
 
 
@@ -17,7 +17,7 @@ void kernel_trap_process_kernel() {
 
 
 
-    //arch_vma_assign_kernel(process, TRAPFRAME_ADDRESS, (u64)process->kernelspace_trap_frame, VMA_READ | VMA_WRITE);
+    arch_vma_assign_kernel(process, TRAPFRAME_ADDRESS, (u64)process->kernelspace_trap_frame, VMA_READ | VMA_WRITE);
     //change process state to say that its runnning as 
     arch_irq_enable();
 
@@ -29,6 +29,6 @@ void kernel_trap_process_kernel() {
 
 
     arch_irq_disable();
-    //arch_vma_assign_kernel(process, TRAPFRAME_ADDRESS, (u64)process->userspace_trap_frame, VMA_READ | VMA_WRITE);
+    arch_vma_assign_kernel(process, TRAPFRAME_ADDRESS, (u64)process->userspace_trap_frame, VMA_READ | VMA_WRITE);
     //store process as running in user state
 }
