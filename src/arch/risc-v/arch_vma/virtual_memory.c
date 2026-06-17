@@ -8,18 +8,29 @@
 #include "kernel/safety/panic.h"
 #include "kernel/process/process.h"
 #include "virtual_memory.h"
+#include "board.h"
 
 u64 arch_vma_create() {
     u64 new_page_addr = kernel_pager_acquire();
+    
+    //create kernel mapping
+    ///allow read/write/execute, mark as global for optimization, is valid and also mark as already dirty and accessed for performance.
+    const u64 access_mask = 0xEF;
+    volatile u64 *entry_leaf = (u64 *)new_page_addr;
+    for (s32 i=0; i<256; i++) {
+        entry_leaf[256 + i] = (i << 28) | access_mask;
+    }
     return new_page_addr;
 }
 
-void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
+void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, u64 arg_flags) {
     u64 ppn0_offset; //least significant
     u64 ppn1_offset;
     u64 ppn2_offset; //most significant
 
-    if (virt_addr % 4096) {
+    u64 phys_addr = vma_phys_addr - KERNEL_VMA_START;
+
+    if (virt_addr % 4096 || phys_addr % 4096) {
         PANIC("VMA_ASSIGN_NOT_PAGE_ALIGN", (s64)process->vma_table, (s64)virt_addr, (s64)phys_addr);
     }
 

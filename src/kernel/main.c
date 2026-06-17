@@ -47,7 +47,7 @@ void kernel_main() {
     kernel_allocator_init();
 
     uart_println_str("Initializing process handler");
-    init_processes();
+    kernel_processes_init(hart_count);
     kernel_schedular_init();
 
     //enable irq and general interrupts

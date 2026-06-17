@@ -13,3 +13,4 @@
  - allocator no cache system for last free
  - virtual memory assigns page by page not in bulk
  - virtual memory doesn't support mega or giga pages
+ - allocator should be 64byte aligned for cross core. (Mostly header issue, per page and per entry)

@@ -5,7 +5,7 @@
 #include "kernel/process/blocks.h"
 #include "arch_trap/parser.h"
 
-void init_processes();
+void kernel_processes_init(u64 hart_count);
 
 typedef struct {
     pid process_id;

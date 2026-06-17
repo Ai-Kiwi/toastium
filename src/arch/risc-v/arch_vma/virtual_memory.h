@@ -16,5 +16,6 @@ void arch_vma_assign_kernel(kernel_process *process, u64 virt_addr, u64 phys_add
 void arch_vma_assign_user(kernel_process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags);
 
 void arch_change_vma(kernel_process *process);
+u64 arch_vma_create();
 
 #endif

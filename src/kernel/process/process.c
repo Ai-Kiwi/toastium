@@ -1,8 +1,12 @@
 #include "process.h"
+#include "arch_trap/parser.h"
 #include "kernel/trap/handler.h"
 #include "def.h"
 #include "kernel/memory/radix.h"
 #include "kernel/safety/panic.h"
+#include "arch_vma/virtual_memory.h"
+#include "board.h"
+#include "kernel/memory/pager.h"
 
 //upto 65,536 processes
 #define pid_level_depth 4
@@ -27,6 +31,11 @@ kernel_process *new_blank_process() {
     }
     kernel_process new_process;
     new_process.process_id = process_upto;
+    new_process.vma_addr_space_id = -1;
+    new_process.vma_table = (u64 *)arch_vma_create();
+    new_process.userspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
+    new_process.kernelspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
+    arch_vma_assign_kernel((kernel_process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trap_frame, VMA_READ | VMA_WRITE);
 
     kernel_process *process = (kernel_process *)kernel_allocator_acquire(sizeof(kernel_process));
     *process = new_process;
@@ -41,15 +50,18 @@ kernel_process *new_blank_process() {
 }
 
 
-void init_processes() {
+void kernel_processes_init(u64 hart_count) {
     process_radix_root = (u64 *)kernel_radix_create_tree(pid_level_depth);
 
 
     process_upto = 0;
-    //process 0 is idle process
-    kernel_process *idle_process = new_blank_process();
-    if (idle_process->process_id != 0) {
-        PANIC("IDLE_PROCESS_NO_ZERO_ID",idle_process->process_id,0,0);
+
+    for (u64 hart_id = 0; hart_id<hart_count; hart_id++) {
+        kernel_process *idle_process = new_blank_process();
+        if (hart_id != idle_process->process_id) {
+            PANIC("IDLE_PROCESS_INVALID_ID",idle_process->process_id, hart_id,0);
+        }
+        idle_process->runing_hart_id = hart_id;
     }
 
     //TODO: setup vma table fot this idea process
