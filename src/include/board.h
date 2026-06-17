@@ -1,8 +1,6 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "types.h"
-
 //visionfive2 lite
 //# //also change start in linker
 
@@ -33,6 +31,7 @@
 //c only stuff so linker works
 #ifndef LINKER_SCRIPT
 #ifndef __ASSEMBLER__
+    #include "types.h"
     #ifdef BOARD_TARGET == BOARD_TARGET_QEMU
         typedef u8  uart_reg_t;
     #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
