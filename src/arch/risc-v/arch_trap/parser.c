@@ -10,6 +10,7 @@
 #include "parser.h"
 
 void arch_parse_trap_data(kernel_trap_data trap) {//will have ptr input here that points to reg data on stack
+    uart_println_str("kernel trap parser");
     arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
 
     const u64 is_interrupt = trap_frame_data->scause & BIT(63); //last bit

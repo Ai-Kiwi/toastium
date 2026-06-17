@@ -2,11 +2,12 @@
 #include "arch_trap/parser.h"
 #include "arch_vma/virtual_memory.h"
 #include "board.h"
+#include "drivers/uart/uart.h"
 #include "kernel/process/process.h"
 
 void kernel_trap_process_kernel() {
     //need to some how get process
-
+    uart_println_str("kernel process trap");
     arch_trapframe *process_trapframe = (arch_trapframe *)TRAPFRAME_ADDRESS;
     kernel_process *process = (kernel_process *)process_trapframe->process_ptr;
 
@@ -20,6 +21,8 @@ void kernel_trap_process_kernel() {
     arch_vma_assign_kernel(process, TRAPFRAME_ADDRESS, (u64)process->kernelspace_trap_frame, VMA_READ | VMA_WRITE);
     //change process state to say that its runnning as 
     arch_irq_enable();
+
+    uart_println_str("kernel process trap running");
 
     //instead will store info in trap frames
     //will also need changing when trapframes change.

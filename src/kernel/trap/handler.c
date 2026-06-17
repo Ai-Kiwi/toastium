@@ -6,6 +6,7 @@
 #include "arch_trap/parser.h"
 #include "board.h"
 #include "arch_vma/virtual_memory.h"
+#include "drivers/uart/uart.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel
@@ -15,6 +16,8 @@
 u64 kernel_handle_trap() {
     kernel_trap_data trap_data;
     arch_parse_trap_data(trap_data);
+
+    uart_println_str("kernel trap");
 
     //decide to use
 
