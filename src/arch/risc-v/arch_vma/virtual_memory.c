@@ -10,9 +10,12 @@
 #include "virtual_memory.h"
 #include "board.h"
 
+u64 max_asid;
+u64 current_highest_asid;
+
 u64 arch_vma_create() {
     u64 new_page_addr = kernel_pager_acquire();
-    
+
     //create kernel mapping
     ///allow read/write/execute, mark as global for optimization, is valid and also mark as already dirty and accessed for performance.
     const u64 access_mask = 0xEF;
@@ -21,6 +24,28 @@ u64 arch_vma_create() {
         entry_leaf[256 + i] = (i << 28) | access_mask;
     }
     return new_page_addr;
+}
+
+void arch_vma_init() {
+    current_highest_asid = 0;
+
+    //find max ASID
+}
+
+void arch_vma_reset_asid() {
+    //loop over all processes, set asid to -1 meaning not set.
+    asm volatile ("sfence.vma zero, zero" ::: "memory");
+    PANIC("ASID_RESET_LOOP_NOT_IMPLEMENTED", 0, 0, 0);
+}
+
+u64 arch_vma_fetch_asid() {
+    if (current_highest_asid >= max_asid) {
+        arch_vma_reset_asid();
+        current_highest_asid = 0;
+    }else{
+        current_highest_asid++;
+    }
+    return current_highest_asid;
 }
 
 void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, u64 arg_flags) {
@@ -90,6 +115,10 @@ void arch_vma_assign_user(kernel_process *process, u64 virt_addr, u64 phys_addr,
 }
 
 void arch_change_vma(kernel_process *process) {
+
+    if (process->vma_addr_space_id == -1) {
+        process->vma_addr_space_id = arch_vma_fetch_asid();
+    }
 
     u64 satp_value = 0
     | (((u64)process->vma_addr_space_id) << 44) //ASID ID

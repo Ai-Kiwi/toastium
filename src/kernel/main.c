@@ -13,6 +13,7 @@
 #include "kernel/memory/allocator.h"
 #include "kernel/memory/radix.h"
 #include "include/endian.h"
+#include "arch_vma/virtual_memory.h"
 
 extern u8 _kernel_end, _kernel_start;
 
@@ -49,6 +50,9 @@ void kernel_main() {
     uart_println_str("Initializing process handler");
     kernel_processes_init(hart_count);
     kernel_schedular_init();
+
+    uart_println_str("Initializing virtual memory");
+    arch_vma_init();
 
     //enable irq and general interrupts
     irq_init();
