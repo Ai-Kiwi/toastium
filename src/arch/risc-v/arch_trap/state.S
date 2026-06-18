@@ -60,6 +60,17 @@
 
 .macro LOAD_TRAP_FRAME
     li x1, TRAPFRAME_ADDRESS
+
+    ld a0, 248(x1) #tf->scause
+    ld a1, 256(x1) #tf->sepc
+    ld a2, 264(x1) #tf->stval
+    ld a3, 272(x1) #tf->sstatus
+
+    //csrw scause, a0
+    csrw sepc, a1
+    //csrw stval, a2
+    csrw sstatus, a3
+
     ld x2, 8(x1) #tf->register_2
     ld x3, 16(x1) #tf->register_3
     ld x4, 24(x1) #tf->register_4

@@ -70,6 +70,14 @@ SECTIONS
 
     . = ALIGN(4096);
 
+    .idle_process : ALIGN(4096) {
+        _kernel_idle_process = .;
+        *(.text.idle_process)
+        . = . + 8;
+    }:execute
+
+    . = ALIGN(4096);
+
     _kernel_end = .;
     _hart_stacks_start = .;
 }

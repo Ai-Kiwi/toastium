@@ -5,8 +5,6 @@
 #include "kernel/process/blocks.h"
 #include "arch_trap/parser.h"
 
-void kernel_processes_init(u64 hart_count);
-
 typedef struct {
     pid process_id;
     process_block block_waiting; //process needs to be in kernel space for a block to be waiting
@@ -17,5 +15,8 @@ typedef struct {
     u16 runing_hart_id;
     u16 vma_addr_space_id; // in risc-v also known as ASID
 } __attribute__((aligned(64))) kernel_process;
+
+void kernel_processes_init(u64 hart_count);
+kernel_process *kernel_process_from_id(pid process_id);
 
 #endif

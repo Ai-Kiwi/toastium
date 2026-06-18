@@ -49,6 +49,8 @@ void kernel_main() {
 
     uart_println_str("Initializing process handler");
     kernel_processes_init(hart_count);
+
+    uart_println_str("Initializing schedular");
     kernel_schedular_init();
 
     uart_println_str("Initializing virtual memory");
@@ -68,6 +70,8 @@ void kernel_main() {
     kernel_safety_test();
 
     uart_println_str("Finished initialization, now running kernel");
+
+    kernel_schedular_bootstrap(0); //setup for running processes on core 0
 
     //makes timer to kick start the os
     kernel_set_timer_future_ms(5);

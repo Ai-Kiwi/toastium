@@ -1,4 +1,5 @@
 #include "board.h"
+#include "arch_trap/state.S"
 .section .text.boot
 .global _start
 
@@ -148,8 +149,7 @@ clear_bss:
 
 start_os:
     call arch_main
-    j idle_loop
 
-idle_loop:
-    wfi
-    j idle_loop
+    #load in data for next process and run it
+    LOAD_TRAP_FRAME
+    sret

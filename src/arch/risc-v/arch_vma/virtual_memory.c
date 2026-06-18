@@ -2,6 +2,7 @@
 //everything in here is self contained assumptions, if in future more is needed
 //this file can be swapped out or replaced with generic middle-man.
 
+#include "drivers/uart/uart.h"
 #include "types.h"
 #include "def.h"
 #include "kernel/memory/pager.h"
@@ -10,6 +11,7 @@
 #include "virtual_memory.h"
 #include "board.h"
 
+//not 64 bytes aligned for multicore
 u64 max_asid;
 u64 current_highest_asid;
 
@@ -34,6 +36,7 @@ void arch_vma_init() {
 
 void arch_vma_reset_asid() {
     //loop over all processes, set asid to -1 meaning not set.
+    current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
     PANIC("ASID_RESET_LOOP_NOT_IMPLEMENTED", 0, 0, 0);
 }
@@ -81,19 +84,19 @@ void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, 
         u64 new_page_addr = kernel_pager_acquire();
         new_page_addr = new_page_addr / 4096;
         ppn2_table[ppn2_offset] = 1;
-        ppn2_table[ppn2_offset] |= new_page_addr << 10;
+        ppn2_table[ppn2_offset] |= (new_page_addr - KERNEL_VMA_START) << 10;
     }
 
-    u64 ppn1_table_addr = ((ppn2_table[ppn2_offset] >> 10) & (BIT(27) - 1)) * 4096;
+    u64 ppn1_table_addr = (((ppn2_table[ppn2_offset] >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
     u64 *ppn1_table = (u64 *)ppn1_table_addr;
     if ((ppn1_table[ppn1_offset] & 0x1) == 0) {
         u64 new_page_addr = kernel_pager_acquire();
-        new_page_addr = new_page_addr / 4096;
+        new_page_addr = (new_page_addr - KERNEL_VMA_START) / 4096;
         ppn1_table[ppn1_offset] = 1;
         ppn1_table[ppn1_offset] |= new_page_addr << 10;
     }
 
-    u64 ppn0_table_addr = ((ppn1_table[ppn1_offset] >> 10) & (BIT(27) - 1)) * 4096;
+    u64 ppn0_table_addr = (((ppn1_table[ppn1_offset] >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
     u64 *ppn0_table = (u64 *)ppn0_table_addr;
 
     //can use to handle if already in use
@@ -114,7 +117,7 @@ void arch_vma_assign_user(kernel_process *process, u64 virt_addr, u64 phys_addr,
     arch_vma_assign(process, virt_addr, phys_addr, arg_flags | VMA_USER);
 }
 
-void arch_change_vma(kernel_process *process) {
+void arch_vma_swap(kernel_process *process) {
 
     if (process->vma_addr_space_id == -1) {
         process->vma_addr_space_id = arch_vma_fetch_asid();
