@@ -13,7 +13,7 @@ idle_process_entry:
     ecall
     li a0, 'o'
     ecall
-    li a0, ''
+    li a0, ' '
     ecall
     li a0, 'w'
     ecall
@@ -24,6 +24,8 @@ idle_process_entry:
     li a0, 'l'
     ecall
     li a0, 'd'
+    ecall
+    li a0, '\n'
     ecall
     #wfi
     j idle_process_entry
