@@ -30,7 +30,7 @@ u64 arch_vma_create() {
 
 //must be called when init vma has already been set
 //Reason is it detects max vma
-void arch_vma_init() {    
+void arch_vma_init() {
     //find max ASID
     asm volatile ("csrr %0, satp" : "=r"(max_asid));
     max_asid = (max_asid >> 44) & (BIT(16)-1);
