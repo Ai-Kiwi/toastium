@@ -44,6 +44,6 @@ typedef struct { //each split into page so doesn't need to be 64 byte aligned
     u64 hart_id;
 } arch_trapframe;
 
-void arch_parse_trap_data(kernel_trap_data trap);
+void arch_parse_trap_data(kernel_trap_data *trap);
 
 #endif

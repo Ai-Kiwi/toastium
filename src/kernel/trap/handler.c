@@ -15,9 +15,11 @@
 
 u64 kernel_handle_trap() {
     kernel_trap_data trap_data;
-    arch_parse_trap_data(trap_data);
+    arch_parse_trap_data((kernel_trap_data *)&trap_data);
 
     uart_println_str("kernel trap");
+
+    uart_println_u64_hex(trap_data.fault_addr);
 
     //decide to use
 
