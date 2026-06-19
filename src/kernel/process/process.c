@@ -67,8 +67,9 @@ void kernel_processes_init(u64 hart_count) {
             PANIC("IDLE_PROCESS_INVALID_ID",idle_process->process_id, hart_id,0);
         }
         idle_process->runing_hart_id = hart_id;
-        arch_trapframe_init_user(idle_process->userspace_trap_frame, 0);
-        arch_vma_assign_user(idle_process, 0, (u64)&_kernel_idle_process, VMA_EXEC);
+        arch_trapframe_init_user(idle_process->userspace_trap_frame, 0x1000);
+        arch_vma_assign_user(idle_process, 0x1000, (u64)&_kernel_idle_process, VMA_EXEC);
+        u32 *data = (u32 *)&_kernel_idle_process;
     }
 
     //TODO: setup vma table fot this idea process

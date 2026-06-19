@@ -19,8 +19,6 @@ u64 kernel_handle_trap() {
 
     uart_println_str("kernel trap");
 
-    uart_println_u64_hex(trap_data.fault_addr);
-
     //decide to use
 
     switch (trap_data.code) {

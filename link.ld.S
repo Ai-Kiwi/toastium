@@ -16,7 +16,6 @@ SECTIONS
     .text : ALIGN(16) {
         _kernel_start = .;
         *(.text.boot)
-        *(.text*)
     }:execute
 
     .trap : ALIGN(16) {

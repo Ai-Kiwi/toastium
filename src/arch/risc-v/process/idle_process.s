@@ -1,7 +1,8 @@
 .section .text.idle_process
 .global idle_process_entry
+.align 4
 
 idle_process_entry:
     #ecall
-    wfi
+    #wfi
     j idle_process_entry
