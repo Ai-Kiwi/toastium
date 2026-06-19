@@ -3,6 +3,6 @@
 
 #include "kernel/process/process.h"
 
-void kernel_syscall_sync_handler(kernel_trap_data *trap);
+u64 kernel_syscall_sync_handler(kernel_trap_data *trap);
 
 #endif

@@ -1,4 +1,5 @@
 #include "kernel/trap/handler.h"
+#include "kernel/process/process.h"
 #include "kernel/safety/panic.h"
 #include "kernel/safety/safety.h"
 #include "kernel/process/scheduler.h"
@@ -35,7 +36,11 @@ u64 kernel_handle_trap() {
         PANIC("KERNEL_TRAP_UNIMPLENTED_BREAKPOINT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         break;
     case KTRAP_SYSCALL:
-        kernel_syscall_sync_handler(&trap_data);
+        u64 response = kernel_syscall_sync_handler(&trap_data);
+        if (response > 0) {
+            //needs to be handled by async
+            return (u64)((kernel_process *)trap_data.process_ptr)->kernelspace_trap_frame;
+        }
         arch_trap_set_response(&trap_data);
         break;
     case KTRAP_PAGE_FAULT:

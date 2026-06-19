@@ -44,8 +44,10 @@ trap_entry:
     call kernel_handle_trap #c handler. Dumps response to a0
 
     bgtz a0, process_trap_handler
+    j trap_exit
 
 process_trap_handler:
+    mv sp, a0
     call kernel_trap_process_kernel
     j trap_exit
 
