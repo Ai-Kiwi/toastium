@@ -73,6 +73,11 @@ run: $(BIN)
 	touch src/kernel/safety/panic.c
 	$(QEMU) $(QEMUF) -kernel $(BIN)
 
+run-traps: $(BIN)
+#tell the panic to be recompiled, means that git hash version will get updated.
+	touch src/kernel/safety/panic.c
+	$(QEMU) $(QEMUF) -kernel $(BIN) -d int
+
 asm-debug: $(BIN)
 	$(QEMU) $(QEMUF) -kernel $(BIN) -d in_asm,cpu
 
