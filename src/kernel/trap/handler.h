@@ -34,11 +34,17 @@ typedef enum {
 } kernel_trap_code;
 
 typedef struct {
+    u64 process_ptr; //would like to be a process pointer type but causes circular import, will revisit
     kernel_trap_type trap_type;
     privilege_mode privilege;
     kernel_trap_code code;
     u64 fault_pc;
     u64 fault_addr;
+    u64 arg0_reg;
+    u64 arg1_reg;
+    u64 arg2_reg;
+    u64 arg3_reg;
+    u64 return_reg;
 } kernel_trap_data;
 
 typedef enum {

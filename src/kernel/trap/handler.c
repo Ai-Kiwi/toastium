@@ -7,6 +7,8 @@
 #include "board.h"
 #include "arch_vma/virtual_memory.h"
 #include "drivers/uart/uart.h"
+#include "kernel/timer/timer.h"
+#include "kernel/syscall/handler.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel
@@ -16,8 +18,6 @@
 u64 kernel_handle_trap() {
     kernel_trap_data trap_data;
     arch_parse_trap_data((kernel_trap_data *)&trap_data);
-
-    uart_println_str("kernel trap");
 
     //decide to use
 
@@ -35,7 +35,8 @@ u64 kernel_handle_trap() {
         PANIC("KERNEL_TRAP_UNIMPLENTED_BREAKPOINT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         break;
     case KTRAP_SYSCALL:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_SYSCALL",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+        kernel_syscall_sync_handler(&trap_data);
+        arch_trap_set_response(&trap_data);
         break;
     case KTRAP_PAGE_FAULT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_PAGE_FAULT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
@@ -56,6 +57,7 @@ u64 kernel_handle_trap() {
         if (trap_data.privilege != KTRAP_MODE_SUPERVISOR){
             PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         }
+        kernel_timer_set_future_ms(4);
         break;
     case KTRAP_EXTERNAL_INTERRUPT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);

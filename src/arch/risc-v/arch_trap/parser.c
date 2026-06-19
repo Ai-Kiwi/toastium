@@ -10,12 +10,19 @@
 #include "parser.h"
 
 void arch_parse_trap_data(kernel_trap_data *trap) {//will have ptr input here that points to reg data on stack
-    uart_println_str("kernel trap parser");
     arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
 
     const u64 is_interrupt = trap_frame_data->scause & BIT(63); //last bit
     const u64 trap_code = (trap_frame_data->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit
     const u64 is_user_mode = trap_frame_data->scause & BIT(8);
+
+    trap->process_ptr = trap_frame_data->process_ptr;
+
+    trap->arg0_reg = trap_frame_data->register_10;
+    trap->arg1_reg = trap_frame_data->register_11;
+    trap->arg2_reg = trap_frame_data->register_12;
+    trap->arg3_reg = trap_frame_data->register_13;
+    trap->return_reg = trap_frame_data->register_10;
 
     trap->fault_pc = trap_frame_data->sepc;
     trap->fault_addr = trap_frame_data->stval;
@@ -122,4 +129,15 @@ void arch_parse_trap_data(kernel_trap_data *trap) {//will have ptr input here th
             break;
         }
     }
+}
+
+void arch_trap_set_response(kernel_trap_data *kernel_trap) {
+    arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
+
+    trap_frame_data->register_10 = kernel_trap->return_reg;
+}
+
+void arch_trap_iter_instruction(kernel_trap_data *kernel_trap) {
+    arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
+    trap_frame_data->sepc += 4;
 }
