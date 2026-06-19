@@ -13,6 +13,7 @@
  - virtual memory assigns page by page not in bulk
  - virtual memory doesn't support mega or giga pages
  - allocator should be 64byte aligned for cross core. (Mostly header issue, per page and per entry)
+ - asid isn't best handled for when its not supported on hardware
 
 Need bss fix
  - asid not aligned 64 bytes (current and max)

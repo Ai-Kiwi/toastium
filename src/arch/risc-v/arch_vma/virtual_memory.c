@@ -33,7 +33,7 @@ u64 arch_vma_create() {
 void arch_vma_init() {    
     //find max ASID
     asm volatile ("csrr %0, satp" : "=r"(max_asid));
-
+    max_asid = (max_asid >> 44) & (BIT(16)-1);
     //set to max so first loop resets all
     current_highest_asid = max_asid;
 }
@@ -45,6 +45,7 @@ void delete_process_asid(u64 process_ptr, u64 parameter) {
 }
 
 void arch_vma_reset_asid() {
+    uart_println_str("reset all vma asid");
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
