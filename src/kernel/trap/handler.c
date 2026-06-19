@@ -1,4 +1,5 @@
 #include "kernel/trap/handler.h"
+#include "def.h"
 #include "kernel/process/process.h"
 #include "kernel/safety/panic.h"
 #include "kernel/safety/safety.h"
@@ -39,7 +40,7 @@ u64 kernel_handle_trap() {
         u64 response = kernel_syscall_sync_handler(&trap_data);
         if (response > 0) {
             //needs to be handled by async
-            return (u64)((kernel_process *)trap_data.process_ptr)->kernelspace_trap_frame;
+            return ((u64)((kernel_process *)trap_data.process_ptr)->kernel_stack) + KERNEL_PAGE_SIZE - 1;
         }
         arch_trap_set_response(&trap_data);
         break;

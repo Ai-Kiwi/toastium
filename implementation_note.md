@@ -14,6 +14,7 @@
  - virtual memory doesn't support mega or giga pages
  - allocator should be 64byte aligned for cross core. (Mostly header issue, per page and per entry)
  - asid isn't best handled for when its not supported on hardware
+ - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
 
 Need bss fix
  - asid not aligned 64 bytes (current and max)

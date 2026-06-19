@@ -6,7 +6,6 @@
 //response of 0 means it handled it, higher means will need async version to handle it.
 u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
 
-    return 1;
     if (TRUE) {
         uart_print_char(trap->arg0_reg);
         arch_trap_iter_instruction(trap);

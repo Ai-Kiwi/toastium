@@ -20,7 +20,7 @@ trap_entry:
     li a0, TRAPFRAME_ADDRESS
     call kernel_handle_trap #outputs to a0 response
 
-    bgtz a0, run_process_kernel_trap
+    bne a0, zero, run_process_kernel_trap
 
 
     j resume_process

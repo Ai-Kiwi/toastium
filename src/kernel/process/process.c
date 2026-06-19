@@ -41,9 +41,16 @@ kernel_process *new_blank_process() {
     new_process.userspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     new_process.kernelspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     arch_vma_assign_kernel((kernel_process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trap_frame, VMA_READ | VMA_WRITE);
+    
+    u64 kernel_stack = kernel_pager_acquire();
+    new_process.kernel_stack = kernel_stack;
 
     kernel_process *process = (kernel_process *)kernel_allocator_acquire(sizeof(kernel_process));
+    new_process.userspace_trap_frame->process_ptr = (u64)process;
+    new_process.kernelspace_trap_frame->process_ptr = (u64)process;
     *process = new_process;
+
+    
 
     u64 old_child = (u64)kernel_radix_create_child((u64)process_radix_root,process->process_id,(u64)process,pid_levels,pid_level_size);
     if (old_child) {
