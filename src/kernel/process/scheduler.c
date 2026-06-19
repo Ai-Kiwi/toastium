@@ -31,4 +31,6 @@ void kernel_schedular_bootstrap(u64 hart_id) {
     }
 
     swap_running_process(idle_process);
+
+    
 }

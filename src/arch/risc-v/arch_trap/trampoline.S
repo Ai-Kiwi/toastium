@@ -35,6 +35,10 @@
 
 
 trap_entry:
+    li t0, (0x10000000 + KERNEL_VMA_START)
+    li t1, 'T'
+    sb t1, 0(t0)
+
     STORE_TRAP_FRAME
 
     call kernel_handle_trap #c handler. Dumps response to a0

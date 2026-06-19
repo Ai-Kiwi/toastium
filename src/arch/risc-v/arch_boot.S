@@ -98,6 +98,8 @@ finish_vma_setup:
     //apply table location and info
     csrw satp, t1
 
+    fence.i
+
     //flush TLB so it applies changes which we have made (not satp but VMA table)
     sfence.vma zero, zero
 
@@ -151,5 +153,11 @@ start_os:
     call arch_main
 
     #load in data for next process and run it
+    li t0, (0x10000000 + KERNEL_VMA_START)
+    li t1, 'R'
+    sb t1, 0(t0)
     LOAD_TRAP_FRAME
+    li t0, (0x10000000 + KERNEL_VMA_START)
+    li t1, 'E'
+    sb t1, 0(t0)
     sret

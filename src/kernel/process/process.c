@@ -11,7 +11,7 @@
 #include "arch_trap/handler.h"
 
 //upto 65,536 processes
-#define pid_level_depth 4
+#define pid_level_size 4
 #define pid_levels 4
 #define max_processes 65536
 
@@ -22,13 +22,13 @@ u64 process_upto = 0;
 u64 *process_radix_root = 0;
 
 kernel_process *kernel_process_from_id(pid process_id) {
-    return (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_id, pid_levels, pid_level_depth);
+    return (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_id, pid_levels, pid_level_size);
 }
 
 kernel_process *new_blank_process() {
     kernel_process *current_process; //Non zero
     while (TRUE){
-        current_process = (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_upto, pid_levels, pid_level_depth);
+        current_process = (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_upto, pid_levels, pid_level_size);
         if (!current_process) {
             break;
         }
@@ -36,7 +36,7 @@ kernel_process *new_blank_process() {
     }
     kernel_process new_process;
     new_process.process_id = process_upto;
-    new_process.vma_addr_space_id = -1;
+    new_process.vma_addr_space_id = U64_MAX;
     new_process.vma_table = (u64 *)arch_vma_create();
     new_process.userspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     new_process.kernelspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
@@ -45,7 +45,7 @@ kernel_process *new_blank_process() {
     kernel_process *process = (kernel_process *)kernel_allocator_acquire(sizeof(kernel_process));
     *process = new_process;
 
-    u64 old_child = (u64)kernel_radix_create_child((u64)process_radix_root,process->process_id,(u64)process,pid_levels,pid_level_depth);
+    u64 old_child = (u64)kernel_radix_create_child((u64)process_radix_root,process->process_id,(u64)process,pid_levels,pid_level_size);
     if (old_child) {
         PANIC("CREATE_BLANK_PROCESS_CONFLICTING_CHILD_PRESENT",old_child,0,0);
     }
@@ -56,7 +56,7 @@ kernel_process *new_blank_process() {
 
 
 void kernel_processes_init(u64 hart_count) {
-    process_radix_root = (u64 *)kernel_radix_create_tree(pid_level_depth);
+    process_radix_root = (u64 *)kernel_radix_create_tree(pid_level_size);
 
 
     process_upto = 0;
@@ -80,6 +80,9 @@ void start_process() {
 
 }
 
+void kernel_process_iter(void (*function)(u64, u64), u64 parameters) {
+    kernel_radix_iter_children((u64)process_radix_root, pid_levels, pid_level_size, parameters, function);
+}
 
 void kill_process(pid process_id) {
     //arch_processes_trap_info[kernel_process_id] = ;

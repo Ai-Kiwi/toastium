@@ -12,11 +12,12 @@ typedef struct {
     arch_trapframe *userspace_trap_frame;
     arch_trapframe *kernelspace_trap_frame;
     u64 *vma_table;
+    u64 vma_addr_space_id; // in risc-v also known as ASID
     u16 runing_hart_id;
-    u16 vma_addr_space_id; // in risc-v also known as ASID
 } __attribute__((aligned(64))) kernel_process;
 
 void kernel_processes_init(u64 hart_count);
 kernel_process *kernel_process_from_id(pid process_id);
+void kernel_process_iter(void (*function)(u64, u64), u64 parameters);
 
 #endif

@@ -69,9 +69,11 @@ void kernel_main() {
     uart_println_str("Running final safety test");
     kernel_safety_test();
 
-    uart_println_str("Finished initialization, now running kernel");
+    uart_println_str("Preforming schedular bootstrap");
 
     kernel_schedular_bootstrap(0); //setup for running processes on core 0
+
+    uart_println_str("Finished initialization, now running kernel");
 
     //makes timer to kick start the os
     kernel_set_timer_future_ms(5);

@@ -1,6 +1,8 @@
 #ifndef DEF_H
 #define DEF_H
 
+#define U64_MAX 0xFFFFFFFFFFFFFFFF
+
 #define BIT(bit_num) (1UL << (bit_num))
 
 //max running processes. Both these cost to be large so kept as small as can be. Both start at 0

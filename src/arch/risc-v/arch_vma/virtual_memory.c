@@ -28,17 +28,28 @@ u64 arch_vma_create() {
     return new_page_addr;
 }
 
-void arch_vma_init() {
-    current_highest_asid = 0;
-
+//must be called when init vma has already been set
+//Reason is it detects max vma
+void arch_vma_init() {    
     //find max ASID
+    asm volatile ("csrr %0, satp" : "=r"(max_asid));
+
+    //set to max so first loop resets all
+    current_highest_asid = max_asid;
+}
+
+void delete_process_asid(u64 process_ptr, u64 parameter) {
+    kernel_process *process = (kernel_process *)process_ptr;
+
+    process->vma_addr_space_id = 0;
 }
 
 void arch_vma_reset_asid() {
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
-    PANIC("ASID_RESET_LOOP_NOT_IMPLEMENTED", 0, 0, 0);
+
+    kernel_process_iter(delete_process_asid, 0);
 }
 
 u64 arch_vma_fetch_asid() {
@@ -118,17 +129,21 @@ void arch_vma_assign_user(kernel_process *process, u64 virt_addr, u64 phys_addr,
 }
 
 void arch_vma_swap(kernel_process *process) {
-
-    if (process->vma_addr_space_id == -1) {
+    if (process->vma_addr_space_id == U64_MAX) {
         process->vma_addr_space_id = arch_vma_fetch_asid();
     }
 
     u64 satp_value = 0
     | (((u64)process->vma_addr_space_id) << 44) //ASID ID
-    | 8UL << 60 // says its sv39
-    | (((u64)process->vma_table) / 4096);
+    | (8UL << 60) // says its sv39
+    | ((((u64)process->vma_table) - KERNEL_VMA_START) / 4096);
 
+    asm volatile ("fence rw, rw");
+    asm volatile ("fence.i");
     asm volatile ("csrw satp, %0" :: "r"(satp_value) : "memory");
-
+    uart_println_str("print vma swap");
+    uart_println_u64_hex(process->vma_addr_space_id);
+    uart_println_u64_hex((u64)process->vma_table);
+    uart_println_u64_hex(satp_value);
     //might need fence here need to look more into it
 }
