@@ -29,6 +29,7 @@ run_process_kernel_trap:
     #swap to process kernel stack
     mv sp, a0 #sets to response stack location
     call kernel_trap_process_kernel
+    j resume_process
 
 
 resume_process:
