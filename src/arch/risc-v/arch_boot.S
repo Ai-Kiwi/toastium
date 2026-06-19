@@ -153,11 +153,5 @@ start_os:
     call arch_main
 
     #load in data for next process and run it
-    li t0, (0x10000000 + KERNEL_VMA_START)
-    li t1, 'R'
-    sb t1, 0(t0)
     LOAD_TRAP_FRAME
-    li t0, (0x10000000 + KERNEL_VMA_START)
-    li t1, 'E'
-    sb t1, 0(t0)
     sret

@@ -22,7 +22,7 @@ u64 arch_vma_create() {
     ///allow read/write/execute, mark as global for optimization, is valid and also mark as already dirty and accessed for performance.
     const u64 access_mask = 0xEF;
     volatile u64 *entry_leaf = (u64 *)new_page_addr;
-    for (s32 i=0; i<256; i++) {
+    for (u64 i=0; i<256; i++) {
         entry_leaf[256 + i] = (i << 28) | access_mask;
     }
     return new_page_addr;
@@ -94,9 +94,9 @@ void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, 
     u64 *ppn2_table = (u64 *)process->vma_table;
     if ((ppn2_table[ppn2_offset] & 0x1) == 0) {
         u64 new_page_addr = kernel_pager_acquire();
-        new_page_addr = new_page_addr / 4096;
+        new_page_addr = (new_page_addr - KERNEL_VMA_START) / 4096;
         ppn2_table[ppn2_offset] = 1;
-        ppn2_table[ppn2_offset] |= (new_page_addr - KERNEL_VMA_START) << 10;
+        ppn2_table[ppn2_offset] |= new_page_addr << 10;
     }
 
     u64 ppn1_table_addr = (((ppn2_table[ppn2_offset] >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
@@ -142,9 +142,5 @@ void arch_vma_swap(kernel_process *process) {
     asm volatile ("fence rw, rw");
     asm volatile ("fence.i");
     asm volatile ("csrw satp, %0" :: "r"(satp_value) : "memory");
-    uart_println_str("print vma swap");
-    uart_println_u64_hex(process->vma_addr_space_id);
-    uart_println_u64_hex((u64)process->vma_table);
-    uart_println_u64_hex(satp_value);
     //might need fence here need to look more into it
 }

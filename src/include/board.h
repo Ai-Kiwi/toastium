@@ -7,7 +7,7 @@
 // 1024*1024*1024*512 = 0x4000000000 (half of sv39 space for risc-v)
 //0x4000000000 would be jump but top half is top half
 #define KERNEL_VMA_START 0xffffffc000000000
-#define TRAPFRAME_ADDRESS 0x0000003FFFFF000
+#define TRAPFRAME_ADDRESS 0x000003FFFFFF000
 //16kb stack size for each hart
 #define HART_KERNEL_STACK_SIZE 4096 * 4
 

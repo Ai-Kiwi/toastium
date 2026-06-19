@@ -61,27 +61,15 @@
 .macro LOAD_TRAP_FRAME
     li x1, TRAPFRAME_ADDRESS
 
-    li t0, (0x10000000 + KERNEL_VMA_START)
-    li t1, 'x'
-    sb t1, 0(t0)
-
     ld a0, 248(x1) #tf->scause
     ld a1, 256(x1) #tf->sepc
     ld a2, 264(x1) #tf->stval
     ld a3, 272(x1) #tf->sstatus
 
-    li t0, (0x10000000 + KERNEL_VMA_START)
-    li t1, 'p'
-    sb t1, 0(t0)
-
     //csrw scause, a0
     csrw sepc, a1
     //csrw stval, a2
     csrw sstatus, a3
-
-    li t0, (0x10000000 + KERNEL_VMA_START)
-    li t1, 'o'
-    sb t1, 0(t0)
 
     ld x2, 8(x1) #tf->register_2
     ld x3, 16(x1) #tf->register_3
@@ -113,10 +101,6 @@
     ld x29, 224(x1) #tf->register_29
     ld x30, 232(x1) #tf->register_30
     ld x31, 240(x1) #tf->register_31
-
-    li t0, (0x10000000 + KERNEL_VMA_START)
-    li t1, 'i'
-    sb t1, 0(t0)
 
     #loads in x1 last as being used as ptr right now
     ld x1, 0(x1) ##tf->register_1 
