@@ -4,6 +4,7 @@
 An operating system that I have been developing for learning purposes. Designed for targeting a custom portable console I am working on with someone in the long run, However is designed with portablity in mind so can be ported to other devices or architectures.
 
 ## Current Features
+ - Basic round robin scheduler with running processes.
  - Bootloader (U-Boot + OpenSBI for RISC-V)
  - Pager
  - Allocator
