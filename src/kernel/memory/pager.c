@@ -235,7 +235,6 @@ u64 kernel_pager_acquire() { //will add cnt later u64 byte_cnt
 }
 
 void kernel_pager_release(u64 location) {
-    uart_print_str("release page :");
     uart_println_u64_hex(location);
     u8 *page_location = (u8 *)location;
     const s64 page_list_cnt = pager_bitmap_list[0];
