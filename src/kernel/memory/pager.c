@@ -235,6 +235,8 @@ u64 kernel_pager_acquire() { //will add cnt later u64 byte_cnt
 }
 
 void kernel_pager_release(u64 location) {
+    uart_print_str("release page :");
+    uart_println_u64_hex(location);
     u8 *page_location = (u8 *)location;
     const s64 page_list_cnt = pager_bitmap_list[0];
 
@@ -267,7 +269,7 @@ void kernel_pager_release(u64 location) {
         PANIC("ATTEMPT_REMOVE_PAGE_OUT_OF_RANGE",page_num, closest_page_cnt, (u64)closest_page_list);
     }
 
-    if (closest_bitmap[bitmap_num] & BIT(bit_num)) {
+    if (~closest_bitmap[bitmap_num] & BIT(bit_num)) {
         PANIC("DOUBLE_FREE_PAGE",(s64)page_location, (s64)page_num, (s64)closest_bitmap);
     }
 
