@@ -77,6 +77,14 @@ SECTIONS
 
     . = ALIGN(4096);
 
+    .init_process : ALIGN(4096) {
+        _kernel_init_process = .;
+        *(.text.init_process)
+        . = . + 8;
+    }:execute
+
+    . = ALIGN(4096);
+
     _kernel_end = .;
     _hart_stacks_start = .;
 }

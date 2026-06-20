@@ -35,6 +35,9 @@ void arch_vma_init() {
     asm volatile ("csrr %0, satp" : "=r"(max_asid));
     max_asid = (max_asid >> 44) & (BIT(16)-1);
     //set to max so first loop resets all
+    if (max_asid == 0){
+        PANIC("MAX_ASID_IS_ZERO", 0, 0, 0);
+    }
     current_highest_asid = max_asid;
 }
 

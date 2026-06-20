@@ -11,6 +11,7 @@
 #include "drivers/uart/uart.h"
 #include "kernel/timer/timer.h"
 #include "kernel/syscall/handler.h"
+#include "kernel/process/context.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel
@@ -63,6 +64,10 @@ u64 kernel_handle_trap() {
         if (trap_data.privilege != KTRAP_MODE_SUPERVISOR){
             PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         }
+
+        kernel_process *next_process = kernel_scheduler_dequeue_next_process(trap_data.hart_id);
+        kernel_context_change_process(next_process, trap_data.hart_id);
+
         kernel_timer_set_future_ms(4);
         break;
     case KTRAP_EXTERNAL_INTERRUPT:

@@ -33,3 +33,5 @@ void kernel_timer_set_future_ms(u64 ms) {
 //void kernel_timer_resume() {
 //    //Sets for the next timer to go off.
 //}
+//also needs to be a way to change a timer. SO for example find the timer for next process
+//then change to be more in future if process ends early.

@@ -24,6 +24,8 @@ void arch_parse_trap_data(kernel_trap_data *trap) {//will have ptr input here th
     trap->arg3_reg = trap_frame_data->register_13;
     trap->return_reg = trap_frame_data->register_10;
 
+    trap->hart_id = trap_frame_data->hart_id;
+
     trap->fault_pc = trap_frame_data->sepc;
     trap->fault_addr = trap_frame_data->stval;
     if (is_user_mode) {

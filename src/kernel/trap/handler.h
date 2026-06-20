@@ -45,6 +45,7 @@ typedef struct {
     u64 arg2_reg;
     u64 arg3_reg;
     u64 return_reg;
+    u64 hart_id;
 } kernel_trap_data;
 
 typedef enum {

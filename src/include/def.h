@@ -11,6 +11,4 @@
 
 #define KERNEL_PAGE_SIZE 4096
 
-#define null_program_pid -1
-
 #endif

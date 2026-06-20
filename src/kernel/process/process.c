@@ -9,13 +9,15 @@
 #include "board.h"
 #include "kernel/memory/pager.h"
 #include "arch_trap/handler.h"
+#include "types.h"
+#include "kernel/process/scheduler.h"
 
 //upto 65,536 processes
 #define pid_level_size 4
 #define pid_levels 4
 #define max_processes 65536
 
-extern u8 _kernel_idle_process;
+extern u8 _kernel_idle_process, _kernel_init_process;
 
 //not 64 bytes aligned for multicore
 u64 process_upto = 0;
@@ -35,13 +37,16 @@ kernel_process *new_blank_process() {
         process_upto++;
     }
     kernel_process new_process;
+    new_process.block_waiting = 0;
     new_process.process_id = process_upto;
     new_process.vma_addr_space_id = U64_MAX;
     new_process.vma_table = (u64 *)arch_vma_create();
     new_process.userspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     new_process.kernelspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
+    new_process.process_type = KPROC_TYPE_NORMAL;
+    new_process.running = FALSE;
     arch_vma_assign_kernel((kernel_process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trap_frame, VMA_READ | VMA_WRITE);
-    
+
     u64 kernel_stack = kernel_pager_acquire();
     new_process.kernel_stack = kernel_stack;
 
@@ -50,7 +55,7 @@ kernel_process *new_blank_process() {
     new_process.kernelspace_trap_frame->process_ptr = (u64)process;
     *process = new_process;
 
-    
+
 
     u64 old_child = (u64)kernel_radix_create_child((u64)process_radix_root,process->process_id,(u64)process,pid_levels,pid_level_size);
     if (old_child) {
@@ -74,18 +79,10 @@ void kernel_processes_init(u64 hart_count) {
             PANIC("IDLE_PROCESS_INVALID_ID",idle_process->process_id, hart_id,0);
         }
         idle_process->runing_hart_id = hart_id;
+        idle_process->process_type = KPROC_TYPE_IDLE;
         arch_trapframe_init_user(idle_process->userspace_trap_frame, 0x1000);
         arch_vma_assign_user(idle_process, 0x1000, (u64)&_kernel_idle_process, VMA_EXEC);
-        u32 *data = (u32 *)&_kernel_idle_process;
     }
-
-    //TODO: setup vma table fot this idea process
-
-    //TODO: create and setup a idle process at 0. Will do nothing except forever loop waiting for interrupt.
-}
-
-void start_process() {
-
 }
 
 void kernel_process_iter(void (*function)(u64, u64), u64 parameters) {
@@ -93,6 +90,23 @@ void kernel_process_iter(void (*function)(u64, u64), u64 parameters) {
 }
 
 void kill_process(pid process_id) {
-    //arch_processes_trap_info[kernel_process_id] = ;
+    kernel_process *process = kernel_process_from_id(process_id);
+    if (process->running == TRUE) {
+        process->process_type = KPROC_TYPE_DEAD;
+    }else{
+        kernel_scheduler_dequeue_process(process);
+    }
+}
 
+void kernel_process_cleanup_process(kernel_process *process) {
+
+}
+
+void kernel_process_create_init_process() {
+    //create the init process
+    kernel_process *init_process = new_blank_process();
+    arch_trapframe_init_user(init_process->userspace_trap_frame, 0x1000);
+    arch_vma_assign_user(init_process, 0x1000, (u64)&_kernel_init_process, VMA_EXEC);
+
+    kernel_scheduler_queue_process(init_process);
 }

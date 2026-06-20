@@ -14,8 +14,9 @@
 #include "kernel/memory/radix.h"
 #include "include/endian.h"
 #include "arch_vma/virtual_memory.h"
+#include "kernel/process/context.h"
 
-extern u8 _kernel_end, _kernel_start;
+extern u8 _kernel_end, _kernel_start, _kernel_idle_process;
 
 void kernel_main() {
     uart_init();
@@ -69,9 +70,12 @@ void kernel_main() {
     uart_println_str("Running final safety test");
     kernel_safety_test();
 
+    uart_println_str("Creating init process");
+    kernel_process_create_init_process();
+
     uart_println_str("Preforming schedular bootstrap");
 
-    kernel_schedular_bootstrap(0); //setup for running processes on core 0
+    kernel_context_bootstrap(0); //setup for running processes on core 0
 
     uart_println_str("Finished initialization, now running kernel");
 

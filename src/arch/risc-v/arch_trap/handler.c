@@ -3,6 +3,8 @@
 
 #include "types.h"
 
+//sets up basic info like start location for a process.
+//designed for basic stating process. This is all handled by elf parser for anything more
 void arch_trapframe_init_user(arch_trapframe *trapframe, u64 start_location) {
     u64 is_supervisor = 0;
 
