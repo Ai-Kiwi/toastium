@@ -57,6 +57,7 @@ u64 kernel_handle_trap() {
             return ((u64)((kernel_process *)trap_data.process_ptr)->kernel_stack) + KERNEL_PAGE_SIZE - 1;
         }
         arch_trap_set_response(&trap_data);
+        arch_trap_iter_instruction(&trap_data);
         break;
     case KTRAP_PAGE_FAULT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_PAGE_FAULT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);

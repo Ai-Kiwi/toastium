@@ -7,6 +7,7 @@
 #include "types.h"
 #include "kernel/process/scheduler.h"
 #include "kernel/process/context.h"
+#include "kernel/syscall/uart/handler.h"
 
 //response of 0 means it handled it
 //response of 1 means process died
@@ -15,7 +16,7 @@ u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
 
     switch (trap->arg0_reg) {
         case 1:
-
+            return syscall_uart(trap); 
             break;
         default:
             uart_println_str("process error: unknown syscall ");
@@ -32,16 +33,6 @@ u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
             return 1;
             break;
     }
-
-
-
-    if (TRUE) {
-        uart_print_char(trap->arg0_reg);
-        arch_trap_iter_instruction(trap);
-        return 0;
-    }
-
-
 
     //actually very performant to return it must be async if it wasn't anything we handled
     //as it will likely be killed if it isn't async as well as then it would be unknown
