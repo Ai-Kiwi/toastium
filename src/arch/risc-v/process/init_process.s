@@ -3,16 +3,19 @@
 .align 4
 
 init_process_entry:
-    li a3, 0x123
-    li a0, 'i'
+    li a0, 1
+    li a1, 0
+
+
+    li a2, 'i'
     ecall
-    li a0, 'n'
+    li a2, 'n'
     ecall
-    li a0, 'i'
+    li a2, 'i'
     ecall
-    li a0, 't'
+    li a2, 't'
     ecall
-    li a0, '\n'
+    li a2, '\n'
     ecall
     #wfi
     j init_process_entry
