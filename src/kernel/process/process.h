@@ -31,5 +31,6 @@ kernel_process *kernel_process_from_id(pid process_id);
 void kernel_process_iter(void (*function)(u64, u64), u64 parameters);
 void kernel_process_cleanup_process(kernel_process *process);
 void kernel_process_create_init_process();
+void kernel_process_kill_process(pid process_id);
 
 #endif

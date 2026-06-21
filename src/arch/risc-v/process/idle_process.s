@@ -3,29 +3,33 @@
 .align 4
 
 idle_process_entry:
-    li a0, 'h'
+    
+    li a0, 1
+    li a1, 0
+
+    li a2, 'h'
     ecall
-    li a0, 'e'
+    li a2, 'e'
     ecall
-    li a0, 'l'
+    li a2, 'l'
     ecall
-    li a0, 'l'
+    li a2, 'l'
     ecall
-    li a0, 'o'
+    li a2, 'o'
     ecall
-    li a0, ' '
+    li a2, ' '
     ecall
-    li a0, 'w'
+    li a2, 'w'
     ecall
-    li a0, 'o'
+    li a2, 'o'
     ecall
-    li a0, 'r'
+    li a2, 'r'
     ecall
-    li a0, 'l'
+    li a2, 'l'
     ecall
-    li a0, 'd'
+    li a2, 'd'
     ecall
-    li a0, '\n'
+    li a2, '\n'
     ecall
     #wfi
     j idle_process_entry

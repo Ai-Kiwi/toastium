@@ -1,6 +1,7 @@
 #include "process.h"
 #include "arch_trap/parser.h"
 #include "drivers/uart/uart.h"
+#include "kernel/memory/allocator.h"
 #include "kernel/trap/handler.h"
 #include "def.h"
 #include "kernel/memory/radix.h"
@@ -89,18 +90,28 @@ void kernel_process_iter(void (*function)(u64, u64), u64 parameters) {
     kernel_radix_iter_children((u64)process_radix_root, pid_levels, pid_level_size, parameters, function);
 }
 
-void kill_process(pid process_id) {
+void kernel_process_kill_process(pid process_id) {
     kernel_process *process = kernel_process_from_id(process_id);
+    if (process->process_type == KPROC_TYPE_IDLE) {
+        PANIC("ATTEMPT_TO_KILL_IDLE_PROCESS", 0, 0, 0);
+    }
     if (process->running == TRUE) {
         process->process_type = KPROC_TYPE_DEAD;
     }else{
         kernel_scheduler_dequeue_process(process);
+        kernel_process_cleanup_process(process);
     }
 }
 
 void kernel_process_cleanup_process(kernel_process *process) {
-
+    kernel_radix_remove_child((u64)process_radix_root, process->process_id, pid_levels, pid_level_size);
+    kernel_pager_release((u64)process->userspace_trap_frame);
+    kernel_pager_release((u64)process->kernelspace_trap_frame);
+    kernel_pager_release((u64)process->vma_table);
+    kernel_pager_release(process->kernel_stack); //on large page this will need to be changed to release all of them not just first
+    kernel_allocator_release((u64)process);
 }
+
 
 void kernel_process_create_init_process() {
     //create the init process

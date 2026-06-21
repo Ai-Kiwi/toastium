@@ -18,6 +18,13 @@
 
 //even if process is changed asm doesn't need to worry (vma swap and trap_frame swap done in c)
 
+void change_process(kernel_trap_data *trap_data) {
+    kernel_process *next_process = kernel_scheduler_dequeue_next_process(trap_data->hart_id);
+    kernel_context_change_process(next_process, trap_data->hart_id);
+
+    kernel_timer_set_future_ms(4);
+}
+
 u64 kernel_handle_trap() {
     kernel_trap_data trap_data;
     arch_parse_trap_data((kernel_trap_data *)&trap_data);
@@ -39,6 +46,12 @@ u64 kernel_handle_trap() {
         break;
     case KTRAP_SYSCALL:
         u64 response = kernel_syscall_sync_handler(&trap_data);
+        if (response == 1) {//process needs to be killed
+            kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
+
+            change_process(&trap_data);
+            return 0;
+        }
         if (response > 0) {
             //needs to be handled by async
             return ((u64)((kernel_process *)trap_data.process_ptr)->kernel_stack) + KERNEL_PAGE_SIZE - 1;
@@ -65,10 +78,8 @@ u64 kernel_handle_trap() {
             PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         }
 
-        kernel_process *next_process = kernel_scheduler_dequeue_next_process(trap_data.hart_id);
-        kernel_context_change_process(next_process, trap_data.hart_id);
+        change_process(&trap_data);
 
-        kernel_timer_set_future_ms(4);
         break;
     case KTRAP_EXTERNAL_INTERRUPT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
