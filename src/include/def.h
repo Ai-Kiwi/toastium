@@ -11,4 +11,8 @@
 
 #define KERNEL_PAGE_SIZE 4096
 
+
+#define ROUND_MOD_DOWN(number, rounder) ((number / rounder) * rounder)
+#define ROUND_MOD_UP(number, rounder) (((number+(rounder-1)) / rounder) * rounder)
+
 #endif

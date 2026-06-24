@@ -1,7 +1,5 @@
 misc
  - asid isn't best handled for when its not supported on hardware
- - Allocator should be changed to store the header data once at top of page data instead of per entry
- - allocator should be 64byte aligned for cross core. (Mostly header issue, per page and per entry)
  - allocator no cache system for last free
  - pager should have double past location buffer
  - pager can't handle overlap or same memory locations. Both for reserved and free
@@ -22,9 +20,11 @@ Need large pages
  - user processes don't do large pages
 
 Need bss fix
- - asid not aligned 64 bytes (current and max)
+ - asid upto data not aligned 64 bytes (current and max)
  - processes info
  - current running process info
+ - process created up to id
+ - Allocator data
 
 Red black tree
  - scheduler

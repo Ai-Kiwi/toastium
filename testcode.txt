@@ -39,3 +39,21 @@ for (u64 i = 0; i<100000; i++) {
 uart_println_str("deleting tables");
 
 kernel_radix_delete(tree_root, TRUE, 9, 3);
+
+# allocator
+
+u64 old_location = 0x0;
+for (u64 i=0; i<100000; i++) {
+    u64 location = (u64)kernel_allocator_acquire(32);
+    uart_print_u64(location - old_location);
+    uart_print_str(" : ");
+    uart_println_u64_hex(location);
+    old_location = location;
+    alloc_locations[i] = (u64 *)location;
+    *alloc_locations[i] = i;
+}
+for (u64 i=0; i<100000; i++) {
+    if (*alloc_locations[i] != i) {
+        PANIC("VALUE_IS_DIFFERENT", 0, 0, 0);
+    }
+}
