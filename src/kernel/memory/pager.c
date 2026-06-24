@@ -62,12 +62,12 @@ void find_memory_regions(
         }
 
         s32 *base_value = (s32 *)device_info[i].value;
-        u64 high = arch_dtb_read_int((u8 *)&base_value[0]) << 32;
+        u64 high = ((u64)arch_dtb_read_int((u8 *)&base_value[0])) << 32;
         u64 low = arch_dtb_read_int((u8 *)&base_value[1]);
         u64 location = high | low;
         location += KERNEL_VMA_START;
 
-        high = arch_dtb_read_int((u8 *)&base_value[2]) << 32;
+        high = ((u64)arch_dtb_read_int((u8 *)&base_value[2])) << 32;
         low = arch_dtb_read_int((u8 *)&base_value[3]);
         u64 size = high | low;
 

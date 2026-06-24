@@ -3,14 +3,20 @@
 #include "include/types.h"
 #include "include/def.h"
 #include "drivers/uart/uart.h"
+#include <stdalign.h>
 
 //worth noting, zero is free here, one is in use. This is flipped of pager.
 
 #define max_idx_page_bitmap_entrys ((KERNEL_PAGE_SIZE - 8) / 8)
 
-u64 root_idx_page[256];
-u64 current_bump_page;
-u64 current_bump_cnt;
+
+typedef struct {
+    u64 *page;
+    u64 cnt;
+} __attribute__((aligned(64))) bump_state;
+
+alignas(64) bump_state bump_allocator_state;
+alignas(64) u64 root_idx_page[256]; //multiple of 64, so cache aligned
 
 u32 max_cnt_per_page(u64 size) {
     u64 entry_size = size;
@@ -22,8 +28,8 @@ void kernel_allocator_init() {
         root_idx_page[i] = 0;
     }
 
-    current_bump_page = kernel_pager_acquire();
-    current_bump_cnt = 0;
+    bump_allocator_state.cnt = 0;
+    bump_allocator_state.page = (u64 *)kernel_pager_acquire();
 }
 
 u64 new_idx_page() {
@@ -178,14 +184,14 @@ u64 kernel_allocator_bump(u64 size) {
         PANIC("ALLOCATOR_BUMP_LARGER_THEN_PAGE",0,0,0);
     }
 
-    if (current_bump_cnt + size >= KERNEL_PAGE_SIZE) {
-        current_bump_page = kernel_pager_acquire();
-        current_bump_cnt = 0;
+    if (bump_allocator_state.cnt + size >= KERNEL_PAGE_SIZE) {
+        bump_allocator_state.page = (u64 *)kernel_pager_acquire();
+        bump_allocator_state.cnt = 0;
     }
 
-    u64 response = current_bump_page + current_bump_cnt;
+    u64 response = ((u64)bump_allocator_state.page) + bump_allocator_state.cnt;
 
-    current_bump_cnt += ((size+7)/8) * 8;
+    bump_allocator_state.cnt += ROUND_MOD_UP(size, 8);
 
     return response;
 }

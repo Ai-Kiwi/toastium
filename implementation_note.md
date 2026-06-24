@@ -24,7 +24,6 @@ Need bss fix
  - processes info
  - current running process info
  - process created up to id
- - Allocator data
 
 Red black tree
  - scheduler
