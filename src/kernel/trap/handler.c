@@ -30,16 +30,37 @@ u64 kernel_handle_trap() {
     arch_parse_trap_data((kernel_trap_data *)&trap_data);
 
     //decide to use
+    kernel_process *process = (kernel_process *)trap_data.process_ptr;
 
     switch (trap_data.code) {
     case KTRAP_ACCESS_MISALIGNED:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_ACCESS_MISALIGNED",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+        uart_println_str("process killed : access misaligned");
+        uart_print_str("process id:");
+        uart_println_u64(process->process_id);
+        uart_print_str("fault addr:");
+        uart_println_u64(trap_data.fault_addr);
+        uart_print_str("fault pc:");
+        uart_println_u64(trap_data.fault_pc);
+
+        kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
+        change_process(&trap_data);
+        return 0;
         break;
     case KTRAP_ACCESS_FAULT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_ACCESS_FAULT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         break;
     case KTRAP_INSTRUCTION_INVALID:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_INSTRUCTION_INVALID",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+        uart_println_str("process killed : bad instruction");
+        uart_print_str("process id:");
+        uart_println_u64(process->process_id);
+        uart_print_str("fault addr:");
+        uart_println_u64(trap_data.fault_addr);
+        uart_print_str("fault pc:");
+        uart_println_u64(trap_data.fault_pc);
+
+        kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
+        change_process(&trap_data);
+        return 0;
         break;
     case KTRAP_BREAKPOINT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_BREAKPOINT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);

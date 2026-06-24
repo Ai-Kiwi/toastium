@@ -6,7 +6,7 @@ idle_process_entry:
     
     li a0, 1
     li a1, 0
-
+    
     li a2, 'h'
     ecall
     li a2, 'e'
