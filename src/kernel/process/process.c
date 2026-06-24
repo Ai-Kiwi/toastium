@@ -12,6 +12,7 @@
 #include "arch_trap/handler.h"
 #include "types.h"
 #include "kernel/process/scheduler.h"
+#include <stdalign.h>
 
 //upto 65,536 processes
 #define pid_level_size 4
@@ -21,7 +22,7 @@
 extern u8 _kernel_idle_process, _kernel_init_process;
 
 //not 64 bytes aligned for multicore
-u64 process_upto = 0;
+alignas(64) u64 __attribute__((aligned(64))) process_upto = 0;
 u64 *process_radix_root = 0;
 
 kernel_process *kernel_process_from_id(pid process_id) {

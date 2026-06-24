@@ -23,7 +23,6 @@ Need bss fix
  - asid upto data not aligned 64 bytes (current and max)
  - processes info
  - current running process info
- - process created up to id
 
 Red black tree
  - scheduler
