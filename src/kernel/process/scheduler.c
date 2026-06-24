@@ -12,6 +12,9 @@
 //almost all the code in here atm is temp and will be completely rewritten.
 //this is just a round robin schedular so i am able to get it working for testing.
 
+//also none of this is fast or safe for SMP. THis doesn't matter as it is just planning code
+//it will be replaced before smp gets added.
+
 volatile u64 *process_queue; //page storing ring buffer of processes
 u64 process_queue_size;
 u64 process_queue_count;
