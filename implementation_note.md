@@ -12,6 +12,7 @@ misc
  - the idle process doesn't use wfi
  - floating point reg don't have state saved or swapped for context shift. 
  - kernel stack for processes has no vma write/read guards around it.
+ - read from userspace reads byte at a time not 64bits at a time. (would need to keep align in mind too) 
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
