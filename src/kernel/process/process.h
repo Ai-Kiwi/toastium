@@ -11,12 +11,19 @@ typedef enum {
     KPROC_TYPE_DEAD,
 } kernel_process_type;
 
+typedef enum {
+    KPROC_TRAP_PROCESS,
+    KPROC_TRAP_PROCESS_TRAP,
+    KPROC_TRAP_PROCESS_PAGE_FAULT
+} process_trap_state;
+
 typedef struct {
     pid process_id;
     process_block block_waiting; //process needs to be in kernel space for a block to be waiting
-    bool8 in_kernel_space;
+    process_trap_state trap_state;
     arch_trapframe *userspace_trap_frame;
     arch_trapframe *kernelspace_trap_frame;
+    arch_trapframe *page_fault_trap_frame;
     u64 *vma_table;
     u64 vma_addr_space_id; // in risc-v also known as ASID
     u64 kernel_stack;

@@ -17,6 +17,7 @@ void kernel_context_change_process(kernel_process *process, u64 hart_id) {
 
     change_context(process);
     process->running = TRUE;
+    process->page_fault_trap_frame->hart_id = hart_id;
     process->kernelspace_trap_frame->hart_id = hart_id;
     process->userspace_trap_frame->hart_id = hart_id;
 

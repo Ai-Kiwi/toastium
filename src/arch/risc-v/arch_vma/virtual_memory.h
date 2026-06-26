@@ -19,4 +19,7 @@ void arch_vma_swap(kernel_process *process);
 u64 arch_vma_create();
 void arch_vma_init();
 
+void arch_vma_enable_read_user();
+void arch_vma_disable_read_user();
+
 #endif

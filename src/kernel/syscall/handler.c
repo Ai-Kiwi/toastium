@@ -4,6 +4,7 @@
 #include "arch_trap/parser.h"
 #include "kernel/process/process.h"
 #include "kernel/safety/panic.h"
+#include "kernel/syscall/handler.h"
 #include "types.h"
 #include "kernel/process/scheduler.h"
 #include "kernel/process/context.h"
@@ -15,9 +16,26 @@
 u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
 
     switch (trap->arg0_reg) {
-        case 1:
-            return syscall_uart(trap); 
+        case SYSCALL_UART_PRINT:
+            return syscall_uart(trap, FALSE);
             break;
+        default:
+            //will return async
+            break;
+    }
+
+    //actually very performant to return it must be async if it wasn't anything we handled
+    //as it will likely be killed if it isn't async as well as then it would be unknown
+    return U64_MAX;
+}
+
+//response 1 means process killed
+u64 kernel_syscall_async_handler(kernel_trap_data *trap) {
+
+    switch (trap->arg0_reg) {
+        case SYSCALL_UART_PRINT:
+            return syscall_uart(trap, TRUE);
+        break;
         default:
             uart_println_str("process error: unknown syscall ");
             uart_print_str("process ID: ");
@@ -31,12 +49,6 @@ u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
             uart_print_str("arg3: ");
             uart_println_u64(trap->arg3_reg);
             return 1;
-            break;
+        break;
     }
-
-    //actually very performant to return it must be async if it wasn't anything we handled
-    //as it will likely be killed if it isn't async as well as then it would be unknown
-    return U64_MAX;
 }
-
-

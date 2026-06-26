@@ -143,3 +143,7 @@ void arch_trap_iter_instruction(kernel_trap_data *kernel_trap) {
     arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
     trap_frame_data->sepc += 4;
 }
+
+u64 arch_trap_stack_pointer(arch_trapframe *trap_frame) {
+    return trap_frame->register_2;
+}

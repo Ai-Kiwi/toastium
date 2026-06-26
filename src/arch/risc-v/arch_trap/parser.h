@@ -47,5 +47,6 @@ typedef struct { //each split into page so doesn't need to be 64 byte aligned
 void arch_parse_trap_data(kernel_trap_data *trap);
 void arch_trap_set_response(kernel_trap_data *kernel_trap);
 void arch_trap_iter_instruction(kernel_trap_data *kernel_trap);
+u64 arch_trap_stack_pointer(arch_trapframe *trap_frame);
 
 #endif

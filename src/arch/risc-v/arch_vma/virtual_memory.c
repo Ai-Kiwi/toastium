@@ -147,3 +147,11 @@ void arch_vma_swap(kernel_process *process) {
     asm volatile ("csrw satp, %0" :: "r"(satp_value) : "memory");
     //might need fence here need to look more into it
 }
+
+void arch_vma_enable_read_user() {
+    asm volatile("csrs sstatus, %0" :: "r"BIT(18));
+}
+
+void arch_vma_disable_read_user() {
+    asm volatile("csrc sstatus, %0" :: "r"BIT(18));
+}

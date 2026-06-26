@@ -12,13 +12,14 @@
 #include "kernel/timer/timer.h"
 #include "kernel/syscall/handler.h"
 #include "kernel/process/context.h"
+#include "types.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel
 
 //even if process is changed asm doesn't need to worry (vma swap and trap_frame swap done in c)
 
-void change_process(kernel_trap_data *trap_data) {
+void kernel_trap_change_process(kernel_trap_data *trap_data) {
     kernel_process *next_process = kernel_scheduler_dequeue_next_process(trap_data->hart_id);
     kernel_context_change_process(next_process, trap_data->hart_id);
 
@@ -31,6 +32,7 @@ u64 kernel_handle_trap() {
 
     //decide to use
     kernel_process *process = (kernel_process *)trap_data.process_ptr;
+    u64 kernel_process_stack = ((u64)((kernel_process *)trap_data.process_ptr)->kernel_stack) + KERNEL_PAGE_SIZE - 1;
 
     switch (trap_data.code) {
     case KTRAP_ACCESS_MISALIGNED:
@@ -43,7 +45,7 @@ u64 kernel_handle_trap() {
         uart_println_u64(trap_data.fault_pc);
 
         kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
-        change_process(&trap_data);
+        kernel_trap_change_process(&trap_data);
         return 0;
         break;
     case KTRAP_ACCESS_FAULT:
@@ -59,7 +61,7 @@ u64 kernel_handle_trap() {
         uart_println_u64(trap_data.fault_pc);
 
         kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
-        change_process(&trap_data);
+        kernel_trap_change_process(&trap_data);
         return 0;
         break;
     case KTRAP_BREAKPOINT:
@@ -70,18 +72,24 @@ u64 kernel_handle_trap() {
         if (response == 1) {//process needs to be killed
             kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
 
-            change_process(&trap_data);
+            kernel_trap_change_process(&trap_data);
             return 0;
         }
         if (response > 0) {
             //needs to be handled by async
-            return ((u64)((kernel_process *)trap_data.process_ptr)->kernel_stack) + KERNEL_PAGE_SIZE - 1;
+            return kernel_process_stack;
         }
         arch_trap_set_response(&trap_data);
         arch_trap_iter_instruction(&trap_data);
         break;
     case KTRAP_PAGE_FAULT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_PAGE_FAULT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+        if (process->trap_state == KPROC_TRAP_PROCESS_TRAP) {
+            u64 stack_location = arch_trap_stack_pointer(process->kernelspace_trap_frame);
+            stack_location = ROUND_MOD_DOWN(stack_location - 8, 8);
+            return stack_location;
+        }else{
+            return kernel_process_stack;
+        }
         break;
     case KTRAP_DOUBLE_TRAP:
         PANIC("KERNEL_TRAP_DOUBLE_TRAP",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
@@ -100,7 +108,7 @@ u64 kernel_handle_trap() {
             PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
         }
 
-        change_process(&trap_data);
+        kernel_trap_change_process(&trap_data);
 
         break;
     case KTRAP_EXTERNAL_INTERRUPT:

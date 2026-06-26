@@ -55,6 +55,6 @@ typedef enum {
 
 
 u64 kernel_handle_trap();
-
+void kernel_trap_change_process(kernel_trap_data *trap_data);
 
 #endif

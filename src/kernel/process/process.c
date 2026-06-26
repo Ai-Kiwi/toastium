@@ -39,12 +39,14 @@ kernel_process *new_blank_process() {
         process_upto++;
     }
     kernel_process new_process;
+    new_process.trap_state = KPROC_TRAP_PROCESS;
     new_process.block_waiting = 0;
     new_process.process_id = process_upto;
     new_process.vma_addr_space_id = U64_MAX;
     new_process.vma_table = (u64 *)arch_vma_create();
     new_process.userspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     new_process.kernelspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
+    new_process.page_fault_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     new_process.process_type = KPROC_TYPE_NORMAL;
     new_process.running = FALSE;
     arch_vma_assign_kernel((kernel_process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trap_frame, VMA_READ | VMA_WRITE);
@@ -118,7 +120,7 @@ void kernel_process_create_init_process() {
     //create the init process
     kernel_process *init_process = new_blank_process();
     arch_trapframe_init_user(init_process->userspace_trap_frame, 0x1000);
-    arch_vma_assign_user(init_process, 0x1000, (u64)&_kernel_init_process, VMA_EXEC);
+    arch_vma_assign_user(init_process, 0x1000, (u64)&_kernel_init_process, VMA_EXEC | VMA_READ);
 
     kernel_scheduler_queue_process(init_process);
 }

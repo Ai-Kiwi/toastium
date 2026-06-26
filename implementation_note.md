@@ -10,6 +10,8 @@ misc
  - if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
  ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
  - the idle process doesn't use wfi
+ - floating point reg don't have state saved or swapped for context shift. 
+ - kernel stack for processes has no vma write/read guards around it.
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
