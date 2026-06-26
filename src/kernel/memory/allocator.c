@@ -150,7 +150,7 @@ void kernel_allocator_release(u64 location) {
     u64 page_num = header[1];
     u64 compressed_size = header[2];
     u32 max_per_page = max_cnt_per_page(entry_size);
-    u64 page_entry_num = ((u64)&data - (u64)&header - 64) / entry_size;
+    u64 page_entry_num = (((u64)&data) - ((u64)&header - 64)) / entry_size;
 
     //fetch idx location
     //first 8 bytes is the location of next idx table
