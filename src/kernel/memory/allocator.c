@@ -112,17 +112,15 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
                     continue;
                 }
 
-                u64 global_page_num = local_page_num + (max_page_entry * current_page_data_num);
-
                 if ((current_idx_page[current_idx_entry] & BIT(bit)) != 0UL) {
-                    PANIC("DOUBLE_AQUIRE_PAGE", current_idx_entry, global_page_num, 0);
+                    PANIC("DOUBLE_AQUIRE_PAGE", current_idx_entry, pow2_size, (u64)current_idx_page);
                 }
 
                 current_idx_page[current_idx_entry] |= BIT(bit);
 
 
-                volatile u64 *data = (volatile u64 *)((u64)(current_data_page) + (pow2_size * local_page_num));
-                return ((u64)data) + 64; //offset from start
+                volatile u64 data_location = ((u64)current_data_page) + (pow2_size * local_page_num) + 64;
+                return data_location; //offset from start
             }
 
             current_idx_entry++;
@@ -150,14 +148,14 @@ void kernel_allocator_release(u64 location) {
     u64 page_num = header[1];
     u64 compressed_size = header[2];
     u32 max_per_page = max_cnt_per_page(entry_size);
-    u64 page_entry_num = (((u64)&data) - ((u64)&header - 64)) / entry_size;
+    u64 page_entry_num = (((u64)data) - ((u64)header) - 64) / entry_size;
 
     //fetch idx location
     //first 8 bytes is the location of next idx table
 
 
     //extra 1 added is for page location header
-    const u64 bitmap_entry_num = (page_entry_num/64) + (page_num * (ROUND_MOD_UP(max_per_page,64)+1));
+    const u64 bitmap_entry_num = (page_entry_num/64) + (page_num * (ROUND_MOD_UP(max_per_page,64)+1)) + 1;
     const u64 bitmap_entry_bit = page_entry_num % 64;
 
     //convert
