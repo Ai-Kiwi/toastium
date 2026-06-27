@@ -26,6 +26,7 @@ typedef struct {
     arch_trapframe *page_fault_trap_frame;
     u64 *vma_table;
     u64 vma_addr_space_id; // in risc-v also known as ASID
+    u64 *handles_page; //ptr to pages for process handles. First 4 bytes is location of next. rest are page handle ids.
     u64 kernel_stack;
     u16 runing_hart_id;
     bool8 running;

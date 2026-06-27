@@ -49,6 +49,7 @@ kernel_process *new_blank_process() {
     new_process.page_fault_trap_frame = (arch_trapframe *)kernel_pager_acquire();
     new_process.process_type = KPROC_TYPE_NORMAL;
     new_process.running = FALSE;
+    new_process.handles_page = 0;
     arch_vma_assign_kernel((kernel_process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trap_frame, VMA_READ | VMA_WRITE);
 
     u64 kernel_stack = kernel_pager_acquire();
