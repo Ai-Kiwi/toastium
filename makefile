@@ -89,3 +89,5 @@ debug: $(BIN)
 clean:
 	rm -rf $(BUILD)
 	rm -f link.ld
+
+build: $(BIN)
