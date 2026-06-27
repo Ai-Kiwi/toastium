@@ -8,6 +8,7 @@ typedef struct { //global file data
     char *path;
     u64 size;
     u64 *radix_roots[16];
+    u64 handle_count; //how many handles across all files are using this
 } __attribute__((aligned(64))) file;
 
 typedef struct { //per process
