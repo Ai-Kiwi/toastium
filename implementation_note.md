@@ -30,3 +30,6 @@ Need bss fix
 Red black tree
  - scheduler
  - timer
+
+Random System
+ - Allow hashmap to use random system for hash (word and number)
