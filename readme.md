@@ -6,7 +6,7 @@ An operating system that I have been developing for learning purposes. Designed 
 ## Current Features
  - Preemptive multitasking
  - Basic round robin scheduler with running processes.
- - Syscalls (interruptable and non-interuptable versions)
+ - Syscalls (interruptable and non-interuptable versions) (also handles reading userspace with page fault handling)
  - Running processes
  - Bootloader (U-Boot + OpenSBI for RISC-V)
  - Pager
