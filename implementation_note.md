@@ -27,9 +27,25 @@ Need bss fix
  - processes info
  - current running process info
 
-Red black tree
+needs to use red black tree
  - scheduler
  - timer
 
-Random System
- - Allow hashmap to use random system for hash (word and number)
+hashmap
+ - hashmap has 64byte per item overhead which is not needed (for cache coherency). Possible fix is todo sub lists to fix this.
+ - needs to handle overwrite for insert. Instead of just being unhandled, it should overwrite old value with a new one.
+ - needs to use random system for hashes to stop attack vector.
+
+test suits
+ - pager tests to make sure it allocates again in order.
+ - allocator needs more through testing to make sure it reallocates in order right
+ - allocator currently has unfixed bug
+ - hashmap needs system to make sure it doesn't remap to same location repetitively.
+ - hashmap needs remove item testing.
+
+
+
+
+
+High priority.
+ - There is a bug with allocator todo with not reusing sections. Issue appears in 

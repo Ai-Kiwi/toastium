@@ -9,6 +9,9 @@ else ifeq ($(BOARD), VF2L) #visionfive 2 lite
 else
     $(error Unknown BOARD=$(BOARD))
 endif
+
+test: CC += -DTEST_MODE
+
 GIT_VERSION_HASH := $(shell git describe --always --dirty)
 CC += -DGIT_VERSION_HASH=\"$(GIT_VERSION_HASH)\"
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
@@ -44,6 +47,27 @@ BIN := $(BUILD)/$(TARGET).bin
 ELF := $(BUILD)/$(TARGET).elf
 
 
+#Later date will fix this system
+#for now have to switch with clean before hand
+
+#run: BUILDTAG = run
+#test: BUILDTAG = test
+#run-traps: BUILDTAG = run
+#debug: BUILDTAG = run
+#build: BUILDTAG = run
+#
+
+
+
+#LASTBUILDTAGFILE = $(BUILD)/.last_build_tag
+#
+#ifneq ("$(shell cat $(LASTBUILDTAGFILE) 2>/dev/null)", "$(BUILDTAG)")
+#	$(shell echo "Build config changed")
+#	$(shell rm -rf $(BUILD)/tests)
+#	$(shell mkdir -p $(BUILD))
+#	$(shell echo "$(BUILDTAG)" > $(LASTBUILDTAGFILE))
+#endif
+
 all: $(BIN)
 	du -h $(BIN)
 
@@ -69,6 +93,11 @@ $(BIN): $(ELF)
 	$(OC) -O binary $^ $@
 
 run: $(BIN)
+#tell the panic to be recompiled, means that git hash version will get updated.
+	touch src/kernel/safety/panic.c
+	$(QEMU) $(QEMUF) -kernel $(BIN)
+
+test: $(BIN)
 #tell the panic to be recompiled, means that git hash version will get updated.
 	touch src/kernel/safety/panic.c
 	$(QEMU) $(QEMUF) -kernel $(BIN)

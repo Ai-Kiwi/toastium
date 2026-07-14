@@ -17,6 +17,7 @@ typedef struct {
 
 alignas(64) bump_state bump_allocator_state;
 alignas(64) u64 root_idx_page[256]; //multiple of 64, so cache aligned
+alignas(64) u64 lowest_free_entry[256]; //multiple of 64, so cache aligned
 
 u32 max_cnt_per_page(u64 size) {
     u64 entry_size = size;
@@ -26,6 +27,7 @@ u32 max_cnt_per_page(u64 size) {
 void kernel_allocator_init() {
     for (s32 i=0; i<256; i++) {
         root_idx_page[i] = 0;
+        lowest_free_entry[i] = 0;
     }
 
     bump_allocator_state.cnt = 0;
@@ -42,6 +44,27 @@ u64 new_data_page() {
     //could make sure everything is zero here, pager already handles this
     u64 data_page = (u64)kernel_pager_acquire();
     return data_page;
+}
+
+static inline volatile u64 *fetch_and_confirm_data_page(volatile u64 *current_idx_page, u64 current_idx_entry, u64 pow2_size, u64 compressed_size, u64 current_page_data_num) {
+    if (!current_idx_page[current_idx_entry]) { //create new data page
+        current_idx_page[current_idx_entry] = new_data_page();
+        u64 *data_page = (u64 *)current_idx_page[current_idx_entry];
+        data_page[0] = pow2_size;
+        data_page[1] = current_page_data_num;
+        data_page[2] = compressed_size;
+    }
+    return (volatile u64 *)current_idx_page[current_idx_entry];
+}
+
+static inline void confirm_idx_page(u64 *current_idx_entry, volatile u64 **current_idx_page) {
+    if (*current_idx_entry>=max_idx_page_bitmap_entrys) { //test if spilled over
+        *current_idx_entry = 1; //first is used for next idx page
+        if (!(*current_idx_page)[0]) { //create new idx page
+            (*current_idx_page)[0] = new_idx_page();
+        }
+        *current_idx_page = (volatile u64 *)(*current_idx_page)[0];
+    }
 }
 
 u64 kernel_allocator_acquire(u64 size_bytes) {
@@ -68,62 +91,59 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
     volatile u64 *current_idx_page = (volatile u64 *)root_idx_page[compressed_size];
     volatile u64 *current_data_page;
 
-    const u64 max_page_entry = max_cnt_per_page(pow2_size);
-    u64 bit_entry_per_page = (max_page_entry + 63) / 64;
+    //entry is the 8byte values. cnt is how many actual things.
+    const u64 bitmap_entry_cnt = max_cnt_per_page(pow2_size);
+    u64 bitmap_size = (ROUND_MOD_UP(bitmap_entry_cnt, 64) / 8) + 1; //includes header too
+
+    //sizes are in 8 bytes (64bits)
+    const u64 bitmap_num = lowest_free_entry[compressed_size] / bitmap_entry_cnt;
+
+    const u64 bitmap_location = bitmap_num * bitmap_size;
+    const u64 idx_entry = bitmap_location / max_idx_page_bitmap_entrys; //leaves 1 extra for next idx header
+    for (u64 i=0; i<idx_entry; i++) {
+        current_idx_entry = 999999999;
+        confirm_idx_page(&current_idx_entry, &current_idx_page);
+    }
+    current_idx_entry = (idx_entry % max_idx_page_bitmap_entrys) + 1;
+    current_page_data_num = bitmap_num;
 
 
     while (TRUE) { //loop for page data.
-        if (current_idx_entry>=max_idx_page_bitmap_entrys) { //test if spilled over
-            current_idx_entry = 1; //first is used for next idx page
-            if (!current_idx_page[0]) { //create new idx page
-                current_idx_page[0] = new_idx_page();
-            }
-            current_idx_page = (volatile u64 *)current_idx_page[0];
-        }
-
-        if (!current_idx_page[current_idx_entry]) { //create new data page
-            current_idx_page[current_idx_entry] = new_data_page();
-            u64 *data_page = (u64 *)current_idx_page[current_idx_entry];
-            data_page[0] = pow2_size;
-            data_page[1] = current_page_data_num;
-            data_page[2] = compressed_size;
-        }
-        current_data_page = (volatile u64 *)current_idx_page[current_idx_entry];
-
+        confirm_idx_page(&current_idx_entry, &current_idx_page);
+        current_data_page = fetch_and_confirm_data_page(current_idx_page, current_idx_entry, pow2_size, compressed_size, current_page_data_num);
         current_idx_entry++;
 
-        for (s32 i=0; i<bit_entry_per_page; i++) {
-            if (current_idx_entry>=max_idx_page_bitmap_entrys) { //test if spilled over
-                current_idx_entry = 1; //first is used for next idx page
-                if (!current_idx_page[0]) { //create new idx page
-                    current_idx_page[0] = new_idx_page();
-                }
-                current_idx_page = (volatile u64 *)current_idx_page[0];
+        for (s32 i=0; i<bitmap_entry_cnt; i++) { //all 64bits
+            confirm_idx_page(&current_idx_entry, &current_idx_page);
+
+            if (current_idx_page[current_idx_entry] == 0xFFFFFFFFFFFFFFFF) { //all bits full
+                current_idx_entry++;
+                continue;
             }
 
-            if (current_idx_page[current_idx_entry] != 0xFFFFFFFFFFFFFFFF) {
-                s32 bit = __builtin_ctzl(~current_idx_page[current_idx_entry]);
-                if (current_idx_page[current_idx_entry] == 0) {
-                    bit = 0;
-                }
-                u64 local_page_num = (i*64) + bit;
-                if (local_page_num>=max_page_entry) {
-                    current_idx_entry++;
-                    continue;
-                }
-
-                if ((current_idx_page[current_idx_entry] & BIT(bit)) != 0UL) {
-                    PANIC("DOUBLE_AQUIRE_PAGE", current_idx_entry, pow2_size, (u64)current_idx_page);
-                }
-
-                current_idx_page[current_idx_entry] |= BIT(bit);
-
-
-                volatile u64 data_location = ((u64)current_data_page) + (pow2_size * local_page_num) + 64;
-                return data_location; //offset from start
+            s32 bit = __builtin_ctzl(~current_idx_page[current_idx_entry]);
+            if (current_idx_page[current_idx_entry] == 0) {
+                bit = 0;
+            }
+            u64 local_page_num = (i*64) + bit;
+            if (local_page_num>=bitmap_entry_cnt) { //bit found is past limit for page
+                current_idx_entry++;
+                continue;
             }
 
-            current_idx_entry++;
+            if ((current_idx_page[current_idx_entry] & BIT(bit)) != 0UL) {
+                PANIC("DOUBLE_ACQUIRE_PAGE", current_idx_entry, pow2_size, (u64)current_idx_page);
+            }
+
+            current_idx_page[current_idx_entry] |= BIT(bit);
+
+            const u64 global_num = (bitmap_entry_cnt * current_page_data_num) + local_page_num;
+            if (lowest_free_entry[compressed_size] < global_num) {
+                lowest_free_entry[compressed_size] = global_num;
+            }
+
+            volatile u64 data_location = ((u64)current_data_page) + (pow2_size * local_page_num) + 64;
+            return data_location; //offset from start
         }
         current_page_data_num++;
     }
@@ -155,25 +175,34 @@ void kernel_allocator_release(u64 location) {
 
 
     //extra 1 added is for page location header
-    const u64 bitmap_entry_num = (page_entry_num/64) + (page_num * (ROUND_MOD_UP(max_per_page,64)+1)) + 1;
+    const u64 bitmap_entry_num = (page_entry_num/64) + (page_num * ((ROUND_MOD_UP(max_per_page,64)/8)+1));
     const u64 bitmap_entry_bit = page_entry_num % 64;
 
     //convert
     u64 idx_table_num = bitmap_entry_num / max_idx_page_bitmap_entrys;
-    u64 idx_table_postion = bitmap_entry_num % max_idx_page_bitmap_entrys;
+    u64 idx_table_postion = (bitmap_entry_num % max_idx_page_bitmap_entrys) + 1;
 
     volatile u64 *bitmap = (volatile u64 *)root_idx_page[compressed_size];
+    if (bitmap == 0x0) {
+        PANIC("ALLOCATOR_RELEASE_NO_IDX_TABLE",0,0,0);
+    }
+
     for (s32 i=0; i<idx_table_num; i++) { //move to idx paged stored on
-        if (!bitmap[0]) {
-            PANIC("ALLOCATOR_RELEASE_NO_idx_TABLE_LEAF",0,0,0);
+        if (bitmap[0] == 0x0) {
+            PANIC("ALLOCATOR_RELEASE_NO_idx_TABLE_LEAF",i,idx_table_num,location);
         }
         bitmap = (volatile u64 *)bitmap[0];
     }
 
     //offset 1 because first is location of next idx page
-    bitmap[idx_table_postion + 1] &= ~BIT(bitmap_entry_bit);
+    bitmap[idx_table_postion] &= ~BIT(bitmap_entry_bit);
 
-    //another place multicore support is lacking
+    const u64 global_num = (max_per_page * page_num) + page_entry_num;
+    if (lowest_free_entry[compressed_size] > global_num) {
+        lowest_free_entry[compressed_size] = global_num;
+    }
+
+    //another place multicore suppcompressed_sizert is lacking
     //needs atomic so can't be edited twice at same time
 }
 

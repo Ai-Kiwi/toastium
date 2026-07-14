@@ -1,4 +1,5 @@
 #include "kernel/memory/hashmap.h"
+#include "drivers/uart/uart.h"
 #include "kernel/memory/allocator.h"
 #include "include/types.h"
 #include "kernel/safety/panic.h"
@@ -10,7 +11,7 @@ void kernel_hashmap_insert(kernel_hashmap *hashmap, u64 key, u64 data) {
     u64 hash = hashmap->hash_function(key);
     u64 index = hash % hashmap->len;
 
-    volatile kernel_hashmap_leaf *new_leaf = (kernel_hashmap_leaf *)kernel_allocator_acquire(64);
+    volatile kernel_hashmap_leaf *new_leaf = (volatile kernel_hashmap_leaf *)kernel_allocator_acquire(64);
 
     new_leaf->data = data;
     new_leaf->key = key;
@@ -18,6 +19,11 @@ void kernel_hashmap_insert(kernel_hashmap *hashmap, u64 key, u64 data) {
     new_leaf->next_leaf = hashmap->start[index];
     hashmap->start[index] = (u64)new_leaf;
 }
+
+
+
+
+
 
 //returns data if anything removed
 u64 kernel_hashmap_remove(kernel_hashmap *hashmap, u64 key) {
@@ -45,7 +51,7 @@ u64 kernel_hashmap_fetch(kernel_hashmap *hashmap, u64 key) {
     u64 hash = hashmap->hash_function(key);
     u64 index = hash % hashmap->len;
 
-    volatile kernel_hashmap_leaf *current_leaf = (kernel_hashmap_leaf *)((hashmap->start)[index]);
+    kernel_hashmap_leaf *current_leaf = (kernel_hashmap_leaf *)((hashmap->start)[index]);
 
     while ((u64)current_leaf != 0) {
         if (hashmap->equal_function(current_leaf->key, key)) {
@@ -96,15 +102,15 @@ bool8 builtin_word_equal(u64 first_key, u64 second_key) {
 }
 
 
-void kernel_hashmap_create(khashmap_builtin_types type, kernel_hashmap init_hashmap) {
+void kernel_hashmap_create(khashmap_builtin_types type, kernel_hashmap *init_hashmap) {
     switch (type) {
     case KHASHMAP_TYPE_STR:
-        init_hashmap.equal_function = builtin_word_equal;
-        init_hashmap.hash_function = builtin_word_hash;
+        init_hashmap->equal_function = builtin_word_equal;
+        init_hashmap->hash_function = builtin_word_hash;
         break;
     case KHASHMAP_TYPE_NUMBER:
-        init_hashmap.equal_function = builtin_num_equal;
-        init_hashmap.hash_function = builtin_num_hash;
+        init_hashmap->equal_function = builtin_num_equal;
+        init_hashmap->hash_function = builtin_num_hash;
         break;
     default:
         PANIC("HASHMAP_INIT_INVALID_TYPE", type, 0, 0);

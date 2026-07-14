@@ -16,6 +16,12 @@
 #include "arch_vma/virtual_memory.h"
 #include "kernel/process/context.h"
 
+#include "tests/pager.h"
+#include "tests/allocator.h"
+#include "tests/radix.h"
+#include "tests/hashmap.h"
+#include "tests/utils.h"
+
 extern u8 _kernel_end, _kernel_start, _kernel_idle_process;
 
 u64 *alloc_locations[100000];
@@ -49,6 +55,13 @@ void kernel_main() {
 
     uart_println_str("Initializing allocator");
     kernel_allocator_init();
+    test_pager();
+
+    test_allocator();
+
+    test_radix();
+
+    test_hashmap();
 
     uart_println_str("Initializing process handler");
     kernel_processes_init(hart_count);
@@ -80,6 +93,8 @@ void kernel_main() {
     kernel_context_bootstrap(0); //setup for running processes on core 0
 
     uart_println_str("Finished initialization, now running kernel");
+
+    tests_hang();
 
     //makes timer to kick start the os
     kernel_timer_set_future_ms(5);
