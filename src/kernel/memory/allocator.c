@@ -164,23 +164,25 @@ void kernel_allocator_release(u64 location) {
     volatile u64 *data = (volatile u64 *)(location);
 
     //fetch the page location and which num it is
-    u64 entry_size = header[0];
-    u64 page_num = header[1];
-    u64 compressed_size = header[2];
-    u32 max_per_page = max_cnt_per_page(entry_size);
-    u64 page_entry_num = (((u64)data) - ((u64)header) - 64) / entry_size;
+    const u64 entry_size = header[0];
+    const u64 page_num = header[1];
+    const u64 compressed_size = header[2];
+    const u32 max_per_page = max_cnt_per_page(entry_size);
+    const u64 page_entry_num = (((u64)data) - ((u64)header) - 64) / entry_size;
 
     //fetch idx location
     //first 8 bytes is the location of next idx table
 
 
     //extra 1 added is for page location header
-    const u64 bitmap_entry_num = (page_entry_num/64) + (page_num * ((ROUND_MOD_UP(max_per_page,64)/8)+1));
+    const u64 data_page_row_size = ((ROUND_MOD_UP(max_per_page,64)/8)+1); //add 1 to make room for data ptr
+
+    const u64 bitmap_entry_num = (page_entry_num/64) + (page_num * data_page_row_size) + 1; //add 1 to make sure its not data ptr.
     const u64 bitmap_entry_bit = page_entry_num % 64;
 
     //convert
     u64 idx_table_num = bitmap_entry_num / max_idx_page_bitmap_entrys;
-    u64 idx_table_postion = (bitmap_entry_num % max_idx_page_bitmap_entrys) + 1;
+    u64 idx_table_postion = (bitmap_entry_num % max_idx_page_bitmap_entrys) + 1; //add w1 so not on next index ptr
 
     volatile u64 *bitmap = (volatile u64 *)root_idx_page[compressed_size];
     if (bitmap == 0x0) {
@@ -192,6 +194,9 @@ void kernel_allocator_release(u64 location) {
             PANIC("ALLOCATOR_RELEASE_NO_idx_TABLE_LEAF",i,idx_table_num,location);
         }
         bitmap = (volatile u64 *)bitmap[0];
+    }
+    if ((bitmap[idx_table_postion] & BIT(bitmap_entry_bit)) == 0x0) {
+        PANIC("ALLOCATOR_RELEASE_FREE", 0, 0, 0);
     }
 
     //offset 1 because first is location of next idx page
