@@ -9,8 +9,8 @@
 #include "include/board.h"
 #include "parser.h"
 
-void arch_parse_trap_data(kernel_trap_data *trap) {//will have ptr input here that points to reg data on stack
-    arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
+void trapframe_parse(trap_data *trap) {//will have ptr input here that points to reg data on stack
+    trapframe *trap_frame_data = (trapframe *)TRAPFRAME_ADDRESS;
 
     const u64 is_interrupt = trap_frame_data->scause & BIT(63); //last bit
     const u64 trap_code = (trap_frame_data->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit
@@ -133,17 +133,17 @@ void arch_parse_trap_data(kernel_trap_data *trap) {//will have ptr input here th
     }
 }
 
-void arch_trap_set_response(kernel_trap_data *kernel_trap) {
-    arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
+void trap_data_set_response(trap_data *kernel_trap) {
+    trapframe *trap_frame_data = (trapframe *)TRAPFRAME_ADDRESS;
 
     trap_frame_data->register_10 = kernel_trap->return_reg;
 }
 
-void arch_trap_iter_instruction(kernel_trap_data *kernel_trap) {
-    arch_trapframe *trap_frame_data = (arch_trapframe *)TRAPFRAME_ADDRESS;
+void trap_data_iter_instruction(trap_data *kernel_trap) {
+    trapframe *trap_frame_data = (trapframe *)TRAPFRAME_ADDRESS;
     trap_frame_data->sepc += 4;
 }
 
-u64 arch_trap_stack_pointer(arch_trapframe *trap_frame) {
+u64 trapframe_stack_ptr(trapframe *trap_frame) {
     return trap_frame->register_2;
 }

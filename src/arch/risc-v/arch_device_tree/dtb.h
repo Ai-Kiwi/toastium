@@ -3,10 +3,10 @@
 
 #include "kernel/devices/device_tree.h"
 
-void arch_set_dtb_location(u8 *new_dtb);
-device_info_dump_response arch_parse_dtb_ram(u8 *output_location);
-u32 arch_dtb_read_int(u8 *ptr);
+void dtb_set_dst(u8 *new_dtb);
+device_info_dump_response dtb_dump(u8 *output_location);
+u32 dtb_read_int(u8 *ptr);
 
-u64 arch_dtb_get_hart_count();
+u64 dtb_hart_cnt();
 
 #endif

@@ -4,9 +4,9 @@
 
 #include "kernel/trap/irq.h"
 
-void arch_enable_irq(IRQ_TYPES irq_type);
-void arch_irq_init();
-void arch_irq_enable();
-void arch_irq_disable();
+void irq_enable_type(IRQ_TYPES irq_type);
+void irq_init();
+void irq_enable();
+void irq_disable();
 
 #endif

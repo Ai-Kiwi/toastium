@@ -42,11 +42,11 @@ typedef struct { //each split into page so doesn't need to be 64 byte aligned
     u64 sstatus; //Privilege level machine was in.
     u64 process_ptr;
     u64 hart_id;
-} arch_trapframe;
+} trapframe;
 
-void arch_parse_trap_data(kernel_trap_data *trap);
-void arch_trap_set_response(kernel_trap_data *kernel_trap);
-void arch_trap_iter_instruction(kernel_trap_data *kernel_trap);
-u64 arch_trap_stack_pointer(arch_trapframe *trap_frame);
+void trapframe_parse(trap_data *trap);
+void trap_data_set_response(trap_data *trap);
+void trap_data_iter_instruction(trap_data *trap);
+u64 trapframe_stack_ptr(trapframe *trap_frame);
 
 #endif

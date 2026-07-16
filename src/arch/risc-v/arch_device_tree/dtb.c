@@ -4,7 +4,7 @@
 #include "kernel/devices/device_tree.h"
 #include "arch_device_tree/dtb.h"
 
-u32 arch_dtb_read_int(u8 *ptr) {
+u32 dtb_read_int(u8 *ptr) {
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
 }
 
@@ -24,11 +24,11 @@ typedef struct {
 
 u8 *dtb = 0;
 
-void arch_set_dtb_location(u8 *new_dtb) {
+void dtb_set_dst(u8 *new_dtb) {
     dtb = new_dtb;
 }
 
-device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
+device_info_dump_response dtb_dump(u8 *output_location) {
     uart_println_str("Parsing DTB");
 
     if (!&dtb) {
@@ -38,18 +38,18 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
     dtb_header header;
     header = *(volatile dtb_header*)dtb;
 
-    header.magic_header = arch_dtb_read_int(dtb);
-    header.total_size = arch_dtb_read_int(&dtb[4]);
-    header.struct_offset = arch_dtb_read_int(&dtb[8]);
-    header.strings_offset = arch_dtb_read_int(&dtb[12]);
-    header.memory_offset = arch_dtb_read_int(&dtb[16]);
-    header.version = arch_dtb_read_int(&dtb[20]);
-    header.comptaible_version = arch_dtb_read_int(&dtb[24]);
-    header.boot_cpu = arch_dtb_read_int(&dtb[28]);
-    header.strings_size = arch_dtb_read_int(&dtb[32]);
-    header.struct_size = arch_dtb_read_int(&dtb[36]);
+    header.magic_header = dtb_read_int(dtb);
+    header.total_size = dtb_read_int(&dtb[4]);
+    header.struct_offset = dtb_read_int(&dtb[8]);
+    header.strings_offset = dtb_read_int(&dtb[12]);
+    header.memory_offset = dtb_read_int(&dtb[16]);
+    header.version = dtb_read_int(&dtb[20]);
+    header.comptaible_version = dtb_read_int(&dtb[24]);
+    header.boot_cpu = dtb_read_int(&dtb[28]);
+    header.strings_size = dtb_read_int(&dtb[32]);
+    header.struct_size = dtb_read_int(&dtb[36]);
 
-    u32 magic_code = arch_dtb_read_int(dtb);
+    u32 magic_code = dtb_read_int(dtb);
     if (header.magic_header != 0xD00DFEED) {
         PANIC("INCORRECT_DTB_MAGIC_HEADER",header.comptaible_version, 0, 0);
     }
@@ -65,7 +65,7 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
     s32 node_stack_depth = 0;
 
     for (u32 byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
-        u32 item_value = arch_dtb_read_int(&dtb[byte_location]);
+        u32 item_value = dtb_read_int(&dtb[byte_location]);
 
         //uart_print_u64_hex((u64)byte_location);
         //for (s32 i=0; i<node_stack_depth; i++) {
@@ -96,8 +96,8 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
             //uart_println_str("nop");
             continue;
         case 0x00000003: //property
-            u32 prop_size = arch_dtb_read_int(&dtb[(byte_location + 4)]);
-            u32 name_offset = arch_dtb_read_int(&dtb[(byte_location + 8)]);
+            u32 prop_size = dtb_read_int(&dtb[(byte_location + 4)]);
+            u32 name_offset = dtb_read_int(&dtb[(byte_location + 8)]);
 
             //get name
             u8 *prop_name = &dtb[header.strings_offset + name_offset];
@@ -168,6 +168,6 @@ device_info_dump_response arch_parse_dtb_ram(u8 *output_location) {
 
 }
 
-u64 arch_dtb_get_hart_count() {
+u64 dtb_hart_cnt() {
     return 1;
 }

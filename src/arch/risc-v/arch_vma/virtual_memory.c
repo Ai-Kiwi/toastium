@@ -15,8 +15,8 @@
 u64 max_asid;
 u64 current_highest_asid;
 
-u64 arch_vma_create() {
-    u64 new_page_addr = kernel_pager_acquire();
+u64 vma_create() {
+    u64 new_page_addr = pg_alloc();
 
     //create kernel mapping
     ///allow read/write/execute, mark as global for optimization, is valid and also mark as already dirty and accessed for performance.
@@ -30,7 +30,7 @@ u64 arch_vma_create() {
 
 //must be called when init vma has already been set
 //Reason is it detects max vma
-void arch_vma_init() {
+void vma_init() {
     //find max ASID
     asm volatile ("csrr %0, satp" : "=r"(max_asid));
     max_asid = (max_asid >> 44) & (BIT(16)-1);
@@ -47,7 +47,7 @@ void delete_process_asid(u64 process_ptr, u64 parameter) {
     process->vma_addr_space_id = 0;
 }
 
-void arch_vma_reset_asid() {
+void vma_reset_asid() {
     uart_println_str("reset all vma asid");
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
@@ -56,9 +56,9 @@ void arch_vma_reset_asid() {
     kernel_process_iter(delete_process_asid, 0);
 }
 
-u64 arch_vma_fetch_asid() {
+u64 vma_fetch_asid() {
     if (current_highest_asid >= max_asid) {
-        arch_vma_reset_asid();
+        vma_reset_asid();
         current_highest_asid = 0;
     }else{
         current_highest_asid++;
@@ -66,7 +66,7 @@ u64 arch_vma_fetch_asid() {
     return current_highest_asid;
 }
 
-void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, u64 arg_flags) {
+void vma_assign(process *process, u64 virt_addr, u64 vma_phys_addr, u64 arg_flags) {
     u64 ppn0_offset; //least significant
     u64 ppn1_offset;
     u64 ppn2_offset; //most significant
@@ -96,7 +96,7 @@ void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, 
 
     u64 *ppn2_table = (u64 *)process->vma_table;
     if ((ppn2_table[ppn2_offset] & 0x1) == 0) {
-        u64 new_page_addr = kernel_pager_acquire();
+        u64 new_page_addr = pg_alloc();
         new_page_addr = (new_page_addr - KERNEL_VMA_START) / 4096;
         ppn2_table[ppn2_offset] = 1;
         ppn2_table[ppn2_offset] |= new_page_addr << 10;
@@ -105,7 +105,7 @@ void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, 
     u64 ppn1_table_addr = (((ppn2_table[ppn2_offset] >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
     u64 *ppn1_table = (u64 *)ppn1_table_addr;
     if ((ppn1_table[ppn1_offset] & 0x1) == 0) {
-        u64 new_page_addr = kernel_pager_acquire();
+        u64 new_page_addr = pg_alloc();
         new_page_addr = (new_page_addr - KERNEL_VMA_START) / 4096;
         ppn1_table[ppn1_offset] = 1;
         ppn1_table[ppn1_offset] |= new_page_addr << 10;
@@ -124,17 +124,17 @@ void arch_vma_assign(kernel_process *process, u64 virt_addr, u64 vma_phys_addr, 
     asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr), "r"(process->vma_addr_space_id) : "memory"); //push cache update, only to current asid
 }
 
-void arch_vma_assign_kernel(kernel_process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
-    arch_vma_assign(process, virt_addr, phys_addr, arg_flags);
+void vma_assign_kernel(process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
+    vma_assign(process, virt_addr, phys_addr, arg_flags);
 }
 
-void arch_vma_assign_user(kernel_process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
-    arch_vma_assign(process, virt_addr, phys_addr, arg_flags | VMA_USER);
+void vma_assign_user(process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
+    vma_assign(process, virt_addr, phys_addr, arg_flags | VMA_USER);
 }
 
-void arch_vma_swap(kernel_process *process) {
+void vma_swap(process *process) {
     if (process->vma_addr_space_id == U64_MAX) {
-        process->vma_addr_space_id = arch_vma_fetch_asid();
+        process->vma_addr_space_id = vma_fetch_asid();
     }
 
     u64 satp_value = 0
@@ -148,10 +148,10 @@ void arch_vma_swap(kernel_process *process) {
     //might need fence here need to look more into it
 }
 
-void arch_vma_enable_read_user() {
+void vma_enable_read_user() {
     asm volatile("csrs sstatus, %0" :: "r"BIT(18));
 }
 
-void arch_vma_disable_read_user() {
+void vma_disable_read_user() {
     asm volatile("csrc sstatus, %0" :: "r"BIT(18));
 }
