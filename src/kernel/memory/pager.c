@@ -62,13 +62,13 @@ void find_memory_regions(
         }
 
         s32 *base_value = (s32 *)device_info[i].value;
-        u64 high = ((u64)arch_dtb_read_int((u8 *)&base_value[0])) << 32;
-        u64 low = arch_dtb_read_int((u8 *)&base_value[1]);
+        u64 high = ((u64)dtb_read_int((u8 *)&base_value[0])) << 32;
+        u64 low = dtb_read_int((u8 *)&base_value[1]);
         u64 location = high | low;
         location += KERNEL_VMA_START;
 
-        high = ((u64)arch_dtb_read_int((u8 *)&base_value[2])) << 32;
-        low = arch_dtb_read_int((u8 *)&base_value[3]);
+        high = ((u64)dtb_read_int((u8 *)&base_value[2])) << 32;
+        low = dtb_read_int((u8 *)&base_value[3]);
         u64 size = high | low;
 
         if (reserved) {
@@ -118,10 +118,10 @@ void remove_reserved_memory_regions(memory_region_list *memory_regions) {
     }
 }
 
-void kernel_pager_init() {
-    const device_info *device_info = kernel_device_tree_ptr();
-    const u32 device_list = kernel_device_tree_length();
-    const s64 start_location = (s64)kernel_device_tree_end_ptr();
+void pager_init() {
+    const device_info *device_info = device_tree_ptr();
+    const u32 device_list = device_tree_len();
+    const s64 start_location = (s64)device_tree_end_ptr();
 
     u64 bitmap_location = (((s64)start_location+7)/8)*8; //round to byte boundary
     pager_bitmap_list = (volatile s64 *)bitmap_location;
@@ -203,7 +203,7 @@ void kernel_pager_init() {
     }
 }
 
-u64 kernel_pager_acquire() { //will add cnt later u64 byte_cnt
+u64 pg_alloc() { //will add cnt later u64 byte_cnt
     //unsigned page_cnt = (byte_cnt+4095) / KERNEL_PAGE_SIZE;
 
     const s64 page_list_cnt = pager_bitmap_list[0];
@@ -234,7 +234,7 @@ u64 kernel_pager_acquire() { //will add cnt later u64 byte_cnt
     PANIC("OUT_OF_FREE_PAGES",0,0,0);
 }
 
-void kernel_pager_release(u64 location) {
+void pg_free(u64 location) {
     u8 *page_location = (u8 *)location;
     const s64 page_list_cnt = pager_bitmap_list[0];
 

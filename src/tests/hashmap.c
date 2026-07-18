@@ -11,22 +11,22 @@ void test_hashmap() {
 
     uart_println_str("#TEST# - Testing Hashmap");
 
-    kernel_hashmap hashmap;
-    u64 *hashmap_loc = (u64 *)kernel_pager_acquire();
-    hashmap.start = hashmap_loc;
-    hashmap.len = KERNEL_PAGE_SIZE / 8;
-    kernel_hashmap_create(KHASHMAP_TYPE_NUMBER, &hashmap);
+    hashmap hmap;
+    u64 *loc = (u64 *)pg_alloc();
+    hmap.start = loc;
+    hmap.len = KERNEL_PAGE_SIZE / 8;
+    hashmap_create(HASHMAP_TYPE_NUMBER, &hmap);
 
     test_print_next();
     for (u64 i=0; i<100000; i++) {
         test_print_step("(1/2) Creating data... ", i, 100000, 1);
-        kernel_hashmap_insert(&hashmap, i, (i*32)+36);
+        hashmap_insert(&hmap, i, (i*32)+36);
     }
 
     test_print_next();
     for (u64 i=0; i<100000; i++) {
         test_print_step("(2/2) Confirming data... ", i, 100000, 1);
-        u64 data = kernel_hashmap_fetch(&hashmap, i);
+        u64 data = hashmap_get(&hmap, i);
         asset_u64((i*32)+36, data);
     }
 

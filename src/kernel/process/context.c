@@ -7,42 +7,42 @@
 #include "types.h"
 #include "kernel/process/scheduler.h"
 
-void change_context(kernel_process *process) {
-    arch_vma_swap(process);
+void change_context(process *process) {
+    vma_swap(process);
 }
 
 //handles old process cleanup as well
-void kernel_context_change_process(kernel_process *process, u64 hart_id) {
-    kernel_process *old_process = (kernel_process *)((arch_trapframe *)TRAPFRAME_ADDRESS)->process_ptr;
+void context_change_process(process *proc, u64 hart_id) {
+    process *old_proc = (process *)((trapframe *)TRAPFRAME_ADDRESS)->process_ptr;
 
-    change_context(process);
-    process->running = TRUE;
-    process->page_fault_trap_frame->hart_id = hart_id;
-    process->kernelspace_trap_frame->hart_id = hart_id;
-    process->userspace_trap_frame->hart_id = hart_id;
+    change_context(proc);
+    proc->running = TRUE;
+    proc->page_fault_trapframe->hart_id = hart_id;
+    proc->kernelspace_trapframe->hart_id = hart_id;
+    proc->userspace_trapframe->hart_id = hart_id;
 
     //cleanup the old process
-    switch (old_process->process_type) {
-        case KPROC_TYPE_NORMAL:
-            old_process->running = FALSE;
+    switch (old_proc->process_type) {
+        case PROC_TYPE_NORMAL:
+            old_proc->running = FALSE;
 
-            if (old_process->block_waiting == 0) {
-                kernel_scheduler_queue_process(old_process);
+            if (old_proc->block_waiting == 0) {
+                scheduler_queue_process(old_proc);
             }
             break;
-        case KPROC_TYPE_IDLE:
+        case PROC_TYPE_IDLE:
             break;
-        case KPROC_TYPE_DEAD:
-            kernel_process_cleanup_process(old_process);
+        case PROC_TYPE_DEAD:
+            process_cleanup(old_proc);
             break;
         default:
-            PANIC("UNHANDLED_PROCESS_TYPE", process->process_type, process->process_id, 0);
+            PANIC("UNHANDLED_PROCESS_TYPE", proc->process_type, proc->process_id, 0);
             break;
     }
 }
 
-void kernel_context_bootstrap(u64 hart_id) {
-    kernel_process *idle_process = (kernel_process *)kernel_process_from_id((pid)hart_id);
+void context_bootstrap(u64 hart_id) {
+    process *idle_process = (process *)process_from_id((pid)hart_id);
     if ((u64)idle_process == 0) {
         PANIC("INVALID_IDLE_PROCESS_FOR_HART", (s64)hart_id, (s64)idle_process, 0);
     }

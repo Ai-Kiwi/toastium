@@ -11,8 +11,10 @@ misc
  ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
  - the idle process doesn't use wfi
  - floating point reg don't have state saved or swapped for context shift. 
- - kernel stack for processes has no vma write/read guards around it.
+ - kernel stack for processes has no vma write/read guards around it. (moving to static location would be needed. Also would make finding stack location easier.)
+ - kernel stack for processes has no magic byte protection. (could be skipped with read write protection)
  - read from userspace reads byte at a time not 64bits at a time. (would need to keep align in mind too) 
+ - hashmap for processes should be expanded in size or auto size.
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
@@ -49,3 +51,4 @@ test suits
 
 High priority.
  - There is a bug with allocator todo with not reusing sections. Issue appears in 
+ - hashmap needs to remove old value on insert and return it

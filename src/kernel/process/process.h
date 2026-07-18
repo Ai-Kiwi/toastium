@@ -6,39 +6,40 @@
 #include "arch_trap/parser.h"
 
 typedef enum {
-    KPROC_TYPE_NORMAL,
-    KPROC_TYPE_IDLE,
-    KPROC_TYPE_DEAD,
-} kernel_process_type;
+    PROC_TYPE_NORMAL,
+    PROC_TYPE_IDLE,
+    PROC_TYPE_DEAD,
+} process_type;
 
 typedef enum {
-    KPROC_TRAP_PROCESS,
-    KPROC_TRAP_PROCESS_TRAP,
-    KPROC_TRAP_PROCESS_PAGE_FAULT
+    PROC_TRAP_PROCESS,
+    PROC_TRAP_PROCESS_TRAP,
+    PROC_TRAP_PROCESS_PAGE_FAULT
 } process_trap_state;
 
 typedef struct {
     pid process_id;
     process_block block_waiting; //process needs to be in kernel space for a block to be waiting
     process_trap_state trap_state;
-    arch_trapframe *userspace_trap_frame;
-    arch_trapframe *kernelspace_trap_frame;
-    arch_trapframe *page_fault_trap_frame;
+    trapframe *userspace_trapframe;
+    trapframe *kernelspace_trapframe;
+    trapframe *page_fault_trapframe;
     u64 *vma_table;
     u64 vma_addr_space_id; // in risc-v also known as ASID
-    u64 *handles_page; //ptr to pages for process handles. First 4 bytes is location of next. rest are page handle ids.
-    u64 kernel_stack;
+    u64 *file_desc_pg; //ptr to pages for process handles. First 4 bytes is location of next. rest are page handle ids.
+    u64 file_desc_cnt; //count how mant file descriptors open. Uses swap remove on to many so never missed.
     u16 runing_hart_id;
     bool8 running;
-    kernel_process_type process_type;
-} __attribute__((aligned(64))) kernel_process;
+    process_type process_type;
+    u64 phys_kernel_stack_addr[4]; //12kb per process kernel stack
+} __attribute__((aligned(64))) process;
 
 
-void kernel_processes_init(u64 hart_count);
-kernel_process *kernel_process_from_id(pid process_id);
-void kernel_process_iter(void (*function)(u64, u64), u64 parameters);
-void kernel_process_cleanup_process(kernel_process *process);
-void kernel_process_create_init_process();
-void kernel_process_kill_process(pid process_id);
+void processes_init(u64 hart_count);
+process *process_from_id(pid process_id);
+void processes_iter(void (*function)(u64, u64), u64 parameters);
+void process_cleanup(process *process);
+void create_init_process();
+void kill_process(pid process_id);
 
 #endif

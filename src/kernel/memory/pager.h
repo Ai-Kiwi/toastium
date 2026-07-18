@@ -8,8 +8,8 @@ typedef struct {
     u64 page_size;
 } page_range;
 
-void kernel_pager_init();
-u64 kernel_pager_acquire();
-void kernel_pager_release(u64 location);
+void pager_init();
+u64 pg_alloc();
+void pg_free(u64 location);
 
 #endif

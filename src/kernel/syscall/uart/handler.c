@@ -7,7 +7,7 @@
 #include "kernel/trap/user_accses.h"
 
 
-u64 syscall_uart(kernel_trap_data *trap, bool8 async) {
+u64 syscall_uart(trap_data *trap, bool8 async) {
     switch (trap->arg1_reg) {
         case 0: //char
             uart_print_char(trap->arg2_reg);
@@ -18,9 +18,9 @@ u64 syscall_uart(kernel_trap_data *trap, bool8 async) {
             const u64 str_size = trap->arg3_reg;
             if (async == FALSE) {return U64_MAX;}
             if (str_size > 512 || str_size == 0) {trap->return_reg = 1; return 0;}
-            arch_irq_disable();
-            u8 *location = (u8 *)kernel_allocator_acquire(str_size);
-            arch_irq_enable();
+            irq_disable();
+            u8 *location = (u8 *)mem_alloc(str_size);
+            irq_enable();
             bool8 response = kernel_read_user(str_src, str_size, (u64)location);
             if (response == TRUE) {
                 for (u64 i = 0; i < str_size; i++) {
@@ -28,9 +28,9 @@ u64 syscall_uart(kernel_trap_data *trap, bool8 async) {
                 }
             }
             trap->return_reg = !response;
-            arch_irq_disable();
-            kernel_allocator_release((u64)location);
-            arch_irq_enable();
+            irq_disable();
+            mem_free((u64)location);
+            irq_enable();
             return 0;
         default:
             return 1;//bad syscall

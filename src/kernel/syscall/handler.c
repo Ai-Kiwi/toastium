@@ -13,7 +13,7 @@
 //response of 0 means it handled it
 //response of 1 means process died
 //higher means will need async version to handle it.
-u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
+u64 syscall_sync_handler(trap_data *trap) {
 
     switch (trap->arg0_reg) {
         case SYSCALL_UART_PRINT:
@@ -30,7 +30,7 @@ u64 kernel_syscall_sync_handler(kernel_trap_data *trap) {
 }
 
 //response 1 means process killed
-u64 kernel_syscall_async_handler(kernel_trap_data *trap) {
+u64 syscall_async_handler(trap_data *trap) {
 
     switch (trap->arg0_reg) {
         case SYSCALL_UART_PRINT:
@@ -39,7 +39,7 @@ u64 kernel_syscall_async_handler(kernel_trap_data *trap) {
         default:
             uart_println_str("process error: unknown syscall ");
             uart_print_str("process ID: ");
-            uart_println_u64(((kernel_process *)trap->process_ptr)->process_id);
+            uart_println_u64(((process *)trap->process_ptr)->process_id);
             uart_print_str("arg0: ");
             uart_println_u64(trap->arg0_reg);
             uart_print_str("arg1: ");

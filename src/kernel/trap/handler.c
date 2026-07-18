@@ -19,103 +19,103 @@
 
 //even if process is changed asm doesn't need to worry (vma swap and trap_frame swap done in c)
 
-void kernel_trap_change_process(kernel_trap_data *trap_data) {
-    kernel_process *next_process = kernel_scheduler_dequeue_next_process(trap_data->hart_id);
-    kernel_context_change_process(next_process, trap_data->hart_id);
+void trap_change_process(trap_data *trap_data) {
+    process *next_process = scheduler_next(trap_data->hart_id);
+    context_change_process(next_process, trap_data->hart_id);
 
-    kernel_timer_set_future_ms(4);
+    timer_set_future_ms(4);
 }
 
-u64 kernel_handle_trap() {
-    kernel_trap_data trap_data;
-    arch_parse_trap_data((kernel_trap_data *)&trap_data);
+u64 handle_sync_trap() {
+    trap_data trap;
+    trapframe_parse((trap_data *)&trap);
 
     //decide to use
-    kernel_process *process = (kernel_process *)trap_data.process_ptr;
-    u64 kernel_process_stack = ((u64)((kernel_process *)trap_data.process_ptr)->kernel_stack) + KERNEL_PAGE_SIZE - 1;
+    process *proc = (process *)trap.process_ptr;
+    const u64 kernel_process_stack = PROCESS_KERNEL_STACK_START + ((4096 * 4) - 1); //12KB
 
-    switch (trap_data.code) {
-    case KTRAP_ACCESS_MISALIGNED:
+    switch (trap.code) {
+    case TRAP_ACCESS_MISALIGNED:
         uart_println_str("process killed : access misaligned");
         uart_print_str("process id:");
-        uart_println_u64(process->process_id);
+        uart_println_u64(proc->process_id);
         uart_print_str("fault addr:");
-        uart_println_u64(trap_data.fault_addr);
+        uart_println_u64(trap.fault_addr);
         uart_print_str("fault pc:");
-        uart_println_u64(trap_data.fault_pc);
+        uart_println_u64(trap.fault_pc);
 
-        kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
-        kernel_trap_change_process(&trap_data);
+        kill_process(((process *)trap.process_ptr)->process_id);
+        trap_change_process(&trap);
         return 0;
         break;
-    case KTRAP_ACCESS_FAULT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_ACCESS_FAULT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_ACCESS_FAULT:
+        PANIC("KERNEL_TRAP_UNIMPLENTED_ACCESS_FAULT",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
-    case KTRAP_INSTRUCTION_INVALID:
+    case TRAP_INSTRUCTION_INVALID:
         uart_println_str("process killed : bad instruction");
         uart_print_str("process id:");
-        uart_println_u64(process->process_id);
+        uart_println_u64(proc->process_id);
         uart_print_str("fault addr:");
-        uart_println_u64(trap_data.fault_addr);
+        uart_println_u64(trap.fault_addr);
         uart_print_str("fault pc:");
-        uart_println_u64(trap_data.fault_pc);
+        uart_println_u64(trap.fault_pc);
 
-        kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
-        kernel_trap_change_process(&trap_data);
+        kill_process(((process *)trap.process_ptr)->process_id);
+        trap_change_process(&trap);
         return 0;
         break;
-    case KTRAP_BREAKPOINT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_BREAKPOINT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_BREAKPOINT:
+        PANIC("KERNEL_TRAP_UNIMPLENTED_BREAKPOINT",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
-    case KTRAP_SYSCALL:
-        u64 response = kernel_syscall_sync_handler(&trap_data);
+    case TRAP_SYSCALL:
+        u64 response = syscall_sync_handler(&trap);
         if (response == 1) {//process needs to be killed
-            kernel_process_kill_process(((kernel_process *)trap_data.process_ptr)->process_id);
+            kill_process(((process *)trap.process_ptr)->process_id);
 
-            kernel_trap_change_process(&trap_data);
+            trap_change_process(&trap);
             return 0;
         }
         if (response > 0) {
             //needs to be handled by async
             return kernel_process_stack;
         }
-        arch_trap_set_response(&trap_data);
-        arch_trap_iter_instruction(&trap_data);
+        trap_data_set_response(&trap);
+        trap_data_iter_instruction(&trap);
         break;
-    case KTRAP_PAGE_FAULT:
-        if (process->trap_state == KPROC_TRAP_PROCESS_TRAP) {
-            u64 stack_location = arch_trap_stack_pointer(process->kernelspace_trap_frame);
+    case TRAP_PAGE_FAULT:
+        if (proc->trap_state == PROC_TRAP_PROCESS_TRAP) {
+            u64 stack_location = trapframe_stack_ptr(proc->kernelspace_trapframe);
             stack_location = ROUND_MOD_DOWN(stack_location - 8, 8);
             return stack_location;
         }else{
             return kernel_process_stack;
         }
         break;
-    case KTRAP_DOUBLE_TRAP:
-        PANIC("KERNEL_TRAP_DOUBLE_TRAP",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_DOUBLE_TRAP:
+        PANIC("KERNEL_TRAP_DOUBLE_TRAP",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
-    case KTRAP_SOFTWARE_CHECK:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_CHECK",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_SOFTWARE_CHECK:
+        PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_CHECK",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
-    case KTRAP_HARDWARE_ERROR:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_HARDWARE_ERROR",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_HARDWARE_ERROR:
+        PANIC("KERNEL_TRAP_UNIMPLENTED_HARDWARE_ERROR",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
-    case KTRAP_SOFTWARE_INTERRUPT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_INTERRUPT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_SOFTWARE_INTERRUPT:
+        PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_INTERRUPT",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
-    case KTRAP_TIMER_INTERRUPT:
-        if (trap_data.privilege != KTRAP_MODE_SUPERVISOR){
-            PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_TIMER_INTERRUPT:
+        if (trap.privilege != TRAP_MODE_SUPERVISOR){
+            PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap.privilege, trap.fault_addr, trap.fault_pc);
         }
 
-        kernel_trap_change_process(&trap_data);
+        trap_change_process(&trap);
 
         break;
-    case KTRAP_EXTERNAL_INTERRUPT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+    case TRAP_EXTERNAL_INTERRUPT:
+        PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
     default:
-        PANIC("KERNEL_TRAP_UNHANDLED",trap_data.privilege, trap_data.fault_addr, trap_data.fault_pc);
+        PANIC("KERNEL_TRAP_UNHANDLED",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
     }
 

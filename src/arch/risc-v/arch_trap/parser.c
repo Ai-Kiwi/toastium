@@ -29,37 +29,37 @@ void trapframe_parse(trap_data *trap) {//will have ptr input here that points to
     trap->fault_pc = trap_frame_data->sepc;
     trap->fault_addr = trap_frame_data->stval;
     if (is_user_mode) {
-        trap->privilege = KTRAP_MODE_USER;
+        trap->privilege = TRAP_MODE_USER;
     }else{
-        trap->privilege = KTRAP_MODE_SUPERVISOR;
+        trap->privilege = TRAP_MODE_SUPERVISOR;
     }
 
     if (is_interrupt) {
-        trap->trap_type = KTRAP_TYPE_INTERRUPT;
+        trap->trap_type = TRAP_TYPE_INTERRUPT;
         switch (trap_code){
         case 1UL: //Supervisor software interrupt
-            trap->code = KTRAP_SOFTWARE_INTERRUPT;
-            trap->privilege = KTRAP_MODE_SUPERVISOR;
+            trap->code = TRAP_SOFTWARE_INTERRUPT;
+            trap->privilege = TRAP_MODE_SUPERVISOR;
             break;
         case 3UL: //Machine software interrupt
-            trap->code = KTRAP_SOFTWARE_INTERRUPT;
-            trap->privilege = KTRAP_MODE_MACHINE;
+            trap->code = TRAP_SOFTWARE_INTERRUPT;
+            trap->privilege = TRAP_MODE_MACHINE;
             break;
         case 5UL: //Supervisor timer interrupt
-            trap->code = KTRAP_TIMER_INTERRUPT;
-            trap->privilege = KTRAP_MODE_SUPERVISOR;
+            trap->code = TRAP_TIMER_INTERRUPT;
+            trap->privilege = TRAP_MODE_SUPERVISOR;
             break;
         case 7UL: //Machine timer interrupt
-            trap->code = KTRAP_TIMER_INTERRUPT;
-            trap->privilege = KTRAP_MODE_MACHINE;
+            trap->code = TRAP_TIMER_INTERRUPT;
+            trap->privilege = TRAP_MODE_MACHINE;
             break;
         case 9UL: //Supervisor external interrupt
-            trap->code = KTRAP_EXTERNAL_INTERRUPT;
-            trap->privilege = KTRAP_MODE_SUPERVISOR;
+            trap->code = TRAP_EXTERNAL_INTERRUPT;
+            trap->privilege = TRAP_MODE_SUPERVISOR;
             break;
         case 11UL: //Machine external interrupt
-            trap->code = KTRAP_EXTERNAL_INTERRUPT;
-            trap->privilege = KTRAP_MODE_MACHINE;
+            trap->code = TRAP_EXTERNAL_INTERRUPT;
+            trap->privilege = TRAP_MODE_MACHINE;
             break;
         case 13UL: //cnter-overflow interrupt
             //will code support for later when needed
@@ -70,61 +70,61 @@ void trapframe_parse(trap_data *trap) {//will have ptr input here that points to
             break;
         }
     }else{
-        trap->trap_type = KTRAP_TYPE_EXCEPTION;
+        trap->trap_type = TRAP_TYPE_EXCEPTION;
         switch (trap_code){
         case 0UL: //Instruction addr misaligned
-            trap->code = KTRAP_ACCESS_MISALIGNED;
+            trap->code = TRAP_ACCESS_MISALIGNED;
             break;
         case 1UL: //Instruction access fault
-            trap->code = KTRAP_ACCESS_FAULT;
+            trap->code = TRAP_ACCESS_FAULT;
             break;
         case 2UL: //Illegal instruction
-            trap->code = KTRAP_INSTRUCTION_INVALID;
+            trap->code = TRAP_INSTRUCTION_INVALID;
             break;
         case 3UL: //Breakpoint
-            trap->code = KTRAP_BREAKPOINT;
+            trap->code = TRAP_BREAKPOINT;
             break;
         case 4UL: //Load address misaligned
-            trap->code = KTRAP_ACCESS_MISALIGNED;
+            trap->code = TRAP_ACCESS_MISALIGNED;
             break;
         case 5UL: //Load access fault
-            trap->code = KTRAP_ACCESS_FAULT;
+            trap->code = TRAP_ACCESS_FAULT;
             break;
         case 6UL: //Store/AMO address misaligned
-            trap->code = KTRAP_ACCESS_MISALIGNED;
+            trap->code = TRAP_ACCESS_MISALIGNED;
             break;
         case 7UL: //Store/AMO access fault
-            trap->code = KTRAP_ACCESS_FAULT;
+            trap->code = TRAP_ACCESS_FAULT;
             break;
         case 8UL: //Environment call from U-mode
-            trap->code = KTRAP_SYSCALL;
-            trap->privilege = KTRAP_MODE_USER;
+            trap->code = TRAP_SYSCALL;
+            trap->privilege = TRAP_MODE_USER;
             break;
         case 9UL: //Environment call from S-mode
-            trap->code = KTRAP_SYSCALL;
-            trap->privilege = KTRAP_MODE_SUPERVISOR;
+            trap->code = TRAP_SYSCALL;
+            trap->privilege = TRAP_MODE_SUPERVISOR;
             break;
         case 11UL: //Environment call from M-mode
-            trap->code = KTRAP_SYSCALL;
-            trap->privilege = KTRAP_MODE_MACHINE;
+            trap->code = TRAP_SYSCALL;
+            trap->privilege = TRAP_MODE_MACHINE;
             break;
         case 12UL: //Instruction page fault
-            trap->code = KTRAP_PAGE_FAULT;
+            trap->code = TRAP_PAGE_FAULT;
             break;
         case 13UL: //Load page fault
-            trap->code = KTRAP_PAGE_FAULT;
+            trap->code = TRAP_PAGE_FAULT;
             break;
         case 15UL: //Store/AMO page fault
-            trap->code = KTRAP_PAGE_FAULT;
+            trap->code = TRAP_PAGE_FAULT;
             break;
         case 16UL: //Double trap
-            trap->code = KTRAP_DOUBLE_TRAP;
+            trap->code = TRAP_DOUBLE_TRAP;
             break;
         case 18UL: //Software check
-            trap->code = KTRAP_SOFTWARE_CHECK;
+            trap->code = TRAP_SOFTWARE_CHECK;
             break;
         case 19UL: //Hardware error
-            trap->code = KTRAP_HARDWARE_ERROR;
+            trap->code = TRAP_HARDWARE_ERROR;
             break;
         default:
             PANIC("UNHANDLED_TRAP_EXCEPTION_OCCURRED",trap_code, trap->fault_addr, trap->fault_pc);

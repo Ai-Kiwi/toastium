@@ -2,9 +2,9 @@
 #include "arch_trap/parser.h"
 #include "drivers/uart/uart.h"
 #include "kernel/memory/allocator.h"
+#include "kernel/memory/hashmap.h"
 #include "kernel/trap/handler.h"
 #include "def.h"
-#include "kernel/memory/radix.h"
 #include "kernel/safety/panic.h"
 #include "arch_vma/virtual_memory.h"
 #include "board.h"
@@ -23,105 +23,119 @@ extern u8 _kernel_idle_process, _kernel_init_process;
 
 //not 64 bytes aligned for multicore
 alignas(64) u64 __attribute__((aligned(64))) process_upto = 0;
-u64 *process_radix_root = 0;
+alignas(64) hashmap __attribute__((aligned(64))) process_hashmap;
 
-kernel_process *kernel_process_from_id(pid process_id) {
-    return (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_id, pid_levels, pid_level_size);
+process *process_from_id(pid process_id) {
+    return (process *)hashmap_get(&process_hashmap, (u64)process_id);
 }
 
-kernel_process *new_blank_process() {
-    kernel_process *current_process; //Non zero
+process *new_blank_process() {
+    process *current_process; //Non zero
     while (TRUE){
-        current_process = (kernel_process *)kernel_radix_get_child((u64)process_radix_root, process_upto, pid_levels, pid_level_size);
+        current_process = (process *)hashmap_get(&process_hashmap,process_upto);
         if (!current_process) {
             break;
         }
         process_upto++;
     }
-    kernel_process new_process;
-    new_process.trap_state = KPROC_TRAP_PROCESS;
+    process new_process;
+    new_process.trap_state = PROC_TRAP_PROCESS;
     new_process.block_waiting = 0;
     new_process.process_id = process_upto;
     new_process.vma_addr_space_id = U64_MAX;
-    new_process.vma_table = (u64 *)arch_vma_create();
-    new_process.userspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
-    new_process.kernelspace_trap_frame = (arch_trapframe *)kernel_pager_acquire();
-    new_process.page_fault_trap_frame = (arch_trapframe *)kernel_pager_acquire();
-    new_process.process_type = KPROC_TYPE_NORMAL;
+    new_process.vma_table = (u64 *)vma_create();
+    new_process.userspace_trapframe = (trapframe *)pg_alloc();
+    new_process.kernelspace_trapframe = (trapframe *)pg_alloc();
+    new_process.page_fault_trapframe = (trapframe *)pg_alloc();
+    new_process.process_type = PROC_TYPE_NORMAL;
     new_process.running = FALSE;
-    new_process.handles_page = 0;
-    arch_vma_assign_kernel((kernel_process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trap_frame, VMA_READ | VMA_WRITE);
+    new_process.file_desc_cnt = 0;
+    new_process.file_desc_pg = (u64 *)pg_alloc();
+    new_process.phys_kernel_stack_addr[0] = pg_alloc();
+    new_process.phys_kernel_stack_addr[1] = pg_alloc();
+    new_process.phys_kernel_stack_addr[2] = pg_alloc();
+    new_process.phys_kernel_stack_addr[3] = pg_alloc();
+    vma_assign_kernel((process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trapframe, VMA_READ | VMA_WRITE);
+    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START-KERNEL_PAGE_SIZE, 0x0, 0);
+    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START, (u64)new_process.phys_kernel_stack_addr[0], VMA_READ | VMA_WRITE);
+    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE), (u64)new_process.phys_kernel_stack_addr[1], VMA_READ | VMA_WRITE);
+    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*2), (u64)new_process.phys_kernel_stack_addr[2], VMA_READ | VMA_WRITE);
+    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*3), (u64)new_process.phys_kernel_stack_addr[3], VMA_READ | VMA_WRITE);
+    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*4), 0x0, 0);
 
-    u64 kernel_stack = kernel_pager_acquire();
-    new_process.kernel_stack = kernel_stack;
-
-    kernel_process *process = (kernel_process *)kernel_allocator_acquire(sizeof(kernel_process));
-    new_process.userspace_trap_frame->process_ptr = (u64)process;
-    new_process.kernelspace_trap_frame->process_ptr = (u64)process;
-    *process = new_process;
+    process *temp_process = (process *)mem_alloc(sizeof(process));
+    new_process.userspace_trapframe->process_ptr = (u64)temp_process;
+    new_process.kernelspace_trapframe->process_ptr = (u64)temp_process;
+    *temp_process = new_process;
 
 
 
-    u64 old_child = (u64)kernel_radix_create_child((u64)process_radix_root,process->process_id,(u64)process,pid_levels,pid_level_size);
+    u64 old_child = (u64)hashmap_insert(&process_hashmap, process_upto, (u64)temp_process);
     if (old_child) {
         PANIC("CREATE_BLANK_PROCESS_CONFLICTING_CHILD_PRESENT",old_child,0,0);
     }
 
     process_upto++;//increase for next process
-    return (kernel_process *)process;
+    return (process *)temp_process;
 }
 
 
-void kernel_processes_init(u64 hart_count) {
-    process_radix_root = (u64 *)kernel_radix_create_tree(pid_level_size);
-
+void processes_init(u64 hart_count) {
+    hashmap_create(HASHMAP_TYPE_NUMBER, &process_hashmap);
+    process_hashmap.start = (u64 *)pg_alloc();
+    process_hashmap.len = KERNEL_PAGE_SIZE / 8;
 
     process_upto = 0;
 
     for (u64 hart_id = 0; hart_id<hart_count; hart_id++) {
-        kernel_process *idle_process = new_blank_process();
+        process *idle_process = new_blank_process();
         if (hart_id != idle_process->process_id) {
             PANIC("IDLE_PROCESS_INVALID_ID",idle_process->process_id, hart_id,0);
         }
         idle_process->runing_hart_id = hart_id;
-        idle_process->process_type = KPROC_TYPE_IDLE;
-        arch_trapframe_init_user(idle_process->userspace_trap_frame, 0x1000);
-        arch_vma_assign_user(idle_process, 0x1000, (u64)&_kernel_idle_process, VMA_EXEC);
+        idle_process->process_type = PROC_TYPE_IDLE;
+        trapframe_user_init(idle_process->userspace_trapframe, 0x1000);
+        vma_assign_user(idle_process, 0x1000, (u64)&_kernel_idle_process, VMA_EXEC);
     }
 }
 
-void kernel_process_iter(void (*function)(u64, u64), u64 parameters) {
-    kernel_radix_iter_children((u64)process_radix_root, pid_levels, pid_level_size, parameters, function);
+void processes_iter(void (*function)(u64, u64), u64 parameters) {
+    //move to hashmap, currently no way to loop will add later after working
+    PANIC("LOOPING_OVER_PROCESSES_NOT_IMPLEMTED", 0, 0, 0)
+    //kernel_radix_iter_children((u64)process_radix_root, pid_levels, pid_level_size, parameters, function);
 }
 
-void kernel_process_kill_process(pid process_id) {
-    kernel_process *process = kernel_process_from_id(process_id);
-    if (process->process_type == KPROC_TYPE_IDLE) {
+void kill_process(pid process_id) {
+    process *proc = process_from_id(process_id);
+    if (proc->process_type == PROC_TYPE_IDLE) {
         PANIC("ATTEMPT_TO_KILL_IDLE_PROCESS", 0, 0, 0);
     }
-    if (process->running == TRUE) {
-        process->process_type = KPROC_TYPE_DEAD;
+    if (proc->running == TRUE) {
+        proc->process_type = PROC_TYPE_DEAD;
     }else{
-        kernel_scheduler_dequeue_process(process);
-        kernel_process_cleanup_process(process);
+        scheduler_remove(proc);
+        process_cleanup(proc);
     }
 }
 
-void kernel_process_cleanup_process(kernel_process *process) {
-    kernel_radix_remove_child((u64)process_radix_root, process->process_id, pid_levels, pid_level_size);
-    kernel_pager_release((u64)process->userspace_trap_frame);
-    kernel_pager_release((u64)process->kernelspace_trap_frame);
-    kernel_pager_release((u64)process->vma_table);
-    kernel_pager_release(process->kernel_stack); //on large page this will need to be changed to release all of them not just first
-    kernel_allocator_release((u64)process);
+void process_cleanup(process *proc) {
+    hashmap_remove(&process_hashmap, proc->process_id);
+    pg_free((u64)proc->userspace_trapframe);
+    pg_free((u64)proc->kernelspace_trapframe);
+    pg_free((u64)proc->vma_table);
+    pg_free((u64)proc->phys_kernel_stack_addr[0]);
+    pg_free((u64)proc->phys_kernel_stack_addr[1]);
+    pg_free((u64)proc->phys_kernel_stack_addr[2]);
+    pg_free((u64)proc->phys_kernel_stack_addr[3]);
+    mem_free((u64)proc);
 }
 
 
-void kernel_process_create_init_process() {
+void create_init_process() {
     //create the init process
-    kernel_process *init_process = new_blank_process();
-    arch_trapframe_init_user(init_process->userspace_trap_frame, 0x1000);
-    arch_vma_assign_user(init_process, 0x1000, (u64)&_kernel_init_process, VMA_EXEC | VMA_READ);
+    process *init_process = new_blank_process();
+    trapframe_user_init(init_process->userspace_trapframe, 0x1000);
+    vma_assign_user(init_process, 0x1000, (u64)&_kernel_init_process, VMA_EXEC | VMA_READ);
 
-    kernel_scheduler_queue_process(init_process);
+    scheduler_queue_process(init_process);
 }

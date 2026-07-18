@@ -16,9 +16,9 @@ typedef struct {
     u8 *end_location;
 } device_info_dump_response;
 
-void kernel_device_tree_init(u8 *kernel_end);
-device_info *kernel_device_tree_ptr();
-u32 kernel_device_tree_length();
-u8 *kernel_device_tree_end_ptr();
+void device_tree_init(u8 *kernel_end);
+device_info *device_tree_ptr();
+u32 device_tree_len();
+u8 *device_tree_end_ptr();
 
 #endif

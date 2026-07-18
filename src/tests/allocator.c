@@ -21,11 +21,11 @@ void test_allocator() {
 
     u64 *alloc_locations[value_cnt];
 
-    u64 old_location = (u64)kernel_allocator_acquire(32); //does leave a 32bit unfreed
+    u64 old_location = (u64)mem_alloc(32); //does leave a 32bit unfreed
     for (u64 i=0; i<(value_cnt/2); i++) {
         test_print_step("(1/8) Creating data 1st half... ", i*2, value_cnt, 2);
 
-        u64 location = (u64)kernel_allocator_acquire(32);
+        u64 location = (u64)mem_alloc(32);
         u64 location_change = location - old_location;
         if (location_change > 9000) {
             PANIC("ALLOCATOR_CHANGE_LARGER_THEN_PAGE", location_change, i, 0)
@@ -38,12 +38,12 @@ void test_allocator() {
 
     kernel_safety_test();
 
-    old_location = (u64)kernel_allocator_acquire(32);
+    old_location = (u64)mem_alloc(32);
     test_print_next();
     for (u64 i=0; i<blank_assigns; i++) { //create blank must be done after as else the follow index and data page will be size jump
         test_print_step("(2/8) Creating blank, testing distance... ", i, blank_assigns, 1);
 
-        u64 location = kernel_allocator_acquire(32);
+        u64 location = mem_alloc(32);
         u64 location_change = location - old_location;
         if (location_change > 9000) { //little over 8kb. Means that it has room for idx and page data change, also supports extra from start headers.
             PANIC("ALLOCATOR_CHANGE_LARGER_THEN_PAGE", location_change, i, 0)
@@ -57,7 +57,7 @@ void test_allocator() {
 
         for (u64 j=0; j<12; j++) {
             u64 size = BIT(j);
-            kernel_allocator_acquire(size);
+            mem_alloc(size);
         }
     }
 
@@ -65,15 +65,15 @@ void test_allocator() {
     for (u64 i=0; i<(blank_assigns/10); i++) { //create blank must be done after as else the follow index and data page will be size jump
         test_print_step("(4/8) Creating blank... ", i, blank_assigns/10, 1);
 
-        kernel_allocator_acquire(32);
+        mem_alloc(32);
     }
 
     test_print_next();
-    old_location = (u64)kernel_allocator_acquire(32);
+    old_location = (u64)mem_alloc(32);
     for (u64 i=(value_cnt/2); i<(value_cnt); i++) {
         test_print_step("(5/8) Creating data 2nd half... ", (i-(value_cnt/2))*2, value_cnt, 2);
 
-        u64 location = (u64)kernel_allocator_acquire(32);
+        u64 location = (u64)mem_alloc(32);
         //uart_println_u64_hex(location);
         u64 location_change = location - old_location;
         if (location_change > 9000) { //little over 8kb. Means that it has room for idx and page data change, also supports extra from start headers.
@@ -88,11 +88,11 @@ void test_allocator() {
     test_print_step("(6/8) Random freeing and setting... ", 1, 1, 1);
     //randomly sets values and frees them. On next assign these same values should be set.
     //also worth noting the high value then low value. This is designed to test the cache system
-    kernel_allocator_release((u64)alloc_locations[267]);
-    kernel_allocator_release((u64)alloc_locations[965]);
-    kernel_allocator_release((u64)alloc_locations[1233]);
-    kernel_allocator_release((u64)alloc_locations[385]);
-    kernel_allocator_release((u64)alloc_locations[1367]);
+    mem_free((u64)alloc_locations[267]);
+    mem_free((u64)alloc_locations[965]);
+    mem_free((u64)alloc_locations[1233]);
+    mem_free((u64)alloc_locations[385]);
+    mem_free((u64)alloc_locations[1367]);
 
 
     *(alloc_locations[267]) = 0;
@@ -101,15 +101,15 @@ void test_allocator() {
     *(alloc_locations[385]) = 0;
     *(alloc_locations[1367]) = 0;
 
-    u64 *value_1 = (u64 *)kernel_allocator_acquire(32);
+    u64 *value_1 = (u64 *)mem_alloc(32);
     *value_1 = (267*653)+3;
-    u64 *value_2 = (u64 *)kernel_allocator_acquire(32);
+    u64 *value_2 = (u64 *)mem_alloc(32);
     *value_2 = (385*653)+3;
-    u64 *value_3 = (u64 *)kernel_allocator_acquire(32);
+    u64 *value_3 = (u64 *)mem_alloc(32);
     *value_3 = (965*653)+3;
-    u64 *value_4 = (u64 *)kernel_allocator_acquire(32);
+    u64 *value_4 = (u64 *)mem_alloc(32);
     *value_4 = (1233*653)+3;
-    u64 *value_5 = (u64 *)kernel_allocator_acquire(32);
+    u64 *value_5 = (u64 *)mem_alloc(32);
     *value_5 = (1367*653)+3;
 
     test_print_next();
@@ -122,7 +122,7 @@ void test_allocator() {
     for (u64 i=0; i<value_cnt; i++) {
         test_print_step("(8/8) Releasing some of values... ", i, value_cnt, 1);
 
-        kernel_allocator_release((u64)alloc_locations[i]);
+        mem_free((u64)alloc_locations[i]);
     }
     kernel_safety_test();
 

@@ -5,6 +5,6 @@
 #include "types.h"
 #include "arch_trap/parser.h"
 
-void trapframe_user_init(arch_trapframe *trapframe, u64 start_location);
+void trapframe_user_init(trapframe *trapframe, u64 start_location);
 
 #endif

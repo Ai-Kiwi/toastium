@@ -6,15 +6,8 @@
 #include "arch_cpu.h"
 #include "kernel/safety/panic.h"
 
-void timer_set(u64 clock_num) {
-    u64 response = arch_set_timer(clock_num);
-    if (response) {
-        PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response, 0, 0);
-    }
-}
-
-void kernel_timer_set_future_ms(u64 ms) {
-    u64 response = arch_set_timer(arch_get_time_cnt() + ((BASE_CLOCK_SPEED / 1000) * ms));
+void timer_set_future_ms(u64 ms) {
+    u64 response = timer_set(time_cnt() + ((BASE_CLOCK_SPEED / 1000) * ms));
     if (response) {
         PANIC("FAILED_TO_CREATE_KERNEL_TIMER", response, 0, 0);
     }

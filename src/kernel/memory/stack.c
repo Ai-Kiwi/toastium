@@ -8,7 +8,7 @@
 
 extern u8 _stack_top_test, _stack_bottom_test;
 
-void kernel_stack_init() {
+void stack_init() {
     *(volatile u64 *)(&_stack_bottom_test) = stack_end_magic_num;
     *(volatile u64 *)(&_stack_top_test) = stack_top_magic_num;
     uart_print_str("STACK TOP : ");
@@ -17,7 +17,7 @@ void kernel_stack_init() {
 
 
 
-void kernel_stack_confirm_safe() {
+void stack_confirm() {
     if (*(volatile u64 *)(&_stack_bottom_test) != stack_end_magic_num) {
         PANIC("DATA_HAS_BEEN_WRITTEN_BELOW_STACK", *(volatile u64 *)(&_stack_bottom_test), (s64)(&_stack_bottom_test), 0);
     }

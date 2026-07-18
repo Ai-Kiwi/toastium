@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-void kernel_timer_set_future_ms(u64 ms);
+void timer_set_future_ms(u64 ms);
 
 #endif

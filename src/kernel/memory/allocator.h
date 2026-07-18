@@ -3,9 +3,9 @@
 
 #include "types.h"
 
-void kernel_allocator_init();
-u64 kernel_allocator_acquire(u64 size_bytes);
-void kernel_allocator_release(u64 location);
-u64 kernel_allocator_bump(u64 size);
+void allocator_init();
+u64 mem_alloc(u64 size_bytes);
+void mem_free(u64 location);
+u64 bump_alloc(u64 size);
 
 #endif

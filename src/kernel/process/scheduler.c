@@ -22,33 +22,33 @@ u64 process_queue_start;
 
 pid kernel_running_process;
 
-kernel_process **hart_idle_process;
+process **hart_idle_process;
 
 //this also marks current as running so must be careful handled
 //also after remove has to be readded
-kernel_process *kernel_scheduler_dequeue_next_process(u64 hart_id) {
+process *scheduler_next(u64 hart_id) {
     if (process_queue_count == 0) {
         return hart_idle_process[hart_id];
     }
-    kernel_process *output_process = (kernel_process *)process_queue[process_queue_start];
+    process *output_process = (process *)process_queue[process_queue_start];
     process_queue_start = (process_queue_start + 1) % process_queue_size;
 
     process_queue_count--;
     return output_process;
 }
 
-void kernel_scheduler_queue_process(kernel_process *process) {
+void scheduler_queue_process(process *proc) {
     if (process_queue_size == process_queue_count) {
         PANIC("KERNEL_SCHEDULER_QUEUE_FULL", 0, 0, 0);
     }
-    process_queue[(process_queue_start + process_queue_count) % process_queue_size] = (u64)process;
+    process_queue[(process_queue_start + process_queue_count) % process_queue_size] = (u64)proc;
     process_queue_count++;
 }
 
-void kernel_scheduler_dequeue_process(kernel_process *process) {
+void scheduler_remove(process *proc) {
     u64 offset = 0;
     for (u64 i=1; i<process_queue_count+1; i++) {
-        if (process_queue[(process_queue_start + (process_queue_count - i)) % process_queue_size] == (u64)process) {
+        if (process_queue[(process_queue_start + (process_queue_count - i)) % process_queue_size] == (u64)proc) {
             offset--;
         }
         if (offset==0) {continue;}
@@ -57,9 +57,9 @@ void kernel_scheduler_dequeue_process(kernel_process *process) {
     }
 }
 
-void kernel_schedular_init(u64 hart_count) {
+void schedular_init(u64 hart_count) {
     //kernel_running_process = null_program_pid;
-    process_queue = (u64 *)kernel_pager_acquire();
+    process_queue = (u64 *)pg_alloc();
     process_queue_size = KERNEL_PAGE_SIZE / 8;
     process_queue_count = 0;
     process_queue_start = 0;
@@ -68,9 +68,9 @@ void kernel_schedular_init(u64 hart_count) {
     if (hart_count > (KERNEL_PAGE_SIZE / 8)) {
         PANIC("TO_MANY_IDLE_PROCESSES_FOR_PAGE", 0, 0, 0);
     }
-    hart_idle_process = (kernel_process **)kernel_pager_acquire();
+    hart_idle_process = (process **)pg_alloc();
 
     for (u64 i=0; i<hart_count; i++) {
-        hart_idle_process[i] = (kernel_process *)kernel_process_from_id(i);
+        hart_idle_process[i] = (process *)process_from_id(i);
     }
 }
