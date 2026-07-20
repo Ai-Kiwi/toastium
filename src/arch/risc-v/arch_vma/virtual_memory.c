@@ -11,38 +11,32 @@
 #include "virtual_memory.h"
 #include "board.h"
 
-u64 create_leaf(u64 phys_addr, u64 arg_flags) {
-    return ((phys_addr / 4096) << 10) | arg_flags | VMA_VALID;
+static inline u64 create_leaf(u64 phys_addr, u64 arg_flags) {
+    return (((phys_addr / 4096) << 10) | arg_flags | VMA_VALID) & (U64_MAX * (u64)!!arg_flags);
 }
 
-u64 create_branch(u64 branch_addr) {
+static inline u64 create_branch(u64 branch_addr) {
     return ((branch_addr / 4096) << 10) | VMA_VALID;
 }
 
-u64 get_branch_loc(u64 leaf_data) {
-    if ((leaf_data & (BIT(10)) - 1) == 0x1) { //only valid is set so its a branch
-        return (((leaf_data >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
-    }else{
-        return 0;
-    }
+static inline u64 get_branch_loc(u64 leaf_data) {
+    bool8 is_branch = (leaf_data & (BIT(10)) - 1) == 0x1;
+    return ((((leaf_data >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_branch);
 }
 
-u64 get_leaf_flags(u64 *leaf_data) {
-    return (BIT(10) - 1) & (*leaf_data);
+static inline u64 get_leaf_flags(u64 leaf_data) {
+    return (BIT(10) - 1) & (leaf_data);
 }
 
-u64 get_phys_leaf_loc(u64 leaf_data) {
-    if ((leaf_data & (BIT(10) - 1)) > 0x1) { // must be a leaf as has flags and valid
-        return (((leaf_data >> 10) & (BIT(27) - 1)) * 4096);
-    }else{
-        return 0;
-    }
+static inline u64 get_phys_leaf_loc(u64 leaf_data) {
+    bool8 is_leaf = (leaf_data & (BIT(10) - 1)) > 0x1; //must have flags and be valid
+    return (((leaf_data >> 10) & (BIT(27) - 1)) * 4096) & (U64_MAX * (u64)is_leaf);
 }
 
 u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
     u64 *new_branch = (u64 *)pg_alloc();
     u64 physical_location = get_phys_leaf_loc(*leaf);
-    u64 flags = get_leaf_flags(leaf);
+    u64 flags = get_leaf_flags(*leaf);
 
     if ((*leaf) == 0x0) {
         return (u64)new_branch; //was unmapped so just return unmapped
@@ -55,24 +49,54 @@ u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
     return (u64)new_branch;
 }
 
-void destroy_branch(u64 branch_location, u64 branch_jmp_size) {
-    volatile u64 *physical_loc = (volatile u64 *)get_branch_loc(branch_location);
+void destroy_branch(u64 *branch_loc, u64 branch_jmp_size) {
+    volatile u64 *physical_loc = (volatile u64 *)get_branch_loc(*branch_loc);
     if ((u64)physical_loc == 0x0) {
         return;
     }
 
     for (u64 i=0; i<512; i++) {
-        destroy_branch(physical_loc[i], branch_jmp_size / 512);
+        destroy_branch((u64 *)physical_loc[i], branch_jmp_size / 512);
     }
 
     pg_free((u64)physical_loc);
 }
 
-void shrink_branch() {
-    //loop over all leafs inside it and if they all follow each other directly then delete that table and replace contents with parent leaf instead
-    //keeps in mind to ignore special cases
-    //also should look into if it has no rwx commands as that is a ignore all as its acting as a guard
-    //when i go over and recode this to support unmapping this will also need to support that
+void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
+    bool8 can_shrink = TRUE;
+
+    u64 *branch_leafs = (u64 *)get_branch_loc(*branch_loc);
+    if (branch_leafs == 0x0) {
+        return;
+    }
+
+    u64 leaf_jmp_size = branch_jmp_size / 512;
+
+    if (branch_leafs[0] == 0) {//unmapped
+        for (u64 i=0; i<512; i++) {
+            can_shrink = can_shrink && (branch_leafs[i] == 0);
+        }
+    }else{
+        u64 start_phys_loc = get_phys_leaf_loc(branch_leafs[0]);
+        u64 start_access_flags = get_leaf_flags(branch_leafs[0]);
+        for (u64 i=0; i<512; i++) {
+            u64 iter_phys_loc = get_phys_leaf_loc(branch_leafs[i]);
+            u64 iter_flags = get_leaf_flags(branch_leafs[i]);
+            can_shrink = can_shrink && (iter_phys_loc == start_phys_loc + (leaf_jmp_size * i)) && (iter_flags == start_access_flags);
+        }
+    }
+
+    if (can_shrink == TRUE) {
+        if (branch_leafs[0] == 0) {//unmapped
+            *branch_loc = 0;
+            pg_free((u64)branch_leafs);
+        }else{
+            u64 start_phys_loc = get_phys_leaf_loc(branch_leafs[0]);
+            u64 start_access_flags = get_leaf_flags(branch_leafs[0]);
+            create_leaf(start_phys_loc, start_access_flags);
+            pg_free((u64)branch_leafs);
+        }
+    }
 }
 
 //needs shrink done
@@ -81,9 +105,8 @@ void shrink_branch() {
 //probs will do a different unmap function but will just call this main one with unmap. Will have to see how clean that works out being
 //needs way to support page as unmapped region
 
-NOtes above for programming this
-
 void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags) {
+    PANIC("VMA IS UNTESTED AND IS A DRAFT", 0 , 0, 0);
     const u64 ppn0_jmp_size = 4096;
     const u64 ppn1_jmp_size = 4096*512;
     const u64 ppn2_jmp_size = 4096*512*512;
@@ -177,25 +200,25 @@ void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_a
         cur_ppn0_offset++;
     }
     cur_ppn0_offset = 0;
+    shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
 
 
     for (u64 i=0; i<pre_ppn1_cnt; i++) {
         if (get_branch_loc(pre_ppn1_table[cur_ppn1_offset]) != 0) {
-            destroy_branch(pre_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
+            destroy_branch((u64 *)pre_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
         }
         pre_ppn1_table[cur_ppn1_offset] = create_leaf(phys_addr + cur_offset, access_flags);
-        shrink_branch();
         cur_offset += ppn1_jmp_size;
         cur_ppn1_offset++;
     }
     cur_ppn1_offset = 0;
+    shrink_branch(&ppn2_table[cur_ppn2_offset],ppn2_jmp_size);
 
     for (u64 i=0; i<ppn2_cnt; i++) {
         if (get_branch_loc(ppn2_table[cur_ppn2_offset]) != 0) {
-            destroy_branch(ppn2_table[cur_ppn2_offset], ppn2_jmp_size);
+            destroy_branch((u64 *)ppn2_table[cur_ppn2_offset], ppn2_jmp_size);
         }
         ppn2_table[cur_ppn2_offset] = create_leaf(phys_addr + cur_offset, access_flags);
-        shrink_branch();
         cur_offset += ppn2_jmp_size;
         cur_ppn2_offset++;
     }
@@ -207,13 +230,13 @@ void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_a
 
     for (u64 i=0; i<post_ppn1_cnt; i++) {
         if (get_branch_loc(post_ppn1_table[cur_ppn1_offset]) != 0) {
-            destroy_branch(post_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
+            destroy_branch((u64 *)post_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
         }
         post_ppn1_table[cur_ppn1_offset] = create_leaf(phys_addr + cur_offset, access_flags);
-        shrink_branch();
         cur_offset += ppn1_jmp_size;
         cur_ppn1_offset++;
     }
+    shrink_branch(&ppn2_table[cur_ppn2_offset],ppn2_jmp_size);
 
     u64 *post_ppn0_table = (u64 *)get_branch_loc(post_ppn1_table[cur_ppn1_offset]);
     if (((u64)post_ppn0_table == 0x0) && (post_ppn0_cnt > 0)) {
@@ -225,6 +248,7 @@ void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_a
         cur_offset += ppn0_jmp_size;
         cur_ppn0_offset++;
     }
+    shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
 
     //do asid updates now
 }
