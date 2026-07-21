@@ -99,13 +99,15 @@ void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
     }
 }
 
-//needs shrink done
 //needs testing done
 //needs way to unmap. For unmap im thinking it will have nothing in access flags.
 //probs will do a different unmap function but will just call this main one with unmap. Will have to see how clean that works out being
 //needs way to support page as unmapped region
+//needs special flags for sizes that cant be shrink (files foe exmaple)
+//needs support for dirty both read and write for pages
+//shrinker should ignore dirty bit flags.
 
-void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags) {
+void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags, u64 vma_addr_asid) {
     PANIC("VMA IS UNTESTED AND IS A DRAFT", 0 , 0, 0);
     const u64 ppn0_jmp_size = 4096;
     const u64 ppn1_jmp_size = 4096*512;
@@ -250,13 +252,44 @@ void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_a
     }
     shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
 
-    //do asid updates now
+    //loop over again but with asid updates now
+    cur_offset = 0;
+
+    for (u64 i = 0; i<pre_ppn0_cnt; i++) {
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        cur_offset += ppn0_jmp_size;
+    }
+    for (u64 i = 0; i<pre_ppn1_cnt; i++) {
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        cur_offset += ppn1_jmp_size;
+    }
+    for (u64 i = 0; i<ppn2_cnt; i++) {
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        cur_offset += ppn2_jmp_size;
+    }
+    for (u64 i = 0; i<post_ppn1_cnt; i++) {
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        cur_offset += ppn1_jmp_size;
+    }
+    for (u64 i = 0; i<post_ppn0_cnt; i++) {
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        cur_offset += ppn0_jmp_size;
+    }
+
+
 }
 
+void vma_map_kernel(process proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
+    vma_replace_section((u64)proc.vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID, proc.vma_addr_space_id);
+}
 
+void vma_map_user(process proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
+    vma_replace_section((u64)proc.vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID | VMA_USER, proc.vma_addr_space_id);
+}
 
-
-
+void vma_unmap(process proc, u64 virt_addr, u64 size) {
+    vma_replace_section((u64)proc.vma_table, virt_addr, size, 0, 0, proc.vma_addr_space_id);
+}
 
 
 
@@ -271,15 +304,6 @@ void vma_map(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_a
 //not 64 bytes aligned for multicore
 u64 max_asid;
 u64 current_highest_asid;
-
-void write_leaf(u64 leaf_loc, u64 dst_loc) {
-
-}
-
-void compress_branch(u64 branch_loc, u64 branch_lvl) {
-    //just looks and children and sees if it can compress. If any of the children have a child then just return.
-    //idea is the children will have this compress ran on them before any parent does so it fixes on that front.
-}
 
 //need to sense if it is smaller then current and expand out
 //if it is same as current then compress
@@ -342,72 +366,6 @@ u64 vma_fetch_asid() {
         current_highest_asid++;
     }
     return current_highest_asid;
-}
-
-void vma_assign(process *process, u64 virt_addr, u64 vma_phys_addr, u64 arg_flags) {
-    u64 ppn0_offset; //least significant
-    u64 ppn1_offset;
-    u64 ppn2_offset; //most significant
-
-    u64 phys_addr = vma_phys_addr - KERNEL_VMA_START;
-
-    if (virt_addr % 4096 || phys_addr % 4096) {
-        PANIC("VMA_ASSIGN_NOT_PAGE_ALIGN", (s64)process->vma_table, (s64)virt_addr, (s64)phys_addr);
-    }
-
-    u64 ranged_virt_addr = virt_addr;
-    //move down if kernel space addr
-    if (ranged_virt_addr > 0x4000000000) {
-        if (ranged_virt_addr < 0xffffffc000000000) {
-            PANIC("VMA_ASSIGN_BETWEEN_USERSPACE_AND_KERNELSPACE", (s64)process->vma_table, (s64)virt_addr, (s64)phys_addr)
-        }
-        ranged_virt_addr = ranged_virt_addr - (0xffffffc000000000 - 0x4000000000);
-    }
-
-    ppn0_offset = ranged_virt_addr / 4096;
-    ppn1_offset = ppn0_offset / 512;
-    ppn2_offset = ppn1_offset / 512;
-
-    ppn0_offset = ppn0_offset % 512;
-    ppn1_offset = ppn1_offset % 512;
-    ppn2_offset = ppn2_offset % 512;
-
-    u64 *ppn2_table = (u64 *)process->vma_table;
-    if ((ppn2_table[ppn2_offset] & 0x1) == 0) {
-        u64 new_page_addr = pg_alloc();
-        new_page_addr = (new_page_addr - KERNEL_VMA_START) / 4096;
-        ppn2_table[ppn2_offset] = 1;
-        ppn2_table[ppn2_offset] |= new_page_addr << 10;
-    }
-
-    u64 ppn1_table_addr = (((ppn2_table[ppn2_offset] >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
-    u64 *ppn1_table = (u64 *)ppn1_table_addr;
-    if ((ppn1_table[ppn1_offset] & 0x1) == 0) {
-        u64 new_page_addr = pg_alloc();
-        new_page_addr = (new_page_addr - KERNEL_VMA_START) / 4096;
-        ppn1_table[ppn1_offset] = 1;
-        ppn1_table[ppn1_offset] |= new_page_addr << 10;
-    }
-
-    u64 ppn0_table_addr = (((ppn1_table[ppn1_offset] >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START;
-    u64 *ppn0_table = (u64 *)ppn0_table_addr;
-
-    //can use to handle if already in use
-    //if (ppn0_table[ppn0_offset] & 0x1 == 0) {
-    //
-    //}
-
-    ppn0_table[ppn0_offset] = ((phys_addr / 4096) << 10) | arg_flags | VMA_VALID;
-
-    asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr), "r"(process->vma_addr_space_id) : "memory"); //push cache update, only to current asid
-}
-
-void vma_assign_kernel(process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
-    vma_assign(process, virt_addr, phys_addr, arg_flags);
-}
-
-void vma_assign_user(process *process, u64 virt_addr, u64 phys_addr, u64 arg_flags) {
-    vma_assign(process, virt_addr, phys_addr, arg_flags | VMA_USER);
 }
 
 void vma_swap(process *process) {
