@@ -100,7 +100,6 @@ void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
 }
 
 //needs testing done
-//needs way to unmap. For unmap im thinking it will have nothing in access flags.
 //probs will do a different unmap function but will just call this main one with unmap. Will have to see how clean that works out being
 //needs way to support page as unmapped region
 //needs special flags for sizes that cant be shrink (files foe exmaple)
@@ -314,7 +313,6 @@ u64 current_highest_asid;
 //one of the reserved flag will be a special bit. It basiclly tells that this part can't be compressed. It would be used for files and what not
 
 u64 vma_create() {
-    needs to setup kernel space as with rwx, after that also needs to asssign the kernel stack process to the end region with guarding around it.
     //likely todo will be vma generic enough so that it isnt just processes, will keep this new generic as not shared. Then after that will use that to create the inital kernel level.
     //for kernel level it will go over a premade list of ranges and setup all of those. 
     //this data made will then be cached and just straght copied whever a new process is loaded in, slight changes will be made from there tho such as setting up per process kernel stack right at the end. Or assigning the process trapframe
