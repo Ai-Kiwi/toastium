@@ -1,7 +1,7 @@
 # Toastium
 (Stands for Toast-Is-Utterly-aMazing)
 
-An operating system that I have been developing for learning purposes. Designed for targeting a custom portable console I am working on with someone in the long run, However is designed with portablity in mind so can be ported to other devices or architectures.
+An operating system that I have been developing for learning purposes. Designed for targeting a custom portable console I am working on with someone in the long run, However is designed with portablity in mind so can be ported to other devices or architectures. It is built using C & Assembly and is currently targeted at RISC-V but with plans to expand in future. 
 
 ## Current Features
  - Preemptive multitasking
