@@ -20,13 +20,13 @@ void handle_async_trap() {
         PANIC("PROCESS_TRAP_AFTER_PAGE_FAULT", trap.code, proc->process_id, 0);
     }
     if (proc->trap_state == PROC_TRAP_PROCESS_TRAP) {
-        vma_assign_kernel(proc, TRAPFRAME_ADDRESS, (u64)proc->page_fault_trapframe, VMA_READ | VMA_WRITE);
+        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->page_fault_trapframe, VMA_READ | VMA_WRITE);
         proc->trap_state = PROC_TRAP_PROCESS_PAGE_FAULT;
         if (trap.code != TRAP_PAGE_FAULT) {
             PANIC("DOUBLE_PROCESS_TRAP_NOT_PAGE_FAULT", trap.code, proc->process_id, 0);
         }
     }else{
-        vma_assign_kernel(proc, TRAPFRAME_ADDRESS, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
+        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
         proc->trap_state = PROC_TRAP_PROCESS_TRAP;
     }
     irq_enable();
@@ -74,10 +74,10 @@ void handle_async_trap() {
 
     irq_disable();
     if (proc->trap_state == PROC_TRAP_PROCESS_PAGE_FAULT) {
-        vma_assign_kernel(proc, TRAPFRAME_ADDRESS, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
+        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
         proc->trap_state = PROC_TRAP_PROCESS_TRAP;
     }else{
-        vma_assign_kernel(proc, TRAPFRAME_ADDRESS, (u64)proc->userspace_trapframe, VMA_READ | VMA_WRITE);
+        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->userspace_trapframe, VMA_READ | VMA_WRITE);
         proc->trap_state = PROC_TRAP_PROCESS;
     }
 

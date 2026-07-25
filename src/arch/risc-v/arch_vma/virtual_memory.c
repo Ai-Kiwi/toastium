@@ -278,16 +278,16 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
 
 }
 
-void vma_map_kernel(process proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
-    vma_replace_section((u64)proc.vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID, proc.vma_addr_space_id);
+void vma_map_kernel(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
+    vma_replace_section((u64)proc->vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID, proc->vma_addr_space_id);
 }
 
-void vma_map_user(process proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
-    vma_replace_section((u64)proc.vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID | VMA_USER, proc.vma_addr_space_id);
+void vma_map_user(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
+    vma_replace_section((u64)proc->vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID | VMA_USER, proc->vma_addr_space_id);
 }
 
-void vma_unmap(process proc, u64 virt_addr, u64 size) {
-    vma_replace_section((u64)proc.vma_table, virt_addr, size, 0, 0, proc.vma_addr_space_id);
+void vma_unmap(process *proc, u64 virt_addr, u64 size) {
+    vma_replace_section((u64)proc->vma_table, virt_addr, size, 0, 0, proc->vma_addr_space_id);
 }
 
 
@@ -312,7 +312,7 @@ u64 current_highest_asid;
 
 //one of the reserved flag will be a special bit. It basiclly tells that this part can't be compressed. It would be used for files and what not
 
-u64 vma_create() {
+void vma_create(process *proc) {
     //likely todo will be vma generic enough so that it isnt just processes, will keep this new generic as not shared. Then after that will use that to create the inital kernel level.
     //for kernel level it will go over a premade list of ranges and setup all of those. 
     //this data made will then be cached and just straght copied whever a new process is loaded in, slight changes will be made from there tho such as setting up per process kernel stack right at the end. Or assigning the process trapframe
@@ -320,12 +320,13 @@ u64 vma_create() {
 
     //create kernel mapping
     ///allow read/write/execute, mark as global for optimization, is valid and also mark as already dirty and accessed for performance.
-    const u64 access_mask = 0xEF;
+    const u64 access_mask = VMA_VALID | VMA_READ | VMA_WRITE | VMA_EXEC; //missing dirt and global
     volatile u64 *entry_leaf = (u64 *)new_page_addr;
     for (u64 i=0; i<256; i++) {
         entry_leaf[256 + i] = (i << 28) | access_mask;
     }
-    return new_page_addr;
+
+    proc->vma_table = (u64 *)new_page_addr;
 }
 
 //must be called when init vma has already been set
@@ -367,8 +368,10 @@ u64 vma_fetch_asid() {
 }
 
 void vma_swap(process *process) {
+    bool8 new_vma = FALSE;
     if (process->vma_addr_space_id == U64_MAX) {
         process->vma_addr_space_id = vma_fetch_asid();
+        new_vma = TRUE;
     }
 
     u64 satp_value = 0
@@ -380,6 +383,9 @@ void vma_swap(process *process) {
     asm volatile ("fence.i");
     asm volatile ("csrw satp, %0" :: "r"(satp_value) : "memory");
     //might need fence here need to look more into it
+    if (new_vma) {
+        asm volatile ("sfence.vma zero, %0" :: "r"(process->vma_addr_space_id) : "memory");
+    }
 }
 
 void vma_enable_read_user() {

@@ -43,7 +43,7 @@ process *new_blank_process() {
     new_process.block_waiting = 0;
     new_process.process_id = process_upto;
     new_process.vma_addr_space_id = U64_MAX;
-    new_process.vma_table = (u64 *)vma_create();
+    new_process.vma_table = 0;
     new_process.userspace_trapframe = (trapframe *)pg_alloc();
     new_process.kernelspace_trapframe = (trapframe *)pg_alloc();
     new_process.page_fault_trapframe = (trapframe *)pg_alloc();
@@ -55,20 +55,21 @@ process *new_blank_process() {
     new_process.phys_kernel_stack_addr[1] = pg_alloc();
     new_process.phys_kernel_stack_addr[2] = pg_alloc();
     new_process.phys_kernel_stack_addr[3] = pg_alloc();
-    vma_assign_kernel((process *)&new_process, TRAPFRAME_ADDRESS, (u64)new_process.userspace_trapframe, VMA_READ | VMA_WRITE);
-    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START-KERNEL_PAGE_SIZE, 0x0, 0);
-    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START, (u64)new_process.phys_kernel_stack_addr[0], VMA_READ | VMA_WRITE);
-    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE), (u64)new_process.phys_kernel_stack_addr[1], VMA_READ | VMA_WRITE);
-    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*2), (u64)new_process.phys_kernel_stack_addr[2], VMA_READ | VMA_WRITE);
-    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*3), (u64)new_process.phys_kernel_stack_addr[3], VMA_READ | VMA_WRITE);
-    vma_assign_kernel((process *)&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*4), 0x0, 0);
+
+    vma_create(&new_process);
+
+    vma_map_kernel(&new_process,TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)new_process.userspace_trapframe, VMA_READ | VMA_WRITE);
+    vma_unmap(&new_process, PROCESS_KERNEL_STACK_START-KERNEL_PAGE_SIZE, KERNEL_PAGE_SIZE);
+    vma_map_kernel(&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*0), KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[0], VMA_READ | VMA_WRITE);
+    vma_map_kernel(&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*1), KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[1], VMA_READ | VMA_WRITE);
+    vma_map_kernel(&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*2), KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[2], VMA_READ | VMA_WRITE);
+    vma_map_kernel(&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*3), KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[3], VMA_READ | VMA_WRITE);
+    vma_unmap(&new_process, PROCESS_KERNEL_STACK_START+(KERNEL_PAGE_SIZE*4), KERNEL_PAGE_SIZE);
 
     process *temp_process = (process *)mem_alloc(sizeof(process));
     new_process.userspace_trapframe->process_ptr = (u64)temp_process;
     new_process.kernelspace_trapframe->process_ptr = (u64)temp_process;
     *temp_process = new_process;
-
-
 
     u64 old_child = (u64)hashmap_insert(&process_hashmap, process_upto, (u64)temp_process);
     if (old_child) {
@@ -95,7 +96,7 @@ void processes_init(u64 hart_count) {
         idle_process->runing_hart_id = hart_id;
         idle_process->process_type = PROC_TYPE_IDLE;
         trapframe_user_init(idle_process->userspace_trapframe, 0x1000);
-        vma_assign_user(idle_process, 0x1000, (u64)&_kernel_idle_process, VMA_EXEC);
+        vma_map_user(idle_process, 0x1000, KERNEL_PAGE_SIZE ,(u64)&_kernel_idle_process, VMA_EXEC);
     }
 }
 
@@ -135,7 +136,7 @@ void create_init_process() {
     //create the init process
     process *init_process = new_blank_process();
     trapframe_user_init(init_process->userspace_trapframe, 0x1000);
-    vma_assign_user(init_process, 0x1000, (u64)&_kernel_init_process, VMA_EXEC | VMA_READ);
+    vma_map_user(init_process, 0x1000, KERNEL_PAGE_SIZE , (u64)&_kernel_init_process, VMA_EXEC | VMA_READ);
 
     scheduler_queue_process(init_process);
 }
