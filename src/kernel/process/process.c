@@ -3,6 +3,7 @@
 #include "drivers/uart/uart.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/memory/hashmap.h"
+#include "kernel/memory/list.h"
 #include "kernel/trap/handler.h"
 #include "def.h"
 #include "kernel/safety/panic.h"
@@ -22,26 +23,25 @@
 extern u8 _kernel_idle_process, _kernel_init_process;
 
 //not 64 bytes aligned for multicore
-alignas(64) u64 __attribute__((aligned(64))) process_upto = 0;
-alignas(64) hashmap __attribute__((aligned(64))) process_hashmap;
+alignas(64) process_handler_state __attribute__((aligned(64))) state;
 
 process *process_from_id(pid process_id) {
-    return (process *)hashmap_get(&process_hashmap, (u64)process_id);
+    return (process *)hashmap_get(&state.process_hashmap, (u64)process_id);
 }
 
 process *new_blank_process() {
     process *current_process; //Non zero
     while (TRUE){
-        current_process = (process *)hashmap_get(&process_hashmap,process_upto);
+        current_process = (process *)hashmap_get(&state.process_hashmap,state.process_upto);
         if (!current_process) {
             break;
         }
-        process_upto++;
+        state.process_upto++;
     }
     process new_process;
     new_process.trap_state = PROC_TRAP_PROCESS;
     new_process.block_waiting = 0;
-    new_process.process_id = process_upto;
+    new_process.process_id = state.process_upto;
     new_process.vma_addr_space_id = U64_MAX;
     new_process.vma_table = 0;
     new_process.userspace_trapframe = (trapframe *)pg_alloc();
@@ -71,22 +71,26 @@ process *new_blank_process() {
     new_process.kernelspace_trapframe->process_ptr = (u64)temp_process;
     *temp_process = new_process;
 
-    u64 old_child = (u64)hashmap_insert(&process_hashmap, process_upto, (u64)temp_process);
+    u64 old_child = (u64)hashmap_insert(&state.process_hashmap, state.process_upto, (u64)temp_process);
     if (old_child) {
         PANIC("CREATE_BLANK_PROCESS_CONFLICTING_CHILD_PRESENT",old_child,0,0);
     }
 
-    process_upto++;//increase for next process
+    list_append(&state.running_list, (u64)temp_process);
+
+    state.process_upto++;//increase for next process
     return (process *)temp_process;
 }
 
 
 void processes_init(u64 hart_count) {
-    hashmap_create(HASHMAP_TYPE_NUMBER, &process_hashmap);
-    process_hashmap.start = (u64 *)pg_alloc();
-    process_hashmap.len = KERNEL_PAGE_SIZE / 8;
+    hashmap_create(HASHMAP_TYPE_NUMBER, &state.process_hashmap);
+    state.process_hashmap.start = (u64 *)pg_alloc();
+    state.process_hashmap.len = KERNEL_PAGE_SIZE / 8;
 
-    process_upto = 0;
+    state.process_upto = 0;
+
+    list_create(&state.running_list, 8);
 
     for (u64 hart_id = 0; hart_id<hart_count; hart_id++) {
         process *idle_process = new_blank_process();
@@ -98,12 +102,6 @@ void processes_init(u64 hart_count) {
         trapframe_user_init(idle_process->userspace_trapframe, 0x1000);
         vma_map_user(idle_process, 0x1000, KERNEL_PAGE_SIZE ,(u64)&_kernel_idle_process, VMA_EXEC);
     }
-}
-
-void processes_iter(void (*function)(u64, u64), u64 parameters) {
-    //move to hashmap, currently no way to loop will add later after working
-    PANIC("LOOPING_OVER_PROCESSES_NOT_IMPLEMTED", 0, 0, 0)
-    //kernel_radix_iter_children((u64)process_radix_root, pid_levels, pid_level_size, parameters, function);
 }
 
 void kill_process(pid process_id) {
@@ -120,7 +118,17 @@ void kill_process(pid process_id) {
 }
 
 void process_cleanup(process *proc) {
-    hashmap_remove(&process_hashmap, proc->process_id);
+    hashmap_remove(&state.process_hashmap, proc->process_id);
+    u64 highest_idx = state.running_list.item_cnt - 1;
+    list_remove(&state.running_list, proc->list_idx);
+    if (highest_idx != proc->list_idx) {
+        process *replacement_process = (process *)list_get(&state.running_list, proc->list_idx);
+        if (replacement_process == 0x0) {
+            PANIC("REPLACEMENT_PROCESS_REMOVE_SWAP_INVALID", proc->process_id, highest_idx, proc->list_idx);
+        }
+        replacement_process->list_idx = highest_idx;
+    }
+
     pg_free((u64)proc->userspace_trapframe);
     pg_free((u64)proc->kernelspace_trapframe);
     pg_free((u64)proc->vma_table);
@@ -139,4 +147,8 @@ void create_init_process() {
     vma_map_user(init_process, 0x1000, KERNEL_PAGE_SIZE , (u64)&_kernel_init_process, VMA_EXEC | VMA_READ);
 
     scheduler_queue_process(init_process);
+}
+
+void processes_iter(list_iter *iter) {
+    list_iter_create(&state.running_list, iter);
 }

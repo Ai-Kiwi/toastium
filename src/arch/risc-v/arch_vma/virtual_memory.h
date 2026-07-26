@@ -12,6 +12,9 @@
 #define VMA_USER  (1 << 4)
 #define VMA_GLOBAL  (1 << 5)
 
+#define VMA_ACCESSED  (1 << 6)
+#define VMA_DIRTY  (1 << 7)
+
 #define VMA_DONT_COMPRESS  (1 << 8)
 
 void vma_map_kernel(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags);

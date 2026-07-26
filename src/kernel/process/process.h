@@ -1,6 +1,8 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "kernel/memory/hashmap.h"
+#include "kernel/memory/list.h"
 #include "types.h"
 #include "kernel/process/blocks.h"
 #include "arch_trap/parser.h"
@@ -18,6 +20,12 @@ typedef enum {
 } process_trap_state;
 
 typedef struct {
+    u64 process_upto;
+    hashmap process_hashmap;
+    list running_list;
+} __attribute__((aligned(64))) process_handler_state;
+
+typedef struct {
     pid process_id;
     process_block block_waiting; //process needs to be in kernel space for a block to be waiting
     process_trap_state trap_state;
@@ -32,14 +40,16 @@ typedef struct {
     bool8 running;
     process_type process_type;
     u64 phys_kernel_stack_addr[4]; //12kb per process kernel stack
+    u64 list_idx;
 } __attribute__((aligned(64))) process;
+
 
 
 void processes_init(u64 hart_count);
 process *process_from_id(pid process_id);
-void processes_iter(void (*function)(u64, u64), u64 parameters);
 void process_cleanup(process *process);
 void create_init_process();
 void kill_process(pid process_id);
+void processes_iter(list_iter *iter);
 
 #endif

@@ -7,6 +7,7 @@
 //if it had merged it would be one large read field instead of more then 1
 
 #include "drivers/uart/uart.h"
+#include "kernel/memory/list.h"
 #include "types.h"
 #include "def.h"
 #include "kernel/memory/pager.h"
@@ -351,19 +352,21 @@ void vma_init() {
     current_highest_asid = max_asid;
 }
 
-void delete_process_asid(u64 process_ptr, u64 parameter) {
-    process *proc = (process *)process_ptr;
-
-    proc->vma_addr_space_id = 0;
-}
-
 void vma_reset_asid() {
     uart_println_str("reset all vma asid");
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
 
-    processes_iter(delete_process_asid, 0);
+    list_iter iter;
+    processes_iter(&iter);
+    while (iter.cur_upto<iter.cur_list->item_cnt) {
+        process *proc = (process *)list_iter_next(&iter);
+        if (proc == 0x0) {
+            PANIC("PROC_ASID_LOOP_INVALID", 0, 0, 0);
+        }
+        proc->vma_addr_space_id = 0;
+    }
 }
 
 u64 vma_fetch_asid() {
