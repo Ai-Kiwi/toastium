@@ -17,16 +17,16 @@
 #include "board.h"
 
 static inline u64 create_leaf(u64 phys_addr, u64 arg_flags) {
-    return (((phys_addr / 4096) << 10) | arg_flags | VMA_VALID) & (U64_MAX * (u64)!!arg_flags);
+    return ((((phys_addr - KERNEL_VMA_START) / 4096) << 10) | arg_flags | VMA_VALID) & (U64_MAX * (u64)!!arg_flags);
 }
 
 static inline u64 create_branch(u64 branch_addr) {
-    return ((branch_addr / 4096) << 10) | VMA_VALID;
+    return (((branch_addr - KERNEL_VMA_START) / 4096) << 10) | VMA_VALID;
 }
 
 static inline u64 get_branch_loc(u64 leaf_data) {
     bool8 is_branch = (leaf_data & (BIT(10)) - 1) == 0x1;
-    return ((((leaf_data >> 10) & (BIT(27) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_branch);
+    return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_branch);
 }
 
 static inline u64 get_leaf_flags(u64 leaf_data) {
@@ -35,7 +35,7 @@ static inline u64 get_leaf_flags(u64 leaf_data) {
 
 static inline u64 get_phys_leaf_loc(u64 leaf_data) {
     bool8 is_leaf = (leaf_data & (BIT(10) - 1)) > 0x1; //must have flags and be valid
-    return (((leaf_data >> 10) & (BIT(27) - 1)) * 4096) & (U64_MAX * (u64)is_leaf);
+    return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_leaf);
 }
 
 u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
@@ -47,6 +47,8 @@ u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
         PANIC("ATTEMPT_TO_EXPAND_NON_COMPRESS_LEAF", 0, 0, 0);
     }
 
+    *leaf = create_branch((u64)new_branch);
+
     if ((*leaf) == 0x0) {
         return (u64)new_branch; //was unmapped so just return unmapped
     }
@@ -54,6 +56,7 @@ u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
     for (u64 i=0; i<512; i++) {
         new_branch[i] = create_leaf(physical_location + (i * (branch_jmp_size/512)), flags);
     }
+
 
     return (u64)new_branch;
 }
@@ -73,14 +76,12 @@ void destroy_branch(u64 *branch_loc, u64 branch_jmp_size) {
 
 void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
     bool8 can_shrink = TRUE;
-
     u64 *branch_leafs = (u64 *)get_branch_loc(*branch_loc);
-    if (branch_leafs == 0x0) {
+    if ((u64)branch_leafs == 0x0) {
         return;
     }
 
     u64 leaf_jmp_size = branch_jmp_size / 512;
-
     if (branch_leafs[0] == 0) {//unmapped
         for (u64 i=0; i<512; i++) {
             can_shrink = can_shrink && (branch_leafs[i] == 0);
@@ -256,7 +257,7 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
             cur_offset += ppn0_jmp_size;
             cur_ppn0_offset++;
         }
-        shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
+        shrink_branch(&post_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
     }
 
     shrink_branch(&ppn2_table[cur_ppn2_offset],ppn2_jmp_size); //shrink afterwards as it has to remain expanded for ppn 0 to use
@@ -353,7 +354,6 @@ void vma_init() {
 }
 
 void vma_reset_asid() {
-    uart_println_str("reset all vma asid");
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
