@@ -109,13 +109,6 @@ void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
     }
 }
 
-//needs testing done
-//probs will do a different unmap function but will just call this main one with unmap. Will have to see how clean that works out being
-//needs way to support page as unmapped region
-//needs special flags for sizes that cant be shrink (files foe exmaple)
-//needs support for dirty both read and write for pages
-//shrinker should ignore dirty bit flags.
-
 void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags, u64 vma_addr_asid) {
     const u64 ppn0_jmp_size = 4096;
     const u64 ppn1_jmp_size = 4096*512;
