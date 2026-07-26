@@ -64,7 +64,7 @@ setup_vmn_table:
     add t3, t1, t0
     add t3, t3, t6
 
-    sd t4, 0(t3) //write out   ///PROBLEMATIC LINE
+    sd t4, 0(t3) //write out
 
     //setup userspace, for now kernel until jump then blank
     li t4, 0xCF //allow read/write/execute, is valid and also mark as already dirty and accessed for performance .
