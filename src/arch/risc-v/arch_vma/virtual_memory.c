@@ -107,7 +107,6 @@ void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
 //shrinker should ignore dirty bit flags.
 
 void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags, u64 vma_addr_asid) {
-    PANIC("VMA IS UNTESTED AND IS A DRAFT", 0 , 0, 0);
     const u64 ppn0_jmp_size = 4096;
     const u64 ppn1_jmp_size = 4096*512;
     const u64 ppn2_jmp_size = 4096*512*512;
@@ -121,7 +120,7 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
     if (virt_addr_size > ppn2_jmp_size * 256) {
         PANIC("VMA_MAPPING_LARGER_THEN_MAX_SIZE", virt_addr_size, 0, 0);
     }
-    if (U64_MAX - virt_addr_size - 1 >= virt_addr_start) { //take max value remove the size and if start is more then that its overflow
+    if (U64_MAX - virt_addr_size <= virt_addr_start) { //take max value remove the size and if start is more then that its overflow
         PANIC("VMA_MAPPING_PAST_MAX_KERNEL", virt_addr_size, 0, 0);
     }
     if (virt_addr_start + virt_addr_size > 0x4000000000) { //spilling past max userspace
