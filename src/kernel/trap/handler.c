@@ -32,7 +32,7 @@ u64 handle_sync_trap() {
 
     //decide to use
     process *proc = (process *)trap.process_ptr;
-    const u64 kernel_process_stack = PROCESS_KERNEL_STACK_START + ((4096 * 4) - 1); //12KB
+    const u64 kernel_process_stack = PROCESS_KERNEL_STACK_START + (PROCESS_KERNEL_STACK_SIZE - 1); //12KB
 
     switch (trap.code) {
     case TRAP_ACCESS_MISALIGNED:
