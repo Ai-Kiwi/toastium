@@ -1,5 +1,7 @@
 #include "uart_16550.h"
 #include "board.h"
+#include "drivers/uart/uart.h"
+#include "kernel/safety/panic.h"
 
 #define UART_BASE_LOCATION 0x10000000 + KERNEL_VMA_START
 #define UART_STATUS_OFFSET 5
@@ -7,9 +9,14 @@
 #define UART_STATUS_READY_SEND (1 << 5)
 #define UART_STATUS_READY_RECEIVE (1 << 0)
 
+//values are times 4 as on board working on it works that way
+//will later be a value that is setup from dtb
+
+u64 uart_reg_size = 0;
+
 void uart_16550_output_u8(const u8 output_u8) {
-    volatile uart_reg_t* uart = (volatile uart_reg_t*)UART_BASE_LOCATION;
-    volatile uart_reg_t* uart_status = &uart[5];
+    volatile u8* uart = (volatile u8*)UART_BASE_LOCATION;
+    volatile u8* uart_status = &uart[5*uart_reg_size];
 
 
     //for (volatile s32 i=0; i<1000000; i++) {}
@@ -31,12 +38,26 @@ s32 uart_16550_try_fetch_u8() {
 }
 
 void uart_16550_init() {
-    volatile uart_reg_t *base_location = (volatile uart_reg_t*)UART_BASE_LOCATION;
+    //uart_reg_size = 0;
+    volatile u8 *base_location = (volatile u8*)UART_BASE_LOCATION;
     base_location[UART_INTERRUPT_TOGGLE_OFFSET] = 0;
     //base_location[UART_INTERRUPT_TOGGLE_OFFSET] |= 0x1;
 
-    volatile uart_reg_t* uart = (volatile uart_reg_t*)UART_BASE_LOCATION;
-    volatile uart_reg_t* uart_status = &uart[5];
+    volatile u8* uart = (volatile u8*)UART_BASE_LOCATION;
+    for (u64 i=1; i<9; i++) {
+        volatile u8* uart_stride = &uart[7*i];
+        *uart_stride = 'a';
+        if (*uart_stride == 'a') {
+            *uart_stride = 'c';
+            if (*uart_stride == 'c') {
+                uart_reg_size = i;
+                break;
+            }
+        }
+    }
 
-    //while (!(*uart_status & UART_STATUS_READY_SEND)) {}
+    if (uart_reg_size == 0) {
+        //funny thing here is they won't even get this panic as uart wouldn't work
+        PANIC("FAILED_TO_FIND_VALID_UART_SIZE", 0, 0, 0);
+    }
 }

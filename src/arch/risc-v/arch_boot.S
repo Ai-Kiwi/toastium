@@ -3,6 +3,10 @@
 .section .text.boot
 .global _start
 
+//I keep neededing this and forgetting how todo it so for future me and anyone reading lol
+//li   a0, 0x10000000
+//li   a1, 'A'
+//sb   a1, 0(t0)
 
 _start:
     .option norvc

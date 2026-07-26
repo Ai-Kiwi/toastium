@@ -31,20 +31,6 @@
     #define COMPILE_VERSION GIT_VERSION_HASH
 #endif
 
-//c only stuff so linker works
-#ifndef LINKER_SCRIPT
-#ifndef __ASSEMBLER__
-    #include "types.h"
-    #ifdef BOARD_TARGET == BOARD_TARGET_QEMU
-        typedef u8  uart_reg_t;
-    #elif BOARD_TARGET == BOARD_TARGET_VISIONFIVE2_LITE
-        typedef u32 uart_reg_t;
-    #else
-        #error "Unknown BOARD TARGET"
-    #endif
-#endif
-#endif
-
 //#define uart_ram_location 0x80000000 //currrently unused
 
 #endif

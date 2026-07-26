@@ -26,8 +26,6 @@
 
 extern u8 _kernel_end, _kernel_start, _kernel_idle_process;
 
-u64 *alloc_locations[100000];
-
 void kernel_main() {
     uart_init();
     uart_println_str("Initializing kernel...");
