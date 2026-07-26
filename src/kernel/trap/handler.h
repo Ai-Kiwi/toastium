@@ -3,41 +3,41 @@
 
 #include "types.h"
 typedef enum {
-    KTRAP_MODE_USER,
-    KTRAP_MODE_SUPERVISOR,
-    KTRAP_MODE_MACHINE,
+    TRAP_MODE_USER,
+    TRAP_MODE_SUPERVISOR,
+    TRAP_MODE_MACHINE,
 } privilege_mode;
 
 typedef enum {
-    KTRAP_TYPE_INTERRUPT,
-    KTRAP_TYPE_EXCEPTION,
-} kernel_trap_type;
+    TRAP_TYPE_INTERRUPT,
+    TRAP_TYPE_EXCEPTION,
+} trap_type;
 
 typedef enum {
     //interrupts
-    KTRAP_SOFTWARE_INTERRUPT,
-    KTRAP_TIMER_INTERRUPT,
-    KTRAP_EXTERNAL_INTERRUPT,
+    TRAP_SOFTWARE_INTERRUPT,
+    TRAP_TIMER_INTERRUPT,
+    TRAP_EXTERNAL_INTERRUPT,
     //cntER_OVERFLOW_INTERRUPT, unhandled for now until needed
 
     //Exception
-    KTRAP_ACCESS_MISALIGNED,
-    KTRAP_ACCESS_FAULT,
-    KTRAP_INSTRUCTION_INVALID,
-    KTRAP_BREAKPOINT,
-    KTRAP_SYSCALL,
-    KTRAP_PAGE_FAULT,
-    KTRAP_DOUBLE_TRAP,
-    KTRAP_SOFTWARE_CHECK,
-    KTRAP_HARDWARE_ERROR,
+    TRAP_ACCESS_MISALIGNED,
+    TRAP_ACCESS_FAULT,
+    TRAP_INSTRUCTION_INVALID,
+    TRAP_BREAKPOINT,
+    TRAP_SYSCALL,
+    TRAP_PAGE_FAULT,
+    TRAP_DOUBLE_TRAP,
+    TRAP_SOFTWARE_CHECK,
+    TRAP_HARDWARE_ERROR,
 
-} kernel_trap_code;
+} trap_code;
 
 typedef struct {
     u64 process_ptr; //would like to be a process pointer type but causes circular import, will revisit
-    kernel_trap_type trap_type;
+    trap_type trap_type;
     privilege_mode privilege;
-    kernel_trap_code code;
+    trap_code code;
     u64 fault_pc;
     u64 fault_addr;
     u64 arg0_reg;
@@ -46,15 +46,15 @@ typedef struct {
     u64 arg3_reg;
     u64 return_reg;
     u64 hart_id;
-} kernel_trap_data;
+} trap_data;
 
 typedef enum {
-    KTRAP_RESPONSE_RESUME_PROCESS,
-    KTRAP_RESPONSE_HOLD_PROCESS
-} kernel_trap_response_type;
+    TRAP_RET_RESUME_PROCESS,
+    TRAP_RET_HOLD_PROCESS
+} trap_response_type;
 
 
-u64 kernel_handle_trap();
-void kernel_trap_change_process(kernel_trap_data *trap_data);
+u64 handle_sync_trap();
+void trap_change_process(trap_data *trap_data);
 
 #endif

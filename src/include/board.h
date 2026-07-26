@@ -8,6 +8,9 @@
 //0x4000000000 would be jump but top half is top half
 #define KERNEL_VMA_START 0xffffffc000000000
 #define TRAPFRAME_ADDRESS 0x000003FFFFFF000
+//hard coded to 16kb
+#define PROCESS_KERNEL_STACK_START 0xFFFFFFFFFFFFA000
+#define PROCESS_KERNEL_STACK_SIZE 4096 * 4
 //16kb stack size for each hart
 #define HART_KERNEL_STACK_SIZE 4096 * 4
 

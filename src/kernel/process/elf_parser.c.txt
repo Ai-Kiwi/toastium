@@ -1,3 +1,8 @@
+//this whole thing is bassicly going to need to be recoded when i actually go about using it pretty much. Tons of bugs and also going to use async system.
+
+
+
+
 #include "include/types.h"
 #include "include/def.h"
 #include "kernel/memory/radix.h"
@@ -26,7 +31,7 @@
 
 //input args will later be changed as move to disk reading happens
 //returns response code
-u64 kernel_parse_elf(u64 *location_bytes, u64 size_bytes) {
+u64 parse_elf(u64 *location_bytes, u64 size_bytes) {
     u64 page_cnt = (size_bytes / KERNEL_PAGE_SIZE) + 1;
 
     u64 leading_zeros = __builtin_clzl(page_cnt);

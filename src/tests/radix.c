@@ -10,7 +10,7 @@ void test_radix() {
 
     uart_println_str("#TEST# - Testing Radix");
 
-    u64 tree_root = kernel_radix_create_tree(4);
+    u64 tree_root = radix_create(4);
 
     uart_print_str("table made at : ");
     uart_println_u64_hex(tree_root);
@@ -19,18 +19,18 @@ void test_radix() {
     for (u64 i = 0; i<100000; i++) {
         test_print_step("(1/3) Creating Data... ", i, 100000, 1);
 
-        u64 *child_ptr = (u64 *)kernel_allocator_acquire(8);
+        u64 *child_ptr = (u64 *)mem_alloc(8);
         *child_ptr = (i*i)+68359;
-        kernel_radix_create_child(tree_root, i, (u64)child_ptr, 9, 3);
+        radix_insert(tree_root, i, (u64)child_ptr, 9, 3);
     }
 
     test_print_next();
     for (u64 i = 0; i<100000; i++) {
         test_print_step("(2/3) Confirming Data... ", i, 100000, 1);
 
-        u64 *child_ptr = (u64 *)kernel_allocator_acquire(8);
+        u64 *child_ptr = (u64 *)mem_alloc(8);
         *child_ptr = i;
-        u64 *child = (u64 *)kernel_radix_get_child(tree_root, i, 9, 3);
+        u64 *child = (u64 *)radix_get(tree_root, i, 9, 3);
         if (!child) {
             uart_println_str("0");
         }else{
@@ -44,7 +44,7 @@ void test_radix() {
     test_print_next();
     test_print_step("(3/3) Deleting Data... ", 0, 1, 1);
 
-    kernel_radix_delete(tree_root, TRUE, 9, 3);
+    radix_delete(tree_root, TRUE, 9, 3);
 
     uart_println_str("\nPASS");
 }

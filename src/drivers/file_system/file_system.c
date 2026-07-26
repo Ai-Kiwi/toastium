@@ -1,17 +1,17 @@
 #include "include/types.h"
 
-void kernel_fs_open() {
+void fs_open() {
 
 }
 
-void kernel_fs_seek() {
+void fs_seek() {
 
 }
 
-void kernel_fs_read() {
+void fs_read() {
 
 }
 
-void kernel_fs_write() {
+void fs_write() {
     
 }

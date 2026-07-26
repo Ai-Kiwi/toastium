@@ -1,4 +1,6 @@
+#include "arch_trap/irq.h"
 #include "drivers/uart/uart.h"
+#include "kernel/devices/device_tree.h"
 #include "kernel/trap/irq.h"
 #include "kernel/trap/handler.h"
 #include "kernel/safety/panic.h"
@@ -39,22 +41,22 @@ void kernel_main() {
 
     //setup stack
     uart_println_str("Initializing stack");
-    kernel_stack_init();
+    stack_init();
     kernel_safety_test();
 
     uart_println_str("fetching core count");
-    u64 hart_count = arch_dtb_get_hart_count();
+    u64 hart_count = dtb_hart_cnt();
     u64 dtb_location = ((u64)&_kernel_end) + (hart_count * HART_KERNEL_STACK_SIZE) + 8;
 
     //setup device tree
     uart_println_str("Initializing device tree");
-    kernel_device_tree_init((u8*)dtb_location);
+    device_tree_init((u8*)dtb_location);
 
     uart_println_str("Initializing pager");
-    kernel_pager_init();
+    pager_init();
 
     uart_println_str("Initializing allocator");
-    kernel_allocator_init();
+    allocator_init();
     test_pager();
 
     test_allocator();
@@ -64,38 +66,38 @@ void kernel_main() {
     test_hashmap();
 
     uart_println_str("Initializing process handler");
-    kernel_processes_init(hart_count);
+    processes_init(hart_count);
 
     uart_println_str("Initializing schedular");
-    kernel_schedular_init();
+    schedular_init();
 
     uart_println_str("Initializing virtual memory");
-    arch_vma_init();
+    vma_init();
 
     //enable irq and general interrupts
     irq_init();
 
     //uart enable irq
     uart_println_str("Initializing irq");
-    irq_enable(KIRQ_UART);
-    irq_enable(KIRQ_TIMER);
-    irq_enable(KIRQ_SOFTWARE);
-    irq_enable(KIRQ_EXTERNAL);
+    irq_enable_type(IRQ_UART);
+    irq_enable_type(IRQ_TIMER);
+    irq_enable_type(IRQ_SOFTWARE);
+    irq_enable_type(IRQ_EXTERNAL);
 
     uart_println_str("Running final safety test");
     kernel_safety_test();
 
     uart_println_str("Creating init process");
-    kernel_process_create_init_process();
+    create_init_process();
 
     uart_println_str("Preforming schedular bootstrap");
 
-    kernel_context_bootstrap(0); //setup for running processes on core 0
+    context_bootstrap(0); //setup for running processes on core 0
 
     uart_println_str("Finished initialization, now running kernel");
 
     tests_hang();
 
     //makes timer to kick start the os
-    kernel_timer_set_future_ms(5);
+    timer_set_future_ms(5);
 }

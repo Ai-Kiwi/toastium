@@ -9,8 +9,8 @@ static device_info *kernel_device_list;
 static u8 *kernel_device_end = 0;
 static u32 kernel_device_list_len = 0;
 
-void kernel_device_tree_init(u8 *kernel_end) {
-    device_info_dump_response device_dump_info = arch_parse_dtb_ram(kernel_end);
+void device_tree_init(u8 *kernel_end) {
+    device_info_dump_response device_dump_info = dtb_dump(kernel_end);
     kernel_device_list_len = device_dump_info.size;
     kernel_device_end = device_dump_info.end_location;
     kernel_safety_test();
@@ -31,7 +31,7 @@ void kernel_device_tree_init(u8 *kernel_end) {
     //}
 }
 
-device_info *kernel_device_tree_ptr() {
+device_info *device_tree_ptr() {
     if (!kernel_device_list_len) {
         PANIC("DEVICE_TREE_FETCHED_BUT_NOT_INIT",0,0,0);
     }
@@ -39,14 +39,14 @@ device_info *kernel_device_tree_ptr() {
     return (device_info *)kernel_device_list;
 }
 
-u32 kernel_device_tree_length() {
+u32 device_tree_len() {
     if (!kernel_device_list_len) {
         PANIC("DEVICE_TREE_FETCHED_BUT_NOT_INIT",0,0,0);
     }
     return kernel_device_list_len;
 }
 
-u8 *kernel_device_tree_end_ptr() {
+u8 *device_tree_end_ptr() {
     if (!kernel_device_list_len) {
         PANIC("DEVICE_TREE_FETCHED_BUT_NOT_INIT",0,0,0);
     }

@@ -6,13 +6,13 @@ misc
  - dtb is hard coded in a lot of locations. Will cause issues when switching between arch and is messy right now for different systems
  - bitmaps overlap with page size meaning data will be passed to user in virtual memory
  - No memory overlap handling for pager memory regions
- - No read/write/execute guard on virtual memory regions for kernelspace
  - if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
  ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
  - the idle process doesn't use wfi
  - floating point reg don't have state saved or swapped for context shift. 
- - kernel stack for processes has no vma write/read guards around it.
  - read from userspace reads byte at a time not 64bits at a time. (would need to keep align in mind too) 
+ - hashmap for processes should be expanded in size or auto size. (rn only a single page)
+ - kernel vma no longer has global args for kernel side
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
@@ -42,6 +42,11 @@ test suits
  - allocator currently has unfixed bug
  - hashmap needs system to make sure it doesn't remap to same location repetitively.
  - hashmap needs remove item testing.
+ - list system
+ - vma system
+
+currently progress
+ - No read/write/execute guard on virtual memory regions for kernelspace
 
 
 
@@ -49,3 +54,4 @@ test suits
 
 High priority.
  - There is a bug with allocator todo with not reusing sections. Issue appears in 
+ - hashmap needs to remove old value on insert and return it

@@ -18,7 +18,7 @@ trap_entry:
 
     # setup restore once done
     li a0, TRAPFRAME_ADDRESS
-    call kernel_handle_trap #outputs to a0 response
+    call handle_sync_trap #outputs to a0 response
 
     bne a0, zero, run_process_kernel_trap
 
@@ -28,7 +28,7 @@ trap_entry:
 run_process_kernel_trap:
     #swap to process kernel stack
     mv sp, a0 #sets to response stack location
-    call kernel_trap_process_kernel
+    call handle_async_trap
     j resume_process
 
 

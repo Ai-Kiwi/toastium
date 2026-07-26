@@ -24,25 +24,25 @@ u32 max_cnt_per_page(u64 size) {
     return (KERNEL_PAGE_SIZE - 64) / entry_size; //adds 64 bytes for page header
 }
 
-void kernel_allocator_init() {
+void allocator_init() {
     for (s32 i=0; i<256; i++) {
         root_idx_page[i] = 0;
         lowest_free_entry[i] = 0;
     }
 
     bump_allocator_state.cnt = 0;
-    bump_allocator_state.page = (u64 *)kernel_pager_acquire();
+    bump_allocator_state.page = (u64 *)pg_alloc();
 }
 
 u64 new_idx_page() {
     //could make sure everything is zero here, pager already handles this
-    u64 idx_page = (u64)kernel_pager_acquire();
+    u64 idx_page = (u64)pg_alloc();
     return idx_page;
 }
 
 u64 new_data_page() {
     //could make sure everything is zero here, pager already handles this
-    u64 data_page = (u64)kernel_pager_acquire();
+    u64 data_page = (u64)pg_alloc();
     return data_page;
 }
 
@@ -67,7 +67,7 @@ static inline void confirm_idx_page(u64 *current_idx_entry, volatile u64 **curre
     }
 }
 
-u64 kernel_allocator_acquire(u64 size_bytes) {
+u64 mem_alloc(u64 size_bytes) {
     if (!size_bytes) {
         PANIC("ATTEMPT_ALLOCATE_ZERO_BYTES",0,0,0);
     }
@@ -159,7 +159,7 @@ u64 kernel_allocator_acquire(u64 size_bytes) {
 
 }
 
-void kernel_allocator_release(u64 location) {
+void mem_free(u64 location) {
     volatile u64 *header = (volatile u64 *)(ROUND_MOD_DOWN(location, KERNEL_PAGE_SIZE));
     volatile u64 *data = (volatile u64 *)(location);
 
@@ -211,13 +211,13 @@ void kernel_allocator_release(u64 location) {
     //needs atomic so can't be edited twice at same time
 }
 
-u64 kernel_allocator_bump(u64 size) {
+u64 bump_alloc(u64 size) {
     if (size > KERNEL_PAGE_SIZE) {
         PANIC("ALLOCATOR_BUMP_LARGER_THEN_PAGE",0,0,0);
     }
 
     if (bump_allocator_state.cnt + size >= KERNEL_PAGE_SIZE) {
-        bump_allocator_state.page = (u64 *)kernel_pager_acquire();
+        bump_allocator_state.page = (u64 *)pg_alloc();
         bump_allocator_state.cnt = 0;
     }
 

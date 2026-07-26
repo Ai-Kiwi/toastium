@@ -1,9 +1,10 @@
+#include "kernel/memory/radix.h"
 #include "include/types.h"
 #include "kernel/memory/allocator.h"
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
 
-u64 kernel_radix_get_child(u64 addr, u64 key, u8 depth, u8 depth_size) {
+u64 radix_get(u64 addr, u64 key, u8 depth, u8 depth_size) {
     u64 *addr_table = (u64 *)addr;
     u64 mask = (1UL << depth_size) - 1;
     for (s32 i = 1; i < depth+1; i++) {
@@ -17,7 +18,7 @@ u64 kernel_radix_get_child(u64 addr, u64 key, u8 depth, u8 depth_size) {
     return (u64)addr_table;
 }
 
-u64 kernel_radix_create_child(u64 addr, u64 key, u64 child_addr, u8 depth, u8 depth_size) {
+u64 radix_insert(u64 addr, u64 key, u64 child_addr, u8 depth, u8 depth_size) {
     u64 mask = (1UL << depth_size) - 1;
     u64 size = (1UL << depth_size);
     if (key >= (1UL << (depth_size * depth))) {
@@ -29,7 +30,7 @@ u64 kernel_radix_create_child(u64 addr, u64 key, u64 child_addr, u8 depth, u8 de
         u64 idx = (key >> ((depth-i) * depth_size)) & mask;
         if (!addr_table[idx]) {
             u64 node_size = size * 8;
-            u64 *new_node = (u64 *)kernel_allocator_acquire(node_size);
+            u64 *new_node = (u64 *)mem_alloc(node_size);
             for (s32 j = 0; j< node_size/8; j++) {
                 new_node[j] = 0;
             }
@@ -46,7 +47,7 @@ u64 kernel_radix_create_child(u64 addr, u64 key, u64 child_addr, u8 depth, u8 de
     return old_addr;
 }
 
-void kernel_radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size) {
+void radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size) {
     u64 size = (1UL << depth_size);
     u64 *addr_table = (u64 *)addr;
 
@@ -54,8 +55,8 @@ void kernel_radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size)
         for (s32 i=0; i<size; i++) {
             u64 child_addr = (u64)addr_table[i];
             if (child_addr > 0) {
-                kernel_radix_delete(child_addr, remove_leaves, depth - 1, depth_size);
-                kernel_allocator_release(child_addr);
+                radix_delete(child_addr, remove_leaves, depth - 1, depth_size);
+                mem_free(child_addr);
             }
         }
     }else{
@@ -63,14 +64,14 @@ void kernel_radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size)
             for (s32 i=0; i<size; i++) {
                 u64 child_addr = (u64)addr_table[i];
                 if (child_addr > 0) {
-                    kernel_allocator_release(child_addr);
+                    mem_free(child_addr);
                 }
             }
         }
     }
 }
 
-bool8 kernel_radix_remove_child(u64 addr, u64 key, u8 depth, u8 depth_size) {
+bool8 radix_remove(u64 addr, u64 key, u8 depth, u8 depth_size) {
     u64 mask = (1UL << depth_size) - 1;
     u64 size = (1UL << depth_size);
     u64 *addr_table = (u64 *)addr;
@@ -91,10 +92,10 @@ bool8 kernel_radix_remove_child(u64 addr, u64 key, u8 depth, u8 depth_size) {
     return old_addr;
 }
 
-u64 kernel_radix_create_tree(u8 level_depth) {
+u64 radix_create(u8 level_depth) {
     u64 size = (1UL << level_depth);
     u64 node_size = size * 8;
-    u64 *tree = (u64 *)kernel_allocator_acquire(node_size);
+    u64 *tree = (u64 *)mem_alloc(node_size);
 
     for (s32 i = 0; i<node_size/8; i++) {
         tree[i] = 0;
@@ -105,7 +106,7 @@ u64 kernel_radix_create_tree(u8 level_depth) {
 
 
 
-void kernel_radix_iter_children(u64 addr, u8 depth, u8 depth_size, u64 parameters, void (*function)(u64, u64)) {
+void radix_iter(u64 addr, u8 depth, u8 depth_size, u64 parameters, void (*function)(u64, u64)) {
     u64 size = (1UL << depth_size);
     u64 *addr_table = (u64 *)addr;
 
@@ -113,7 +114,7 @@ void kernel_radix_iter_children(u64 addr, u8 depth, u8 depth_size, u64 parameter
         for (s32 i=0; i<size; i++) {
             u64 child_addr = (u64)addr_table[i];
             if (child_addr > 0) {
-                kernel_radix_iter_children(child_addr, depth - 1, depth_size, parameters, function);
+                radix_iter(child_addr, depth - 1, depth_size, parameters, function);
             }
         }
     }else{

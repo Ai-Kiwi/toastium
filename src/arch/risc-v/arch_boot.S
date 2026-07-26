@@ -3,6 +3,7 @@
 .section .text.boot
 .global _start
 
+
 _start:
     .option norvc
     j setup_vma //code 1
@@ -30,8 +31,8 @@ setup_vma:
     //setup virtual memory maps
     la t0, _kernel_vma_offset_table //location for vma table
     li t6, 4096
-    div t0, t0, t2
-    mul t0, t0, t2 //rounds it down
+    div t0, t0, t6
+    mul t0, t0, t6 //rounds it down
 
     li t6, 2048 // 2048 stored
 

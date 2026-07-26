@@ -17,12 +17,12 @@ void test_pager() {
 
     u64 blank_assigns = 1000000;
 
-    u64 first_loc = (u64)kernel_pager_acquire();
+    u64 first_loc = (u64)pg_alloc();
     u64 last_loc = first_loc;
     for (u64 i=0; i<value_cnt; i++) {
         test_print_step("(1/3) Creating pager data... ", i, value_cnt, 1);
 
-        u64 loc = (u64)kernel_pager_acquire();
+        u64 loc = (u64)pg_alloc();
         u64 loc_change = loc - last_loc;
         if (loc_change > 4192) {
             PANIC("FOLLOWING_PAGE_TO_FAR", loc_change, i, 0)
@@ -40,13 +40,13 @@ void test_pager() {
 
     test_print_next();
     test_print_step("(2/3) Releasing first page data... ", 1, 1, 1);
-    kernel_pager_release(first_loc);
+    pg_free(first_loc);
 
     test_print_next();
     for (u64 i=0; i<value_cnt ; i++) {
         u64 *loc = (u64 *)(first_loc+((i+1)*KERNEL_PAGE_SIZE));
         test_print_step("(3/3) Releasing and confirming pager data... ", i, value_cnt, 1);
-        kernel_pager_release((u64)loc);
+        pg_free((u64)loc);
         asset_u64(*(u64 *)(loc), (i*312)+86);
     }
 

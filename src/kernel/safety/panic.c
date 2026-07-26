@@ -56,5 +56,5 @@ void kernel_panic(const char *file, const s64 file_line, const char *function, c
     uart_print_s64(extra_value_3);
     uart_println_str(")");
 
-    arch_freeze_system();
+    freeze_system();
 }

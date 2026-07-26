@@ -4,6 +4,6 @@
 #include "types.h"
 #include "kernel/process/process.h"
 
-u64 syscall_uart(kernel_trap_data *trap, bool8 async);
+u64 syscall_uart(trap_data *trap, bool8 async);
 
 #endif

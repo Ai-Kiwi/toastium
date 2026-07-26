@@ -14,13 +14,13 @@ bool8 kernel_read_user(u64 src, u64 size, u64 dest) {
         return FALSE;
     }
 
-    kernel_process *process = (kernel_process *)((arch_trapframe *)TRAPFRAME_ADDRESS)->process_ptr;
-    arch_irq_disable();
-    arch_vma_enable_read_user();
+    //process *proc = (process *)((trapframe *)TRAPFRAME_ADDRESS)->process_ptr;
+    irq_disable();
+    vma_enable_read_user();
     u64 response = arch_read_user(src, size, dest);
 
-    arch_vma_disable_read_user();
-    arch_irq_enable();
+    vma_disable_read_user();
+    irq_enable();
     return !response;
 }
 
