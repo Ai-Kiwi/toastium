@@ -15,6 +15,7 @@ misc
  - kernel stack for processes has no magic byte protection. (could be skipped with read write protection)
  - read from userspace reads byte at a time not 64bits at a time. (would need to keep align in mind too) 
  - hashmap for processes should be expanded in size or auto size.
+ - kernel vma no longer has global args for kernel side
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.

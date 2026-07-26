@@ -2,6 +2,10 @@
 //everything in here is self contained assumptions, if in future more is needed
 //this file can be swapped out or replaced with generic middle-man.
 
+//for this implication the LSB for RSW field meanins non shrinkable. 
+//an example use case for this is a file and you want to see if its been used.
+//if it had merged it would be one large read field instead of more then 1
+
 #include "drivers/uart/uart.h"
 #include "types.h"
 #include "def.h"
@@ -37,6 +41,10 @@ u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
     u64 *new_branch = (u64 *)pg_alloc();
     u64 physical_location = get_phys_leaf_loc(*leaf);
     u64 flags = get_leaf_flags(*leaf);
+
+    if (flags & VMA_DONT_COMPRESS) {
+        PANIC("ATTEMPT_TO_EXPAND_NON_COMPRESS_LEAF", 0, 0, 0);
+    }
 
     if ((*leaf) == 0x0) {
         return (u64)new_branch; //was unmapped so just return unmapped
@@ -82,7 +90,7 @@ void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
         for (u64 i=0; i<512; i++) {
             u64 iter_phys_loc = get_phys_leaf_loc(branch_leafs[i]);
             u64 iter_flags = get_leaf_flags(branch_leafs[i]);
-            can_shrink = can_shrink && (iter_phys_loc == start_phys_loc + (leaf_jmp_size * i)) && (iter_flags == start_access_flags);
+            can_shrink = can_shrink && (iter_phys_loc == start_phys_loc + (leaf_jmp_size * i)) && (iter_flags == start_access_flags) && ((iter_flags & VMA_DONT_COMPRESS) == 0);
         }
     }
 
@@ -113,21 +121,16 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
 
     bool8 is_kernelspace = virt_addr_start >= 0xffffffc000000000;
     u64 normal_virt_addr = virt_addr_start;
-    if (is_kernelspace) {
-        normal_virt_addr = normal_virt_addr - (0xffffffc000000000 - 0x4000000000);
-    }
+    normal_virt_addr = normal_virt_addr - ((0xffffffc000000000 - 0x4000000000) * (u64)is_kernelspace); //offsets in a way where it starts from 256 instead of from 0
 
     if (virt_addr_size > ppn2_jmp_size * 256) {
         PANIC("VMA_MAPPING_LARGER_THEN_MAX_SIZE", virt_addr_size, 0, 0);
     }
-    if (U64_MAX - virt_addr_size <= virt_addr_start) { //take max value remove the size and if start is more then that its overflow
-        PANIC("VMA_MAPPING_PAST_MAX_KERNEL", virt_addr_size, 0, 0);
+    if (normal_virt_addr > 0x4000000000 - virt_addr_size && is_kernelspace == FALSE) { //spilling past max userspace
+        PANIC("VMA_MAPPING_PAST_MAX_USERSPACE", virt_addr_start, virt_addr_size, phys_addr);
     }
-    if (virt_addr_start + virt_addr_size > 0x4000000000) { //spilling past max userspace
-        PANIC("VMA_MAPPING_PAST_MAX_USERSPACE", virt_addr_size, 0, 0);
-    }
-    if (virt_addr_start > 0x4000000000 && virt_addr_start < 0xffffffc000000000) {
-        PANIC("VMA_MAPPING_BETWEEN_USERSPACE_AND_KERNRELSPACE", virt_addr_size, 0, 0);
+    if (normal_virt_addr > 0x8000000000 - virt_addr_size && is_kernelspace == TRUE) { //spilling past max userspace
+        PANIC("VMA_MAPPING_PAST_MAX_KERNELSPACE", virt_addr_start, virt_addr_size, phys_addr);
     }
 
     u64 mapping_left = virt_addr_size;
@@ -141,7 +144,7 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
 
     u8 highest_reached_ppn = 0;
 
-    while (TRUE) {
+    while (mapping_left > 0) {
         if (ROUND_MOD_DOWN(cur_virt_addr, ppn2_jmp_size) == cur_virt_addr && highest_reached_ppn < 2) {
             highest_reached_ppn = 2;
         }
@@ -194,6 +197,7 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
         pre_ppn0_table = (u64 *)expand_leaf(&pre_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
     }
 
+    //pre ppn 0
     for (u64 i=0; i<pre_ppn0_cnt; i++) {
         pre_ppn0_table[cur_ppn0_offset] = create_leaf(phys_addr + cur_offset, access_flags);
         cur_offset += ppn0_jmp_size;
@@ -202,7 +206,7 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
     cur_ppn0_offset = 0;
     shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
 
-
+    //pre ppn 1
     for (u64 i=0; i<pre_ppn1_cnt; i++) {
         if (get_branch_loc(pre_ppn1_table[cur_ppn1_offset]) != 0) {
             destroy_branch((u64 *)pre_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
@@ -214,6 +218,7 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
     cur_ppn1_offset = 0;
     shrink_branch(&ppn2_table[cur_ppn2_offset],ppn2_jmp_size);
 
+    //ppn 2
     for (u64 i=0; i<ppn2_cnt; i++) {
         if (get_branch_loc(ppn2_table[cur_ppn2_offset]) != 0) {
             destroy_branch((u64 *)ppn2_table[cur_ppn2_offset], ppn2_jmp_size);
@@ -223,9 +228,10 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
         cur_ppn2_offset++;
     }
 
+    //post ppn 1
     u64 *post_ppn1_table = (u64 *)get_branch_loc(ppn2_table[cur_ppn2_offset]);
     if (((u64)post_ppn1_table == 0x0) && (post_ppn1_cnt > 0 || post_ppn0_cnt > 0)) {
-        post_ppn1_table = (u64 *)expand_leaf(&post_ppn1_table[cur_ppn1_offset], ppn2_jmp_size);
+        post_ppn1_table = (u64 *)expand_leaf(&ppn2_table[cur_ppn2_offset], ppn2_jmp_size);
     }
 
     for (u64 i=0; i<post_ppn1_cnt; i++) {
@@ -236,19 +242,23 @@ void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size
         cur_offset += ppn1_jmp_size;
         cur_ppn1_offset++;
     }
-    shrink_branch(&ppn2_table[cur_ppn2_offset],ppn2_jmp_size);
 
-    u64 *post_ppn0_table = (u64 *)get_branch_loc(post_ppn1_table[cur_ppn1_offset]);
-    if (((u64)post_ppn0_table == 0x0) && (post_ppn0_cnt > 0)) {
-        post_ppn0_table = (u64 *)expand_leaf(&post_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
+    //post ppn 0
+    if (post_ppn0_cnt > 0 ) {
+        u64 *post_ppn0_table = (u64 *)get_branch_loc(post_ppn1_table[cur_ppn1_offset]);
+        if (((u64)post_ppn0_table == 0x0) && (post_ppn0_cnt > 0)) {
+            post_ppn0_table = (u64 *)expand_leaf(&post_ppn1_table[cur_ppn1_offset], ppn1_jmp_size);
+        }
+
+        for (u64 i=0; i<post_ppn0_cnt; i++) {
+            post_ppn0_table[cur_ppn0_offset] = create_leaf(phys_addr + cur_offset, access_flags);
+            cur_offset += ppn0_jmp_size;
+            cur_ppn0_offset++;
+        }
+        shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
     }
 
-    for (u64 i=0; i<post_ppn0_cnt; i++) {
-        post_ppn0_table[cur_ppn0_offset] = create_leaf(phys_addr + cur_offset, access_flags);
-        cur_offset += ppn0_jmp_size;
-        cur_ppn0_offset++;
-    }
-    shrink_branch(&pre_ppn1_table[cur_ppn1_offset],ppn1_jmp_size);
+    shrink_branch(&ppn2_table[cur_ppn2_offset],ppn2_jmp_size); //shrink afterwards as it has to remain expanded for ppn 0 to use
 
     //loop over again but with asid updates now
     cur_offset = 0;

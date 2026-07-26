@@ -12,6 +12,8 @@
 #define VMA_USER  (1 << 4)
 #define VMA_GLOBAL  (1 << 5)
 
+#define VMA_DONT_COMPRESS  (1 << 8)
+
 void vma_map_kernel(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags);
 void vma_map_user(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags);
 void vma_unmap(process *proc, u64 virt_addr, u64 size);
