@@ -3,6 +3,7 @@
 .section .text.boot
 .global _start
 
+
 _start:
     .option norvc
     j setup_vma //code 1
@@ -30,8 +31,8 @@ setup_vma:
     //setup virtual memory maps
     la t0, _kernel_vma_offset_table //location for vma table
     li t6, 4096
-    div t0, t0, t2
-    mul t0, t0, t2 //rounds it down
+    div t0, t0, t6
+    mul t0, t0, t6 //rounds it down
 
     li t6, 2048 // 2048 stored
 
@@ -63,7 +64,7 @@ setup_vmn_table:
     add t3, t1, t0
     add t3, t3, t6
 
-    sd t4, 0(t3) //write out
+    sd t4, 0(t3) //write out   ///PROBLEMATIC LINE
 
     //setup userspace, for now kernel until jump then blank
     li t4, 0xCF //allow read/write/execute, is valid and also mark as already dirty and accessed for performance .
