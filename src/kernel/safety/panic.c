@@ -3,6 +3,8 @@
 #include "kernel/safety/panic.h"
 #include "include/board.h"
 
+extern u8 _kernel_start;
+
 void kernel_panic(const char *file, const s64 file_line, const char *function, const char *message, s64 extra_value_1, s64 extra_value_2, s64 extra_value_3) {
     uart_println_str("");
     uart_println_str(" _  ________ _____  _   _ ______ _        _____        _   _ _____ _____ ");
@@ -12,8 +14,9 @@ void kernel_panic(const char *file, const s64 file_line, const char *function, c
     uart_println_str("| . \\| |____| | \\ \\| |\\  | |____| |____  | |  / ____ \\| |\\  |_| || |____ ");
     uart_println_str("|_|\\_\\______|_|  \\_\\_| \\_|______|______| |_| /_/    \\_\\_| \\_|_____\\_____|");
 
-    uart_println_str("KERNEL PANIC");
-    uart_println_str("The experts call this not good and I call this not good.");
+    u64 random_value = time_cnt() + extra_value_1 + extra_value_2 + extra_value_3 + cycle_cnt();
+
+    uart_println_str((char *)panic_messages[random_value % PANIC_MESSAGE_CNT] + (u64)&_kernel_start);
     uart_println_str("");
     uart_println_str("Here is some info relating to what went wrong...");
     uart_println_str("-------------------------------------------------------------------------");
