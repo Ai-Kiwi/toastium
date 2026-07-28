@@ -1,3 +1,4 @@
+#include "kernel/trap/process_handler.h"
 #include "arch_trap/irq.h"
 #include "arch_trap/parser.h"
 #include "arch_vma/virtual_memory.h"
@@ -10,29 +11,42 @@
 #include "kernel/syscall/handler.h"
 #include "kernel/trap/handler.h"
 #include "kernel/trap/page_fault/handler.h"
+#include "interruptible/syscall.h"
+#include "interruptible/page_fault.h"
 
 void handle_async_trap() {
     //need to some how get process
     trap_data trap;
     trapframe_parse((trap_data *)&trap);
-    process *proc = (process *)((trapframe *)TRAPFRAME_ADDRESS)->process_ptr;
-    if (proc->trap_state == PROC_TRAP_PROCESS_PAGE_FAULT) {
-        PANIC("PROCESS_TRAP_AFTER_PAGE_FAULT", trap.code, proc->process_id, 0);
-    }
-    if (proc->trap_state == PROC_TRAP_PROCESS_TRAP) {
-        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->page_fault_trapframe, VMA_READ | VMA_WRITE);
-        proc->trap_state = PROC_TRAP_PROCESS_PAGE_FAULT;
-        if (trap.code != TRAP_PAGE_FAULT) {
-            PANIC("DOUBLE_PROCESS_TRAP_NOT_PAGE_FAULT", trap.code, proc->process_id, 0);
-        }
-    }else{
-        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
-        proc->trap_state = PROC_TRAP_PROCESS_TRAP;
+    process *proc = (process *)trap.process_ptr;
+    process_trap_state past_proc_state = proc->trap_state;
+    switch (past_proc_state) {
+        case PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP:
+            PANIC("INTERRUPTABLE_TRAP_ENTERED_FROM_UNINTERRUPTABLE", 0, 0, 0);
+            break;
+        case PROC_TRAP_PROCESS_INTERRUPTABLE_TRAP:
+            //must be attempting to read userspace
+            if (trap.code != TRAP_PAGE_FAULT || proc->reading_userspace == FALSE) {
+                PANIC("DOUBLE_PROCESS_TRAP_NOT_PAGE_FAULT", trap.code, proc->process_id, 0);
+            }
+            vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->page_fault_trapframe, VMA_READ | VMA_WRITE);
+            break;
+            proc->trap_state = PROC_TRAP_PROCESS_READ_USERSPACE;
+        case PROC_TRAP_PROCESS:
+            vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
+            proc->trap_state = PROC_TRAP_PROCESS_INTERRUPTABLE_TRAP;
+            break;
+        case PROC_TRAP_PROCESS_READ_USERSPACE:
+            PANIC("PAGE_FAULT_FROM_KERNEL_READ_USERSPACE", trap.code, proc->process_id, 0);
+            break;
+      break;
     }
     irq_enable();
-    u64 queued_response = U64_MAX;
-    u64 skip_instruction = FALSE;
-    bool8 alive_process = TRUE;
+    interruptable_trap_response response;
+    response.queued_response = 0;
+    response.send_response = FALSE;
+    response.kill_process = FALSE;
+    response.skip_instruction = FALSE;
 
     switch (trap.code) {
         //case KTRAP_SOFTWARE_INTERRUPT:
@@ -43,29 +57,13 @@ void handle_async_trap() {
         //case KTRAP_INSTRUCTION_INVALID:
         //case KTRAP_BREAKPOINT:
         case TRAP_SYSCALL:
-            u64 response = syscall_async_handler(&trap);
-            if (response == 1) {
-                alive_process = FALSE;
-            }
-            skip_instruction = TRUE;
+            interruptable_trap_syscall(&trap, &response);
             break;
         //case KTRAP_DOUBLE_TRAP:
         //case KTRAP_SOFTWARE_CHECK:
         //case KTRAP_HARDWARE_ERROR:
         case TRAP_PAGE_FAULT:
-            bool8 page_loaded = pgfault_load(&trap);
-            if (proc->trap_state == PROC_TRAP_PROCESS_PAGE_FAULT) {
-                queued_response = !page_loaded;
-                if (page_loaded == FALSE) {
-                    skip_instruction = TRUE;
-                }
-            }else{
-                //was userspace that called it
-                if (page_loaded == FALSE) {
-                    uart_println_str("process set to be killed. Invalid page for page fault");
-                    alive_process = FALSE;
-                }
-            }
+            interruptable_trap_page_fault(&trap, &response);
             break;
         default:
             PANIC("UNHANDLED_KERNEL_PROCESS_TRAP", trap.code, trap.fault_addr, trap.fault_pc);
@@ -73,24 +71,33 @@ void handle_async_trap() {
     }
 
     irq_disable();
-    if (proc->trap_state == PROC_TRAP_PROCESS_PAGE_FAULT) {
-        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
-        proc->trap_state = PROC_TRAP_PROCESS_TRAP;
-    }else{
-        vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->userspace_trapframe, VMA_READ | VMA_WRITE);
-        proc->trap_state = PROC_TRAP_PROCESS;
+    switch (past_proc_state) {
+        case PROC_TRAP_PROCESS:
+            vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->userspace_trapframe, VMA_READ | VMA_WRITE);
+            break;
+        case PROC_TRAP_PROCESS_INTERRUPTABLE_TRAP:
+            vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
+            break;
+        case PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP:
+            PANIC("UNEXPECTED_UNINTERUPTABLE_EXIT_WITH_PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP", 0, 0, 0);
+        case PROC_TRAP_PROCESS_READ_USERSPACE://can't happen
+            PANIC("UNEXPECTED_UNINTERUPTABLE_EXIT_WITH_PROC_TRAP_PROCESS_READ_USERSPACE", 0, 0, 0);
+      break;
     }
 
+    proc->trap_state = past_proc_state;
+
     //output queued data
-    if (queued_response != U64_MAX) {
-        trap.return_reg = queued_response;
+    if (response.send_response == TRUE) {
+        trap.return_reg = response.queued_response;
         trap_data_set_response(&trap);
     }
-    if (skip_instruction == TRUE) {
+    if (response.skip_instruction == TRUE) {
         trap_data_iter_instruction(&trap);
     }
-    if (alive_process == FALSE) {
+    if (response.kill_process == TRUE) {
         trap_change_process(&trap);
         kill_process(proc->process_id);
     }
+
 }

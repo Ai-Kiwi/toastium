@@ -72,25 +72,25 @@ void kernel_main() {
     uart_println_str("Initializing virtual memory");
     vma_init();
 
-    //enable irq and general interrupts
-    irq_init();
-
-    //uart enable irq
-    uart_println_str("Initializing irq");
-    irq_enable_type(IRQ_UART);
-    irq_enable_type(IRQ_TIMER);
-    irq_enable_type(IRQ_SOFTWARE);
-    irq_enable_type(IRQ_EXTERNAL);
-
-    uart_println_str("Running final safety test");
-    kernel_safety_test();
-
     uart_println_str("Creating init process");
     create_init_process();
 
-    uart_println_str("Preforming schedular bootstrap");
+    //enable irq and general interrupts
+    uart_println_str("Initializing irq");
+    irq_init();
+    irq_enable_type(IRQ_TIMER);
+    irq_enable_type(IRQ_UART);
+    irq_enable_type(IRQ_SOFTWARE);
+    irq_enable_type(IRQ_EXTERNAL);
 
+    uart_println_str("Preforming schedular bootstrap");
     context_bootstrap(0); //setup for running processes on core 0
+
+
+
+
+    uart_println_str("Running final safety test");
+    kernel_safety_test();
 
     uart_println_str("Finished initialization, now running kernel");
 

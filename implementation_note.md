@@ -13,6 +13,9 @@ misc
  - read from userspace reads byte at a time not 64bits at a time. (would need to keep align in mind too) 
  - hashmap for processes should be expanded in size or auto size. (rn only a single page)
  - kernel vma no longer has global args for kernel side
+ - No read/write/execute guard on virtual memory regions for kernelspace
+ - No good trap handling if before context switch as nothing is loaded for a trapframe.
+ - IRQ should enable after context switch, currently panics likely guess something queued and bug in trap system. (this doesn't completely make sense tho so will have to investigate)
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
@@ -44,9 +47,6 @@ test suits
  - hashmap needs remove item testing.
  - list system
  - vma system
-
-currently progress
- - No read/write/execute guard on virtual memory regions for kernelspace
 
 
 

@@ -31,7 +31,6 @@ u64 syscall_sync_handler(trap_data *trap) {
 
 //response 1 means process killed
 u64 syscall_async_handler(trap_data *trap) {
-
     switch (trap->arg0_reg) {
         case SYSCALL_UART_PRINT:
             return syscall_uart(trap, TRUE);

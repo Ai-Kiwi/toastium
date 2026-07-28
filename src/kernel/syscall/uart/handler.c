@@ -3,6 +3,7 @@
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "kernel/memory/allocator.h"
+#include "kernel/process/process.h"
 #include "types.h"
 #include "kernel/trap/user_accses.h"
 
@@ -21,7 +22,7 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
             irq_disable();
             u8 *location = (u8 *)mem_alloc(str_size);
             irq_enable();
-            bool8 response = kernel_read_user(str_src, str_size, (u64)location);
+            bool8 response = kernel_read_user(str_src, str_size, (u64)location, (process *)trap->process_ptr);
             if (response == TRUE) {
                 for (u64 i = 0; i < str_size; i++) {
                     uart_print_char(location[i]);

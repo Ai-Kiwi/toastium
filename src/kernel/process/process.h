@@ -15,8 +15,9 @@ typedef enum {
 
 typedef enum {
     PROC_TRAP_PROCESS,
-    PROC_TRAP_PROCESS_TRAP,
-    PROC_TRAP_PROCESS_PAGE_FAULT
+    PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP,
+    PROC_TRAP_PROCESS_INTERRUPTABLE_TRAP,
+    PROC_TRAP_PROCESS_READ_USERSPACE
 } process_trap_state;
 
 typedef struct {
@@ -41,6 +42,7 @@ typedef struct {
     process_type process_type;
     u64 phys_kernel_stack_addr[4]; //12kb per process kernel stack
     u64 list_idx;
+    bool8 reading_userspace;
 } __attribute__((aligned(64))) process;
 
 

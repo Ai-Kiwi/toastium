@@ -13,6 +13,12 @@
 #include "kernel/syscall/handler.h"
 #include "kernel/process/context.h"
 #include "types.h"
+#include "uninterruptible/timer.h"
+#include "uninterruptible/syscall.h"
+#include "uninterruptible/page_fault.h"
+#include "uninterruptible/instruction_invalid.h"
+#include "uninterruptible/access_fault.h"
+#include "uninterruptible/acces_misaligned.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel
@@ -30,66 +36,30 @@ u64 handle_sync_trap() {
     trap_data trap;
     trapframe_parse((trap_data *)&trap);
 
-    //decide to use
     process *proc = (process *)trap.process_ptr;
-    const u64 kernel_process_stack = PROCESS_KERNEL_STACK_START + (PROCESS_KERNEL_STACK_SIZE - 1); //12KB
+    process_trap_state past_proc_state = proc->trap_state;
+    proc->trap_state = PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP;
+
+    u64 response = 0;
 
     switch (trap.code) {
     case TRAP_ACCESS_MISALIGNED:
-        uart_println_str("process killed : access misaligned");
-        uart_print_str("process id:");
-        uart_println_u64(proc->process_id);
-        uart_print_str("fault addr:");
-        uart_println_u64(trap.fault_addr);
-        uart_print_str("fault pc:");
-        uart_println_u64(trap.fault_pc);
-
-        kill_process(((process *)trap.process_ptr)->process_id);
-        trap_change_process(&trap);
-        return 0;
+        response = uninterruptible_trap_access_misaligned(&trap, past_proc_state);
         break;
     case TRAP_ACCESS_FAULT:
-        PANIC("KERNEL_TRAP_UNIMPLENTED_ACCESS_FAULT",trap.privilege, trap.fault_addr, trap.fault_pc);
+        response = uninterruptible_trap_access_fault(&trap, past_proc_state);
         break;
     case TRAP_INSTRUCTION_INVALID:
-        uart_println_str("process killed : bad instruction");
-        uart_print_str("process id:");
-        uart_println_u64(proc->process_id);
-        uart_print_str("fault addr:");
-        uart_println_u64(trap.fault_addr);
-        uart_print_str("fault pc:");
-        uart_println_u64(trap.fault_pc);
-
-        kill_process(((process *)trap.process_ptr)->process_id);
-        trap_change_process(&trap);
-        return 0;
+        response = uninterruptible_trap_instruction_invalid(&trap, past_proc_state);
         break;
     case TRAP_BREAKPOINT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_BREAKPOINT",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
     case TRAP_SYSCALL:
-        u64 response = syscall_sync_handler(&trap);
-        if (response == 1) {//process needs to be killed
-            kill_process(((process *)trap.process_ptr)->process_id);
-
-            trap_change_process(&trap);
-            return 0;
-        }
-        if (response > 0) {
-            //needs to be handled by async
-            return kernel_process_stack;
-        }
-        trap_data_set_response(&trap);
-        trap_data_iter_instruction(&trap);
+        response = uninterruptible_trap_syscall(&trap);
         break;
     case TRAP_PAGE_FAULT:
-        if (proc->trap_state == PROC_TRAP_PROCESS_TRAP) {
-            u64 stack_location = trapframe_stack_ptr(proc->kernelspace_trapframe);
-            stack_location = ROUND_MOD_DOWN(stack_location - 8, 8);
-            return stack_location;
-        }else{
-            return kernel_process_stack;
-        }
+        response = uninterruptible_trap_page_fault(&trap, past_proc_state);
         break;
     case TRAP_DOUBLE_TRAP:
         PANIC("KERNEL_TRAP_DOUBLE_TRAP",trap.privilege, trap.fault_addr, trap.fault_pc);
@@ -104,12 +74,7 @@ u64 handle_sync_trap() {
         PANIC("KERNEL_TRAP_UNIMPLENTED_SOFTWARE_INTERRUPT",trap.privilege, trap.fault_addr, trap.fault_pc);
         break;
     case TRAP_TIMER_INTERRUPT:
-        if (trap.privilege != TRAP_MODE_SUPERVISOR){
-            PANIC("KERNEL_TRAP_TIMER_NON_SUPERVISOR_PRIVILEGE",trap.privilege, trap.fault_addr, trap.fault_pc);
-        }
-
-        trap_change_process(&trap);
-
+        response = uninterruptible_trap_timer(&trap);
         break;
     case TRAP_EXTERNAL_INTERRUPT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT",trap.privilege, trap.fault_addr, trap.fault_pc);
@@ -119,7 +84,8 @@ u64 handle_sync_trap() {
         break;
     }
 
-    return 0; //was kernel stack handled
+    proc->trap_state = past_proc_state;
+    return response;
 }
 
 //Will return trap action

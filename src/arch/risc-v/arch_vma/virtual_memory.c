@@ -358,7 +358,7 @@ void vma_reset_asid() {
         if (proc == 0x0) {
             PANIC("PROC_ASID_LOOP_INVALID", 0, 0, 0);
         }
-        proc->vma_addr_space_id = 0;
+        proc->vma_addr_space_id = U64_MAX;
     }
 }
 

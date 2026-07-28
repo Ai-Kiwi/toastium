@@ -55,6 +55,7 @@ process *new_blank_process() {
     new_process.phys_kernel_stack_addr[1] = pg_alloc();
     new_process.phys_kernel_stack_addr[2] = pg_alloc();
     new_process.phys_kernel_stack_addr[3] = pg_alloc();
+    new_process.reading_userspace = FALSE;
 
     vma_create(&new_process);
 
@@ -106,6 +107,8 @@ void processes_init(u64 hart_count) {
 
 void kill_process(pid process_id) {
     process *proc = process_from_id(process_id);
+    uart_print_str("process killed : ");
+    uart_println_u64(process_id);
     if (proc->process_type == PROC_TYPE_IDLE) {
         PANIC("ATTEMPT_TO_KILL_IDLE_PROCESS", 0, 0, 0);
     }
