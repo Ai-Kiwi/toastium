@@ -47,6 +47,8 @@ test suits
  - hashmap needs remove item testing.
  - list system
  - vma system
+ - scheduler
+ - trap handler
 
 
 
