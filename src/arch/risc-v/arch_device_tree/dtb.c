@@ -31,7 +31,7 @@ void dtb_set_dst(u8 *new_dtb) {
 device_info_dump_response dtb_dump(u8 *output_location) {
     uart_println_str("Parsing DTB");
 
-    if (!&dtb) {
+    if ((u64)&dtb == 0x0) {
         PANIC("BLANK_DTB_LOCATION",(u64)dtb, 0, 0);
     }
 
