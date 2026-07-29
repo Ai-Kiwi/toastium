@@ -17,6 +17,7 @@
 #include "include/endian.h"
 #include "arch_vma/virtual_memory.h"
 #include "kernel/process/context.h"
+#include "arch_trap/handler.h"
 
 #include "tests/pager.h"
 #include "tests/allocator.h"
@@ -92,9 +93,13 @@ void kernel_main() {
     uart_println_str("Running final safety test");
     kernel_safety_test();
 
+    uart_println_str("attaching full trap handler");
+    attach_trap_handler();
+
     uart_println_str("Finished initialization, now running kernel");
 
     tests_hang();
+
 
     //makes timer to kick start the os
     timer_set_future_ms(5);

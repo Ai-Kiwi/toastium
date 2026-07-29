@@ -25,7 +25,7 @@ _start:
 
 setup_vma:
     //bind for traps
-    la t0, trap_entry
+    la t0, unsafe_trap_entry
     csrw stvec, t0
 
     //setup stack top
@@ -140,7 +140,7 @@ real_start:
     addi sp, t0, 0
 
     //bind for new interrupts
-    la t0, trap_entry
+    la t0, unsafe_trap_entry
     csrw stvec, t0
 
     //clear out the bss

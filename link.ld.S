@@ -20,6 +20,7 @@ SECTIONS
 
     .trap : ALIGN(16) {
         *(.text.trap)
+        *(.text.unsafe_trap)
     }:execute
 
     .rodata : ALIGN(16) {
