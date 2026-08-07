@@ -31,6 +31,7 @@ Need bss fix
  - current running process info
 
 needs to use red black tree
+ - children of file descriptor
  - scheduler
  - timer
 
@@ -50,7 +51,9 @@ test suits
  - scheduler
  - trap handler
 
-
+Needs allocator combining (combine more then 1 entry into 64byte chunks)
+ - hashmap entry
+ - red black tree entry (will be when coded)
 
 
 
