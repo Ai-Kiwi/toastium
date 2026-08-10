@@ -24,6 +24,7 @@ Need large pages
  - Allocator should use multipages when support is added
  - pager should support multipages
  - user processes don't do large pages
+ - pipe/sockets need merged pages
 
 Need bss fix
  - asid upto data not aligned 64 bytes (current and max)
@@ -31,9 +32,9 @@ Need bss fix
  - current running process info
 
 needs to use red black tree
- - children of file descriptor
- - scheduler
- - timer
+ - children of file descriptor (currently list)
+ - scheduler (currently list with fifo)
+ - timer (currently nothing) 
 
 hashmap
  - hashmap has 64byte per item overhead which is not needed (for cache coherency). Possible fix is todo sub lists to fix this.

@@ -17,3 +17,23 @@ void memcpy(u64 dst, u64 src, u64 size) {
         }
     }
 }
+
+void strncpy(char *dest, const char *src, unsigned long size) {
+    unsigned char mask = 255;
+    for (unsigned long i=0; i<size; i++) {
+        unsigned char output = src[i];
+        mask = (output | -output) & mask;
+        dest[i] = output & mask;
+    }
+}
+
+bool8 str_starts_with(const char *str, const char *prefix) {
+    while (*prefix != '\0') {
+        if (*prefix != *str) {
+            return FALSE;
+        }
+        str++;
+        prefix++;
+    }
+    return TRUE;
+}
