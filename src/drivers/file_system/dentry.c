@@ -52,7 +52,7 @@ void insert_child(dentry *cwd, char *name) {
 
 
 dentry *get_path(dentry *cwd, char *path) {
-    char filename[256];
+    char filename[257];
 
     char *cur_char = path;
     dentry *cur_node = cwd;
@@ -68,7 +68,7 @@ dentry *get_path(dentry *cwd, char *path) {
 
         u64 name_len = (u64)next_slash - (u64)cur_char - 1;
 
-        strncpy(filename, cur_char, name_len);
+        strncpy(filename, cur_char, 257);//padded higher so it will always end in being null terminated
 
         cur_node = get_child(cur_node, filename);
         if (cur_node == NULL) {
