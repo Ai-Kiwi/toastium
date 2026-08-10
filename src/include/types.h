@@ -20,4 +20,6 @@ typedef u8 bool8;
 #define TRUE 1
 #define FALSE 0
 
+#define NULL ((void *)0)
+
 #endif

@@ -4,6 +4,8 @@
 #include "types.h"
 #include "kernel/memory/string.h"
 
+dentry root_folder;
+
 
 
 dentry *get_child(dentry *cwd, char *name) {
@@ -49,7 +51,33 @@ void insert_child(dentry *cwd, char *name) {
 }
 
 
-void get_path(dentry *cwd, char *path) {
-     
+dentry *get_path(dentry *cwd, char *path) {
+    char filename[256];
+
+    char *cur_char = path;
+    dentry *cur_node = cwd;
+
+    if (*cur_char == '/') {
+        //full path from root
+        cur_char++;
+        cur_node = &root_folder;
+    }
+
+    while (TRUE) {
+        char *next_slash = strchr(cur_char, '/');
+
+        u64 name_len = (u64)next_slash - (u64)cur_char - 1;
+
+        strncpy(filename, cur_char, name_len);
+
+        cur_node = get_child(cur_node, filename);
+        if (cur_node == NULL) {
+            return NULL;
+        }
+
+        cur_char = next_slash + 1;
+    }
+
+    return cur_node;
 }
 

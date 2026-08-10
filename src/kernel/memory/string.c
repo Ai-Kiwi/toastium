@@ -37,3 +37,13 @@ bool8 str_starts_with(const char *str, const char *prefix) {
     }
     return TRUE;
 }
+
+char *strchr(const char *str, char c) {
+    for (const char *i=str; *i != 0x0; i++) {
+        if (*i == c) {
+            return (char *)i;
+        }
+    }
+
+    return 0;
+}
