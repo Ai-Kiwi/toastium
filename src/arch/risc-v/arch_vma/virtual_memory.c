@@ -17,7 +17,10 @@
 #include "board.h"
 
 static inline u64 create_leaf(u64 phys_addr, u64 arg_flags) {
-    return ((((phys_addr - KERNEL_VMA_START) / 4096) << 10) | arg_flags | VMA_VALID) & (U64_MAX * (u64)!!arg_flags);
+    if (arg_flags == 0x0) {
+        return 0;
+    }
+    return ((((phys_addr - KERNEL_VMA_START) / 4096) << 10) | arg_flags | VMA_VALID);
 }
 
 static inline u64 create_branch(u64 branch_addr) {
@@ -25,8 +28,10 @@ static inline u64 create_branch(u64 branch_addr) {
 }
 
 static inline u64 get_branch_loc(u64 leaf_data) {
-    bool8 is_branch = (leaf_data & ((BIT(10)) - 1)) == 0x1;
-    return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_branch);
+    if ((leaf_data & ((BIT(10)) - 1)) != 0x1) {
+        return 0;
+    }
+    return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START);
 }
 
 static inline u64 get_leaf_flags(u64 leaf_data) {
@@ -34,8 +39,10 @@ static inline u64 get_leaf_flags(u64 leaf_data) {
 }
 
 static inline u64 get_phys_leaf_loc(u64 leaf_data) {
-    bool8 is_leaf = (leaf_data & (BIT(10) - 1)) > 0x1; //must have flags and be valid
-    return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_leaf);
+    if ((leaf_data & (BIT(10) - 1)) <= 0x1) { //must have flags and be valid
+        return 0;
+    }
+    return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START);
 }
 
 static u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
