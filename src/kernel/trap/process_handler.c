@@ -13,6 +13,7 @@
 #include "kernel/trap/page_fault/handler.h"
 #include "interruptible/syscall.h"
 #include "interruptible/page_fault.h"
+#include "process_handler.h"
 
 void handle_async_trap() {
     //need to some how get process
@@ -30,8 +31,8 @@ void handle_async_trap() {
                 PANIC("DOUBLE_PROCESS_TRAP_NOT_PAGE_FAULT", trap.code, proc->process_id, 0);
             }
             vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->page_fault_trapframe, VMA_READ | VMA_WRITE);
-            break;
             proc->trap_state = PROC_TRAP_PROCESS_READ_USERSPACE;
+            break;
         case PROC_TRAP_PROCESS:
             vma_map_kernel(proc, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE, (u64)proc->kernelspace_trapframe, VMA_READ | VMA_WRITE);
             proc->trap_state = PROC_TRAP_PROCESS_INTERRUPTABLE_TRAP;
@@ -80,9 +81,11 @@ void handle_async_trap() {
             break;
         case PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP:
             PANIC("UNEXPECTED_UNINTERUPTABLE_EXIT_WITH_PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP", 0, 0, 0);
+            break;
         case PROC_TRAP_PROCESS_READ_USERSPACE://can't happen
             PANIC("UNEXPECTED_UNINTERUPTABLE_EXIT_WITH_PROC_TRAP_PROCESS_READ_USERSPACE", 0, 0, 0);
-      break;
+            break;
+        break;
     }
 
     proc->trap_state = past_proc_state;

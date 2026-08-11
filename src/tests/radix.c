@@ -1,6 +1,7 @@
 #include "kernel/memory/radix.h"
 #include "drivers/uart/uart.h"
 #include "tests/utils.h"
+#include "radix.h"
 
 void test_radix() {
     #ifndef TEST_MODE

@@ -3,6 +3,7 @@
 #include "types.h"
 #include "kernel/devices/device_tree.h"
 #include "arch_device_tree/dtb.h"
+#include "dtb.h"
 
 u32 dtb_read_int(u8 *ptr) {
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
@@ -49,7 +50,6 @@ device_info_dump_response dtb_dump(u8 *output_location) {
     header.strings_size = dtb_read_int(&dtb[32]);
     header.struct_size = dtb_read_int(&dtb[36]);
 
-    u32 magic_code = dtb_read_int(dtb);
     if (header.magic_header != 0xD00DFEED) {
         PANIC("INCORRECT_DTB_MAGIC_HEADER",header.comptaible_version, 0, 0);
     }
@@ -100,7 +100,7 @@ device_info_dump_response dtb_dump(u8 *output_location) {
             u32 name_offset = dtb_read_int(&dtb[(byte_location + 8)]);
 
             //get name
-            u8 *prop_name = &dtb[header.strings_offset + name_offset];
+            char *prop_name = &dtb[header.strings_offset + name_offset];
             //uart_print_str("-PROP: ");
             //uart_println_str(prop_name);
 
@@ -145,12 +145,12 @@ device_info_dump_response dtb_dump(u8 *output_location) {
         device_output[i] = device_list[i];
     }
     //add parents
-    u8 **parents_location = (u8 **)&device_output[device_list_len];
+    char **parents_location = (char **)&device_output[device_list_len];
     s32 parent_offset = 0;
     for (s32 i=0; i<device_list_len; i++) {
         device_output[i].parent_nodes = parents_location + parent_offset;
         for (s32 p=0; p < device_output[i].node_depth; p++) {
-            parents_location[parent_offset] = (u8 *)(device_parents[i][p]);
+            parents_location[parent_offset] = (char *)(device_parents[i][p]);
             parent_offset++;
         }
     }

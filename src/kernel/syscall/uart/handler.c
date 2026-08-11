@@ -6,6 +6,7 @@
 #include "kernel/process/process.h"
 #include "types.h"
 #include "kernel/trap/user_accses.h"
+#include "handler.h"
 
 
 u64 syscall_uart(trap_data *trap, bool8 async) {

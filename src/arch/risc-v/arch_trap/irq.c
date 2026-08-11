@@ -3,6 +3,7 @@
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
 #include "def.h"
+#include "irq.h"
 
 //these values are S mode
 #define PLIC_BASE 0x0C000000

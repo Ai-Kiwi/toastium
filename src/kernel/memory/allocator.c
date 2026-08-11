@@ -4,6 +4,7 @@
 #include "include/def.h"
 #include "drivers/uart/uart.h"
 #include <stdalign.h>
+#include "allocator.h"
 
 //worth noting, zero is free here, one is in use. This is flipped of pager.
 
@@ -19,7 +20,7 @@ alignas(64) bump_state bump_allocator_state;
 alignas(64) u64 root_idx_page[256]; //multiple of 64, so cache aligned
 alignas(64) u64 lowest_free_entry[256]; //multiple of 64, so cache aligned
 
-u32 max_cnt_per_page(u64 size) {
+static u32 max_cnt_per_page(u64 size) {
     u64 entry_size = size;
     return (KERNEL_PAGE_SIZE - 64) / entry_size; //adds 64 bytes for page header
 }
@@ -34,13 +35,13 @@ void allocator_init() {
     bump_allocator_state.page = (u64 *)pg_alloc();
 }
 
-u64 new_idx_page() {
+static u64 new_idx_page() {
     //could make sure everything is zero here, pager already handles this
     u64 idx_page = (u64)pg_alloc();
     return idx_page;
 }
 
-u64 new_data_page() {
+static u64 new_data_page() {
     //could make sure everything is zero here, pager already handles this
     u64 data_page = (u64)pg_alloc();
     return data_page;

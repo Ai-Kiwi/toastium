@@ -1,5 +1,4 @@
-#include "board.h"
-#include "kernel/safety/panic.h"
+#include "syscall.h"
 #include "kernel/syscall/handler.h"
 #include "kernel/trap/handler.h"
 #include "kernel/trap/process_handler.h"

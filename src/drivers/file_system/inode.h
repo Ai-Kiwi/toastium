@@ -48,6 +48,11 @@ typedef struct {
 } inode;
 
 
+void inode_inc_link(inode *file);
+void inode_dec_link(inode *file);
+void inode_inc_open_cnt(inode *file);
+void inode_dec_open_cnt(inode *file);
+
 //file descriptor is actually he process accuses to a file
 
 #endif

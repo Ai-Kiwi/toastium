@@ -5,6 +5,7 @@
 
 #include "arch_cpu.h"
 #include "kernel/safety/panic.h"
+#include "timer.h"
 
 void timer_set_future_ms(u64 ms) {
     u64 response = timer_set(time_cnt() + ((BASE_CLOCK_SPEED / 1000) * ms));

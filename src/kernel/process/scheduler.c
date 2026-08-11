@@ -8,6 +8,7 @@
 #include "types.h"
 #include "kernel/memory/pager.h"
 #include "kernel/safety/panic.h"
+#include "scheduler.h"
 
 //almost all the code in here atm is temp and will be completely rewritten.
 //this is just a round robin schedular so i am able to get it working for testing.

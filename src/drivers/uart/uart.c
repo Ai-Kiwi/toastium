@@ -12,7 +12,7 @@ void uart_print_char(const char print_char) {
 }
 
 void uart_print_str(const char *print_string) {
-    for (u8 *p = print_string; *p != '\0' ; p++) {
+    for (const char *p = print_string; *p != '\0' ; p++) {
         uart_16550_output_u8(*p);
     }
 }

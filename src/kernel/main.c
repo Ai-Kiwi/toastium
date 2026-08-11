@@ -24,6 +24,7 @@
 #include "tests/radix.h"
 #include "tests/hashmap.h"
 #include "tests/utils.h"
+#include "main.h"
 
 extern u8 _kernel_end, _kernel_start, _kernel_idle_process;
 
@@ -68,7 +69,7 @@ void kernel_main() {
     processes_init(hart_count);
 
     uart_println_str("Initializing schedular");
-    schedular_init();
+    schedular_init(hart_count);
 
     uart_println_str("Initializing virtual memory");
     vma_init();

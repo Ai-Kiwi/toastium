@@ -1,26 +1,11 @@
 #include "kernel/safety/panic.h"
-#include "arch_trap/irq.h"
 #include "kernel/safety/safety.h"
-#include "kernel/trap/handler.h"
 #include "def.h"
-#include "kernel/process/process.h"
-#include "kernel/process/scheduler.h"
-#include "drivers/uart/uart.h"
-#include "include/board.h"
-#include "parser.h"
-
-typedef struct {
-    u64 scause;
-    u64 sepc;
-    u64 stval;
-    u64 sstatus;
-} raw_trap_info;
-
+#include "unsafe_handler.h"
 
 void handle_unsafe_trap(raw_trap_info *trap) {//will have ptr input here that points to reg data on stack
     const u64 is_interrupt = trap->scause & BIT(63); //last bit
     const u64 trap_code = (trap->scause) & 0x7FFFFFFFFFFFFFFF; //everything but last bit
-    const u64 is_user_mode = trap->scause & BIT(8);
 
     const u64 fault_addr = trap->stval;
     const u64 fault_pc = trap->sepc;

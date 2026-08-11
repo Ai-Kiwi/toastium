@@ -9,6 +9,7 @@
 #include "kernel/process/scheduler.h"
 #include "kernel/process/context.h"
 #include "kernel/syscall/uart/handler.h"
+#include "handler.h"
 
 //response of 0 means it handled it
 //response of 1 means process died

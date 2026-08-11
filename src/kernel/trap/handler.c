@@ -19,6 +19,7 @@
 #include "uninterruptible/instruction_invalid.h"
 #include "uninterruptible/access_fault.h"
 #include "uninterruptible/acces_misaligned.h"
+#include "handler.h"
 
 //function returns 0 if it was handled in kernel.
 //function returns process kernel stack if its to be handled using process stack/kernel

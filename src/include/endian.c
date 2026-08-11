@@ -1,4 +1,5 @@
 #include "include/types.h"
+#include "endian.h"
 
 #define BIG_ENDIAN 0
 #define LITTLE_ENDIAN 1
@@ -7,7 +8,7 @@ u16 endian_type;
 
 
 
-u64 flip_u64(u64 input) {
+static u64 flip_u64(u64 input) {
     return
     ((0x00000000000000FF & input) << (8 * 7)) |
     ((0x000000000000FF00 & input) << (8 * 5)) |
@@ -33,7 +34,7 @@ u64 little_endian_u64_to_host(u64 little_endian) {
     return flip_u64(little_endian);
 }
 
-u32 flip_u32(u32 input) {
+static u32 flip_u32(u32 input) {
     return
     ((0x000000FF & input) << (8 * 3)) |
     ((0x0000FF00 & input) << (8 * 1)) |
@@ -55,7 +56,7 @@ u32 little_endian_u32_to_host(u32 little_endian) {
     return flip_u32(little_endian);
 }
 
-u16 flip_u16(u16 input) {
+static u16 flip_u16(u16 input) {
     return
     ((0x00FF & input) << (8 * 1)) |
     ((0xFF00 & input) >> (8 * 1));

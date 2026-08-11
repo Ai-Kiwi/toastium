@@ -2,6 +2,7 @@
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
 #include "include/board.h"
+#include "panic.h"
 
 extern u8 _kernel_start;
 

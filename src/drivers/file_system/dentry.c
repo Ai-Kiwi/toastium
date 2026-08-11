@@ -3,12 +3,13 @@
 #include "kernel/safety/panic.h"
 #include "types.h"
 #include "kernel/memory/string.h"
+#include "dentry.h"
 
 dentry root_folder;
 
 
 
-dentry *get_child(dentry *cwd, char *name) {
+static dentry *get_child(dentry *cwd, char *name) {
 
     list_iter iter;
     list_iter_create(&cwd->children, &iter);
@@ -25,7 +26,7 @@ dentry *get_child(dentry *cwd, char *name) {
     return 0;
 }
 
-void remove_child(dentry *cwd, char *name) {
+static void remove_child(dentry *cwd, char *name) {
 
     list_iter iter;
     list_iter_create(&cwd->children, &iter);
@@ -42,7 +43,7 @@ void remove_child(dentry *cwd, char *name) {
     PANIC("DENTRY_FAILED_TO_REMOVE_CHILD", (u64)cwd, 0, 0);
 }
 
-void insert_child(dentry *cwd, char *name) {
+static void insert_child(dentry *cwd, char *name) {
     dentry_entry entry;
     strncpy((char *)&entry.name, (const char *)&name, 256);
     list_append(&cwd->children, (u64)&entry);
@@ -65,8 +66,6 @@ dentry *get_path(dentry *cwd, char *path) {
 
     while (TRUE) {
         char *next_slash = strchr(cur_char, '/');
-
-        u64 name_len = (u64)next_slash - (u64)cur_char - 1;
 
         strncpy(filename, cur_char, 257);//padded higher so it will always end in being null terminated
 

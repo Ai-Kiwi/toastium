@@ -3,6 +3,7 @@
 #include "kernel/main.h"
 #include "kernel/safety/panic.h"
 #include "include/types.h"
+#include "arch_main.h"
 
 extern u8 _kernel_end;
 

@@ -1,5 +1,7 @@
 #include "drivers/file_system/inode.h"
-void cleanup_file() {
+#include "inode.h"
+
+static void cleanup_file() {
 
 }
 

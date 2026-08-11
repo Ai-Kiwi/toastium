@@ -6,6 +6,7 @@
 #include "include/types.h"
 #include "kernel/process/process.h"
 #include "include/types.h"
+#include "user_accses.h"
 
 extern u64 arch_read_user(u64 src, u64 size, u64 dest);
 

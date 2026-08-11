@@ -14,6 +14,7 @@
 #include "types.h"
 #include "kernel/process/scheduler.h"
 #include <stdalign.h>
+#include "process.h"
 
 //upto 65,536 processes
 #define pid_level_size 4
@@ -29,7 +30,7 @@ process *process_from_id(pid process_id) {
     return (process *)hashmap_get(&state.process_hashmap, (u64)process_id);
 }
 
-process *new_blank_process() {
+static process *new_blank_process() {
     process *current_process; //Non zero
     while (TRUE){
         current_process = (process *)hashmap_get(&state.process_hashmap,state.process_upto);

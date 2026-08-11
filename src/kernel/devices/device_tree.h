@@ -4,9 +4,9 @@
 #include "include/types.h"
 
 typedef struct {
-    u8 **parent_nodes; //backwards, first item is closest parents
+    char **parent_nodes; //backwards, first item is closest parents
     s32 node_depth;
-    u8 *name;
+    char *name;
     u8 *value;
     u32 value_len;
 } device_info;

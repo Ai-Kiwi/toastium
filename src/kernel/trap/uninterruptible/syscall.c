@@ -4,6 +4,7 @@
 #include "kernel/syscall/handler.h"
 #include "kernel/trap/handler.h"
 #include "types.h"
+#include "syscall.h"
 
 u64 uninterruptible_trap_syscall(trap_data *trap) {
     u64 response = syscall_sync_handler(trap);

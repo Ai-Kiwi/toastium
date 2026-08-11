@@ -25,7 +25,7 @@ static inline u64 create_branch(u64 branch_addr) {
 }
 
 static inline u64 get_branch_loc(u64 leaf_data) {
-    bool8 is_branch = (leaf_data & (BIT(10)) - 1) == 0x1;
+    bool8 is_branch = (leaf_data & ((BIT(10)) - 1)) == 0x1;
     return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_branch);
 }
 
@@ -38,7 +38,7 @@ static inline u64 get_phys_leaf_loc(u64 leaf_data) {
     return ((((leaf_data >> 10) & (BIT(44) - 1)) * 4096) + KERNEL_VMA_START) & (U64_MAX * (u64)is_leaf);
 }
 
-u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
+static u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
     u64 *new_branch = (u64 *)pg_alloc();
     u64 physical_location = get_phys_leaf_loc(*leaf);
     u64 flags = get_leaf_flags(*leaf);
@@ -61,7 +61,7 @@ u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
     return (u64)new_branch;
 }
 
-void destroy_branch(u64 *branch_loc, u64 branch_jmp_size) {
+static void destroy_branch(u64 *branch_loc, u64 branch_jmp_size) {
     volatile u64 *physical_loc = (volatile u64 *)get_branch_loc(*branch_loc);
     if ((u64)physical_loc == 0x0) {
         return;
@@ -74,7 +74,7 @@ void destroy_branch(u64 *branch_loc, u64 branch_jmp_size) {
     pg_free((u64)physical_loc);
 }
 
-void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
+static void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
     bool8 can_shrink = TRUE;
     u64 *branch_leafs = (u64 *)get_branch_loc(*branch_loc);
     if ((u64)branch_leafs == 0x0) {
@@ -109,7 +109,7 @@ void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
     }
 }
 
-void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags, u64 vma_addr_asid) {
+static void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_addr_size, u64 phys_addr, u64 access_flags, u64 vma_addr_asid) {
     const u64 ppn0_jmp_size = 4096;
     const u64 ppn1_jmp_size = 4096*512;
     const u64 ppn2_jmp_size = 4096*512*512;
@@ -346,7 +346,7 @@ void vma_init() {
     current_highest_asid = max_asid;
 }
 
-void vma_reset_asid() {
+static void vma_reset_asid() {
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
@@ -362,7 +362,7 @@ void vma_reset_asid() {
     }
 }
 
-u64 vma_fetch_asid() {
+static u64 vma_fetch_asid() {
     if (current_highest_asid >= max_asid) {
         vma_reset_asid();
         current_highest_asid = 0;

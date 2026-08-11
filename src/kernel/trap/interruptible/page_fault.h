@@ -5,6 +5,6 @@
 #include "kernel/trap/process_handler.h"
 #include "types.h"
 
-u64 interruptable_trap_page_fault(trap_data *trap, interruptable_trap_response *response);
+void interruptable_trap_page_fault(trap_data *trap, interruptable_trap_response *response);
 
 #endif

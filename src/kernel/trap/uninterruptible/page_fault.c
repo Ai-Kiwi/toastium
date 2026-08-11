@@ -6,6 +6,7 @@
 #include "kernel/syscall/handler.h"
 #include "kernel/trap/handler.h"
 #include "types.h"
+#include "page_fault.h"
 
 u64 uninterruptible_trap_page_fault(trap_data *trap, process_trap_state past_proc_state) {
     process *proc = (process *)trap->process_ptr;

@@ -5,6 +5,7 @@
 #include "kernel/safety/safety.h"
 #include "tests/utils.h"
 #include "types.h"
+#include "allocator.h"
 
 void test_allocator() {
     #ifndef TEST_MODE
@@ -13,11 +14,11 @@ void test_allocator() {
 
     uart_println_str("#TEST# - Testing Allocator");
 
-    u64 value_cnt = 2000;//100000;
+    const u64 value_cnt = 2000;//100000;
 
-    u64 blank_assigns = 200000;
+    const u64 blank_assigns = 200000;
 
-    u64 different_sizes = 10000;
+    const u64 different_sizes = 10000;
 
     u64 *alloc_locations[value_cnt];
 

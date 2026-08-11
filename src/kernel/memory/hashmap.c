@@ -3,7 +3,7 @@
 #include "kernel/memory/allocator.h"
 #include "include/types.h"
 #include "kernel/safety/panic.h"
-#include <sys/_intsup.h>
+#include "hashmap.h"
 
 //adds anyway if already present, does not replace
 //key used must remain valid if its a ptr
@@ -66,16 +66,16 @@ u64 hashmap_get(hashmap *hashmap, u64 key) {
 
 //built in data
 
-u64 builtin_num_hash(u64 key) {
+static u64 builtin_num_hash(u64 key) {
     return key;
 }
 
-bool8 builtin_num_equal(u64 first_key, u64 second_keys) {
+static bool8 builtin_num_equal(u64 first_key, u64 second_keys) {
     return first_key == second_keys;
 }
 
 
-u64 builtin_word_hash(u64 key) {
+static u64 builtin_word_hash(u64 key) {
     u8 *key_ptr = (u8 *)key;
     u64 hash = 0;
 
@@ -88,7 +88,7 @@ u64 builtin_word_hash(u64 key) {
     return hash;
 }
 
-bool8 builtin_word_equal(u64 first_key, u64 second_key) {
+static bool8 builtin_word_equal(u64 first_key, u64 second_key) {
     char *first_key_ptr = (char *)first_key;
     char *second_key_ptr = (char *)second_key;
 

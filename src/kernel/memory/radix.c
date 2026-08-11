@@ -3,6 +3,7 @@
 #include "kernel/memory/allocator.h"
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
+#include "radix.h"
 
 u64 radix_get(u64 addr, u64 key, u8 depth, u8 depth_size) {
     u64 *addr_table = (u64 *)addr;
@@ -73,7 +74,6 @@ void radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size) {
 
 bool8 radix_remove(u64 addr, u64 key, u8 depth, u8 depth_size) {
     u64 mask = (1UL << depth_size) - 1;
-    u64 size = (1UL << depth_size);
     u64 *addr_table = (u64 *)addr;
     for (s32 i = 1; i < depth; i++) {
         u64 idx = (key >> ((depth-i) * depth_size)) & mask;

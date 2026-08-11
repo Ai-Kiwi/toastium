@@ -3,6 +3,7 @@
 #include "kernel/memory/hashmap.h"
 #include "kernel/memory/pager.h"
 #include "include/def.h"
+#include "hashmap.h"
 
 void test_hashmap() {
     #ifndef TEST_MODE

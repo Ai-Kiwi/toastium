@@ -15,6 +15,6 @@ typedef struct {
     dentry *data_ptr;
 } dentry_entry;
 
-
+dentry *get_path(dentry *cwd, char *path);
 
 #endif

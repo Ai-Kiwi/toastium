@@ -7,6 +7,7 @@
 #include "kernel/trap/process_handler.h"
 #include "types.h"
 #include "kernel/trap/page_fault/handler.h"
+#include "page_fault.h"
 
 void interruptable_trap_page_fault(trap_data *trap, interruptable_trap_response *response) {
     process *proc = (process *)trap->process_ptr;

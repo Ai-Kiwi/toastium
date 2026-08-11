@@ -1,5 +1,6 @@
 #include "open_sbi.h"
 #include "include/types.h"
+#include "arch_cpu.h"
 
 void freeze_system() {
     asm volatile ("csrc sstatus, %0" :: "r"(1 << 1)); //disable traps

@@ -6,8 +6,9 @@
 #include "kernel/safety/panic.h"
 #include "types.h"
 #include "kernel/process/scheduler.h"
+#include "context.h"
 
-void change_context(process *process) {
+static void change_context(process *process) {
     vma_swap(process);
 }
 

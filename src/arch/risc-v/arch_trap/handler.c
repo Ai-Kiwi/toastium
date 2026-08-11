@@ -1,6 +1,6 @@
 
 #include "arch_trap/parser.h"
-
+#include "handler.h"
 #include "types.h"
 
 extern u8 trap_entry;

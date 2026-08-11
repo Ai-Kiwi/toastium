@@ -1,4 +1,5 @@
 #include "include/types.h"
+#include "open_sbi.h"
 
 u64 open_sbi_set_timer(u64 clock_to_run) {
     register u64 a0 asm("a0") = clock_to_run;

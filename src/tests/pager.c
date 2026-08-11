@@ -4,6 +4,7 @@
 #include "kernel/safety/panic.h"
 #include "tests/utils.h"
 #include "kernel/safety/safety.h"
+#include "pager.h"
 
 void test_pager() {
     #ifndef TEST_MODE
@@ -14,8 +15,6 @@ void test_pager() {
     uart_println_str("#TEST# - Testing Pager");
 
     u64 value_cnt = 2000;//100000;
-
-    u64 blank_assigns = 1000000;
 
     u64 first_loc = (u64)pg_alloc();
     u64 last_loc = first_loc;

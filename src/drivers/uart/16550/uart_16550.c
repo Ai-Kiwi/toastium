@@ -27,14 +27,14 @@ void uart_16550_output_u8(const u8 output_u8) {
 }
 
 s32 uart_16550_try_fetch_u8() {
-    //volatile u32* uart = (volatile int*)UART_VALUE;
-    //volatile u32* uart_status = (volatile int*)UART_STATUS;
+    volatile u8* uart = (volatile u8*)UART_BASE_LOCATION;
+    volatile u8* uart_status = &uart[5*uart_reg_size];
+    if (*uart_status & UART_STATUS_READY_RECEIVE) {
 
-    //if (*uart_status & UART_STATUS_READY_RECEIVE) {
-    //    return *uart;
-    //}else{
-    //    return -1;
-    //}
+        return *uart;
+    }else{
+        return -1;
+    }
 }
 
 void uart_16550_init() {

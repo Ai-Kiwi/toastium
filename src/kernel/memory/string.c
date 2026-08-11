@@ -1,5 +1,6 @@
 #include "def.h"
 #include "include/types.h"
+#include "string.h"
 
 void memcpy(u64 dst, u64 src, u64 size) {
     if (ROUND_MOD_DOWN(dst, 8) != dst || ROUND_MOD_DOWN(src, 8) != src || ROUND_MOD_DOWN(size, 8) != size) {

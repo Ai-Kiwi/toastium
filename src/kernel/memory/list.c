@@ -4,6 +4,7 @@
 #include "kernel/safety/panic.h"
 #include "kernel/memory/string.h"
 #include "types.h"
+#include "list.h"
 
 void list_create(list *new_list, u64 item_size) {
     new_list->section_size = KERNEL_PAGE_SIZE;

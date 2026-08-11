@@ -6,6 +6,7 @@
 #include "include/def.h"
 #include "include/board.h"
 #include "kernel/memory/string.h"
+#include "pager.h"
 
 //for pager bitmap 0 is free 1 is in use
 
@@ -15,11 +16,11 @@ s32 last_free_page_num = 0;
 
 extern u8 _kernel_end, _kernel_start;
 
-#define MAX_MEMORY_REGIONS 64
+#define MAX_MEMORY_REGIONS 32
 
-void fetch_node_type(device_info *node, bool8 *memory_reg, bool8 *reserved) {
+static void fetch_node_type(const device_info *node, bool8 *memory_reg, bool8 *reserved) {
     for (s32 n=0; n < node->node_depth; n++) {
-        u8 *parent_node = node->parent_nodes[n];
+        const char *parent_node = node->parent_nodes[n];
         if (str_starts_with(parent_node, "reserved-memory")) {
             *reserved = TRUE;
             *memory_reg = TRUE;
@@ -44,7 +45,7 @@ typedef struct {
     u32 free_cnt;
 } memory_region_list;
 
-void find_memory_regions(
+static void find_memory_regions(
     const u32 device_list,
     const device_info *device_info,
     memory_region_list *memory_regions
@@ -83,7 +84,7 @@ void find_memory_regions(
     }
 }
 
-void remove_reserved_memory_regions(memory_region_list *memory_regions) {
+static void remove_reserved_memory_regions(memory_region_list *memory_regions) {
     for (s32 i=0; i < memory_regions->reserved_cnt; i++) {
         memory_region *reserved_region = &memory_regions->reserved_regions[i];
         u64 reserved_region_end = reserved_region->start + reserved_region->size;
@@ -232,6 +233,7 @@ u64 pg_alloc() { //will add cnt later u64 byte_cnt
         }
     }
     PANIC("OUT_OF_FREE_PAGES",0,0,0);
+    return 0;
 }
 
 void pg_free(u64 location) {
@@ -240,7 +242,7 @@ void pg_free(u64 location) {
 
     s64 closest_page_cnt = 0;
     u64 *closest_bitmap = 0;
-    u8 *closest_page_list = 0;
+    const u8 *closest_page_list = 0;
     s32 closet_page_num = 0;
 
     for (s32 i=0; i< page_list_cnt; i++){
