@@ -7,3 +7,4 @@ link.ld
 .cache
 compile_commands.json
 mount
+.idea
