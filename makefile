@@ -15,6 +15,14 @@ test: CC += -DTEST_MODE
 GIT_VERSION_HASH := $(shell git describe --always --dirty)
 CC += -DGIT_VERSION_HASH=\"$(GIT_VERSION_HASH)\"
 CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
+	-Wall -Wextra \
+	-Wno-unused-parameter \
+	-Wmissing-prototypes \
+	-Wmissing-declarations \
+	-Wframe-larger-than=1024 \
+	-Wvla \
+	-Wimplicit-fallthrough \
+	-Wno-sign-compare \
 	-I src/ \
 	-I src/include \
 	-I src/arch/$(ARCH)
@@ -72,35 +80,35 @@ all: $(BIN)
 	du -h $(BIN)
 
 link.ld: link.ld.S
-	$(CC) -E -P -DLINKER_SCRIPT=1 -I src/include -x c $< -o $@
+	@$(CC) -E -P -DLINKER_SCRIPT=1 -I src/include -x c $< -o $@
 
 $(BUILD)/%.o: %.s
-	mkdir -p $(dir $@)
-	$(AS) $(ASF) $< -o $@
+	@mkdir -p $(dir $@)
+	@$(AS) $(ASF) $< -o $@
 
 $(BUILD)/%.o: %.S
-	mkdir -p $(dir $@)
-	$(CC) $(CCF) -c -I src/include $< -o $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CCF) -c -I src/include $< -o $@
 
 $(BUILD)/%.o: %.c
-	mkdir -p $(dir $@)
-	$(CC) $(CCF) -c $< -o $@
+	@mkdir -p $(dir $@)
+	@$(CC) $(CCF) -c $< -o $@
 
 $(ELF): $(OBJ) link.ld
-	$(LD) $(LDF) $(OBJ) -o $@
+	@$(LD) $(LDF) $(OBJ) -o $@
 
 $(BIN): $(ELF)
-	$(OC) -O binary $^ $@
+	@$(OC) -O binary $^ $@
 
 run: $(BIN)
 #tell the panic to be recompiled, means that git hash version will get updated.
 	touch src/kernel/safety/panic.c
-	$(QEMU) $(QEMUF) -kernel $(BIN)
+	@$(QEMU) $(QEMUF) -kernel $(BIN)
 
 test: $(BIN)
 #tell the panic to be recompiled, means that git hash version will get updated.
 	touch src/kernel/safety/panic.c
-	$(QEMU) $(QEMUF) -kernel $(BIN)
+	@$(QEMU) $(QEMUF) -kernel $(BIN)
 
 run-traps: $(BIN)
 #tell the panic to be recompiled, means that git hash version will get updated.
@@ -111,8 +119,8 @@ asm-debug: $(BIN)
 	$(QEMU) $(QEMUF) -kernel $(BIN) -d in_asm,cpu
 
 debug: $(BIN)
-	echo "connect with riscv64-unknown-elf-gdb build/kernel.elf"
-	echo "target remote :1234"
+	@echo "connect with riscv64-unknown-elf-gdb build/kernel.elf"
+	@echo "target remote :1234"
 	$(QEMU) $(QEMUF) -kernel $(BIN) -S -s
 
 clean:

@@ -1,11 +1,11 @@
 #include "kernel/safety/panic.h"
 #include "kernel/devices/device_tree.h"
-#include "include/string.h"
 #include "arch_device_tree/dtb.h"
 #include "drivers/uart/uart.h"
 #include "include/board.h"
 #include "include/def.h"
 #include "include/board.h"
+#include "kernel/memory/string.h"
 
 //for pager bitmap 0 is free 1 is in use
 
