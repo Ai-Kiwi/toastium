@@ -45,7 +45,7 @@ static void remove_child(dentry *cwd, char *name) {
 
 static void insert_child(dentry *cwd, char *name) {
     dentry_entry entry;
-    strncpy((char *)&entry.name, (const char *)&name, 256);
+    strscpy((char *)&entry.name, (const char *)&name, 256);
     list_append(&cwd->children, (u64)&entry);
 
     PANIC("DENTRY_FAILED_TO_REMOVE_CHILD", (u64)cwd, 0, 0);
@@ -67,7 +67,7 @@ dentry *get_path(dentry *cwd, char *path) {
     while (TRUE) {
         char *next_slash = strchr(cur_char, '/');
 
-        strncpy(filename, cur_char, 257);//padded higher so it will always end in being null terminated
+        strscpy(filename, cur_char, 257);//padded higher so it will always end in being null terminated
 
         cur_node = get_child(cur_node, filename);
         if (cur_node == NULL) {

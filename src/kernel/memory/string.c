@@ -28,6 +28,18 @@ void strncpy(char *dest, const char *src, unsigned long size) {
     }
 }
 
+void strscpy(char *dest, const char *src, unsigned long size) {
+    unsigned long i=0;
+    for (; (i<size) && (src[i] != 0x0); i++) {
+        dest[i] = src[i];
+    }
+    if (i == size) {
+        dest[size-1] = 0x0;
+    }else{
+        dest[i] = 0x0;
+    }
+}
+
 bool8 str_starts_with(const char *str, const char *prefix) {
     while (*prefix != '\0') {
         if (*prefix != *str) {
