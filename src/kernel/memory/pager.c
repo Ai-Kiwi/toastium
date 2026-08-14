@@ -128,6 +128,8 @@ void pager_init() {
     memory_locations.free_cnt = 0;
     memory_locations.reserved_cnt = 0;
 
+    uart_print_str("finding memory regions");
+
     find_memory_regions(device_info, &memory_locations);
 
     //remove reserved areas if they fit inside of a region, if outside trim

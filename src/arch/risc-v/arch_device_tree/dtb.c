@@ -87,9 +87,6 @@ void dtb_dump(u8 *output_location, device_info_dump_response *response) {
             node_stack[node_depth] = node;
             node_depth += 1;
             if (node_depth >= 14) {PANIC("DTB_STACK_DEPTH_TO_HIGH", byte_location, 0, 0);}
-            //read name
-            //uart_print_str("* ");
-            //uart_println_str(&dtb[byte_location + 4]);
             s32 offset = 0;
             while (dtb[byte_location + offset + 4] != '\0'){
                 offset += 1;
@@ -98,13 +95,11 @@ void dtb_dump(u8 *output_location, device_info_dump_response *response) {
             byte_location = byte_location + offset;
             break;
         case 0x00000002: //node end
-            //uart_println_str("node end");
             node_stack[node_depth+1] = NULL; //removes deeper node. Idea being for finding sibling 
             node_depth -= 1;
             if (node_depth < 0) {PANIC("DTB_STACK_DEPTH_LESS_ZERO", byte_location, 0, 0);}
             break;
         case 0x00000004: //no operation
-            //uart_println_str("nop");
             continue;
         case 0x00000003: //property
             u32 prop_size = dtb_read_int(&dtb[(byte_location + 4)]);
@@ -135,8 +130,6 @@ void dtb_dump(u8 *output_location, device_info_dump_response *response) {
             byte_location += padded_len + 8;
             break;
         case 0x00000009:
-            //uart_println_str("end");
-            ///end code
             break;
         default:
             PANIC("DTB_UNEXPECTED_CODE", item_value, byte_location, 0);
