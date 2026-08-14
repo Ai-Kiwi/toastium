@@ -4,21 +4,21 @@
 #include "include/types.h"
 
 typedef struct {
-    char **parent_nodes; //backwards, first item is closest parents
-    s32 node_depth;
+    void *first_child;
+    void *next_sibling;
     char *name;
+    bool8 is_leaf;
     u8 *value;
-    u32 value_len;
+    u64 value_len;
 } device_info;
 
 typedef struct {
-    u32 size;
-    u8 *end_location;
+    device_info *root;
+    u8 *end_loc;
 } device_info_dump_response;
 
 void device_tree_init(u8 *kernel_end);
 device_info *device_tree_ptr();
-u32 device_tree_len();
 u8 *device_tree_end_ptr();
 
 #endif

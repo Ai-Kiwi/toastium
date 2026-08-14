@@ -1,4 +1,5 @@
 #include "drivers/uart/uart.h"
+#include "kernel/memory/string.h"
 #include "kernel/safety/panic.h"
 #include "types.h"
 #include "kernel/devices/device_tree.h"
@@ -29,7 +30,7 @@ void dtb_set_dst(u8 *new_dtb) {
     dtb = new_dtb;
 }
 
-device_info_dump_response dtb_dump(u8 *output_location) {
+void dtb_dump(u8 *output_location, device_info_dump_response *response) {
     uart_println_str("Parsing DTB");
 
     if ((u64)&dtb == 0x0) {
@@ -57,26 +58,35 @@ device_info_dump_response dtb_dump(u8 *output_location) {
         PANIC("INCORRECT_DTB_VERSION",header.comptaible_version, header.version, 0);
     }
 
-    device_info device_list[1024];
-    u8 *device_parents[1024][16];
-    u32 device_list_len = 0;
 
-    u8 *node_stack[10];
-    s32 node_stack_depth = 0;
+    u8 *cur_loc = output_location;
+    device_info *node_stack[16];
+    node_stack[0] = NULL;
+    node_stack[1] = NULL;
+    node_stack[2] = NULL;
+    s32 node_depth = 0;
 
     for (u32 byte_location=header.struct_offset; byte_location<header.struct_offset+header.struct_size; byte_location=byte_location+4) {
         u32 item_value = dtb_read_int(&dtb[byte_location]);
 
-        //uart_print_u64_hex((u64)byte_location);
-        //for (s32 i=0; i<node_stack_depth; i++) {
-        //    uart_print_str(" |");
-        //}
 
         switch (item_value){
         case 0x00000001: //node start
-            node_stack[node_stack_depth] = (u8 *)&dtb[(byte_location + 4)];
-            node_stack_depth += 1;
-            if (node_stack_depth > 9) {PANIC("DTB_STACK_DEPTH_TO_HIGH", byte_location, 0, 0);}
+            device_info *node = (device_info *)cur_loc;
+            cur_loc += sizeof(device_info);
+            node->name = (char *)&dtb[(byte_location + 4)];
+            node->is_leaf = FALSE;
+            node->first_child = NULL;
+            node->next_sibling = NULL;
+            if (node_stack[node_depth] != NULL) {
+                node_stack[node_depth]->next_sibling = node;
+            }
+            if (node_depth > 0 && node_stack[node_depth-1]->first_child == NULL) {
+                node_stack[node_depth-1]->first_child = node;
+            }
+            node_stack[node_depth] = node;
+            node_depth += 1;
+            if (node_depth >= 14) {PANIC("DTB_STACK_DEPTH_TO_HIGH", byte_location, 0, 0);}
             //read name
             //uart_print_str("* ");
             //uart_println_str(&dtb[byte_location + 4]);
@@ -89,8 +99,9 @@ device_info_dump_response dtb_dump(u8 *output_location) {
             break;
         case 0x00000002: //node end
             //uart_println_str("node end");
-            node_stack_depth -= 1;
-            if (node_stack_depth < 0) {PANIC("DTB_STACK_DEPTH_LESS_ZERO", byte_location, 0, 0);}
+            node_stack[node_depth+1] = NULL; //removes deeper node. Idea being for finding sibling 
+            node_depth -= 1;
+            if (node_depth < 0) {PANIC("DTB_STACK_DEPTH_LESS_ZERO", byte_location, 0, 0);}
             break;
         case 0x00000004: //no operation
             //uart_println_str("nop");
@@ -99,29 +110,26 @@ device_info_dump_response dtb_dump(u8 *output_location) {
             u32 prop_size = dtb_read_int(&dtb[(byte_location + 4)]);
             u32 name_offset = dtb_read_int(&dtb[(byte_location + 8)]);
 
-            //get name
             char *prop_name = &dtb[header.strings_offset + name_offset];
-            //uart_print_str("-PROP: ");
-            //uart_println_str(prop_name);
 
-            //add to list
-            {
-                device_info device;
-                device.node_depth = node_stack_depth;
-                device.name = prop_name;
-                device.value = &dtb[(byte_location + 12)];
-                device.value_len = prop_size;
-                for (s32 i=0; i<node_stack_depth; i++) {
-                    device_parents[device_list_len][i] = (u8 *)node_stack[node_stack_depth - 1 - i];
-                }
-                //TODO: code to pass approach
-                //This approach is n(O^2), which is not great.
-                //However for now it is staying, as cleanest alterative is likely 2 pass approach or some form of storing each following items as chained references.
-                //Both add more code complexity for not much performance gain as DTB is pretty small.
-                device_list[device_list_len] = device;
-                device_list_len +=1;
+
+            device_info *device = (device_info *)cur_loc;
+            cur_loc += sizeof(device_info);
+            device->is_leaf = TRUE;
+            device->name = prop_name;
+            device->value = &dtb[(byte_location + 12)];
+            device->value_len = prop_size;
+            device->next_sibling = NULL;
+
+            if (node_stack[node_depth] != NULL) {
+                node_stack[node_depth]->next_sibling = device;
 
             }
+            if (node_depth > 0 && node_stack[node_depth-1]->first_child == NULL) {
+                node_stack[node_depth-1]->first_child = device;
+            }
+
+            node_stack[node_depth] = device;
 
             const s32 padded_len = ((prop_size + 3) / 4) * 4;
             byte_location += padded_len + 8;
@@ -139,35 +147,25 @@ device_info_dump_response dtb_dump(u8 *output_location) {
         PANIC("INVALID_DEVICE_TREE_DUMP_LOCATION",0, 0, 0);
     }
 
-    //lacking the heap allocator which is needed ot actually append this data.
-    device_info *device_output = (device_info *)output_location;
-    for (s32 i=0; i<device_list_len; i++) {
-        device_output[i] = device_list[i];
-    }
-    //add parents
-    char **parents_location = (char **)&device_output[device_list_len];
-    s32 parent_offset = 0;
-    for (s32 i=0; i<device_list_len; i++) {
-        device_output[i].parent_nodes = parents_location + parent_offset;
-        for (s32 p=0; p < device_output[i].node_depth; p++) {
-            parents_location[parent_offset] = (char *)(device_parents[i][p]);
-            parent_offset++;
-        }
-    }
-
-    device_info_dump_response response;
-    response.end_location = (u8 *)&parents_location[parent_offset+1];
-    response.size = device_list_len;
-
-    uart_print_str("DTB devices found : ");
-    uart_println_s64((s64)device_list_len);
-
-
-    return response;
-    //return response;
-
+    response->end_loc = output_location;
+    response->root = node_stack[0];
 }
 
 u64 dtb_hart_cnt() {
     return 1;
+}
+
+device_info *device_tree_prefix_get_child(const device_info *device, char *prefix, u32 iter_num) {//not actually cheapest way this could be stored really
+    device_info *cur_device = device->first_child;
+    u32 iter_upto = 0;
+    while (cur_device != NULL) {
+        if (str_starts_with(cur_device->name, prefix)) {
+            if (iter_num == iter_upto) {
+                return cur_device;
+            }
+            iter_upto +=1;
+        }
+        cur_device = cur_device->next_sibling;
+    }
+    return NULL;
 }

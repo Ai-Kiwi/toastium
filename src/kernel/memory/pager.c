@@ -1,3 +1,4 @@
+#include "endian.h"
 #include "kernel/safety/panic.h"
 #include "kernel/devices/device_tree.h"
 #include "arch_device_tree/dtb.h"
@@ -6,6 +7,7 @@
 #include "include/def.h"
 #include "include/board.h"
 #include "kernel/memory/string.h"
+#include "types.h"
 #include "pager.h"
 
 //for pager bitmap 0 is free 1 is in use
@@ -18,20 +20,7 @@ extern u8 _kernel_end, _kernel_start;
 
 #define MAX_MEMORY_REGIONS 32
 
-static void fetch_node_type(const device_info *node, bool8 *memory_reg, bool8 *reserved) {
-    for (s32 n=0; n < node->node_depth; n++) {
-        const char *parent_node = node->parent_nodes[n];
-        if (str_starts_with(parent_node, "reserved-memory")) {
-            *reserved = TRUE;
-            *memory_reg = TRUE;
-            break;
-        }
 
-        if (str_starts_with(parent_node, "memory@")) {
-            *memory_reg = TRUE;
-        }
-    }
-}
 
 typedef struct {
     u64 start;
@@ -46,41 +35,45 @@ typedef struct {
 } memory_region_list;
 
 static void find_memory_regions(
-    const u32 device_list,
-    const device_info *device_info,
+    const device_info *device,
     memory_region_list *memory_regions
 ) {
-    for (s32 i=0; i< device_list; i++) {
-        if (!str_starts_with(device_info[i].name, "reg")) {
-            continue;
-        }
-        bool8 memory_reg = FALSE;
-        bool8 reserved = FALSE;
-        fetch_node_type(&device_info[i], &memory_reg, &reserved);
+    u32 mem_iter = 0;
+    while (TRUE) {
+        device_info *memory = device_tree_prefix_get_child(device, "memory",mem_iter);
+        if (memory == NULL) {break;}
 
-        if (!memory_reg) {
-            continue;
-        }
+        device_info *memory_reg = device_tree_prefix_get_child(memory, "reg",0);
+        if (memory_reg == NULL) {break;}
 
-        s32 *base_value = (s32 *)device_info[i].value;
-        u64 high = ((u64)dtb_read_int((u8 *)&base_value[0])) << 32;
-        u64 low = dtb_read_int((u8 *)&base_value[1]);
-        u64 location = high | low;
-        location += KERNEL_VMA_START;
+        u64 *value = (u64 *)memory_reg->value;
 
-        high = ((u64)dtb_read_int((u8 *)&base_value[2])) << 32;
-        low = dtb_read_int((u8 *)&base_value[3]);
-        u64 size = high | low;
+        memory_regions->free_regions[memory_regions->free_cnt].start = big_endian_u64_to_host(value[0]) + KERNEL_VMA_START;
+        memory_regions->free_regions[memory_regions->free_cnt].size = big_endian_u64_to_host(value[1]);
+        memory_regions->free_cnt++;
 
-        if (reserved) {
-            memory_regions->reserved_regions[memory_regions->reserved_cnt].start = location;
-            memory_regions->reserved_regions[memory_regions->reserved_cnt].size = size;
-            memory_regions->reserved_cnt++;
-        }else{
-            memory_regions->free_regions[memory_regions->free_cnt].start = location;
-            memory_regions->free_regions[memory_regions->free_cnt].size = size;
-            memory_regions->free_cnt++;
-        }
+        mem_iter+=1;
+    }
+
+    device_info *root_reserved_memory = device_tree_prefix_get_child(device, "reserved-memory",0);
+    if (root_reserved_memory == NULL) {PANIC("NO_RESERVED_MEMORY", 0x0, 0x0, 0x0)}
+
+    mem_iter = 0;
+    while (TRUE) {
+        device_info *reserved_memory = device_tree_prefix_get_child(root_reserved_memory, "",mem_iter);
+        if (reserved_memory == NULL) {break;}
+
+        device_info *memory_reg = device_tree_prefix_get_child(reserved_memory, "reg",0);
+        if (memory_reg == NULL) {break;}
+
+        u64 *value = (u64 *)memory_reg->value;
+        u64 *value_len = (u64 *)memory_reg->value_len;
+
+        memory_regions->reserved_regions[memory_regions->reserved_cnt].start = big_endian_u64_to_host(value[0]) + KERNEL_VMA_START;
+        memory_regions->reserved_regions[memory_regions->reserved_cnt].size = big_endian_u64_to_host(value[1]);
+        memory_regions->reserved_cnt++;
+
+        mem_iter+=1;
     }
 }
 
@@ -121,7 +114,6 @@ static void remove_reserved_memory_regions(memory_region_list *memory_regions) {
 
 void pager_init() {
     const device_info *device_info = device_tree_ptr();
-    const u32 device_list = device_tree_len();
     const s64 start_location = (s64)device_tree_end_ptr();
 
     u64 bitmap_location = (((s64)start_location+7)/8)*8; //round to byte boundary
@@ -136,7 +128,7 @@ void pager_init() {
     memory_locations.free_cnt = 0;
     memory_locations.reserved_cnt = 0;
 
-    find_memory_regions(device_list, device_info, &memory_locations);
+    find_memory_regions(device_info, &memory_locations);
 
     //remove reserved areas if they fit inside of a region, if outside trim
     uart_println_str("Removing reserved from memory region");
@@ -169,7 +161,7 @@ void pager_init() {
     }
 
 
-    if (memory_locations.free_cnt < 1) {
+    if (memory_locations.free_cnt == 0) {
         PANIC("NO_MEMORY_REGIONS_FOR_PAGER",memory_locations.free_cnt,memory_locations.reserved_cnt,0);
     }
 

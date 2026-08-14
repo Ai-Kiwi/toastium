@@ -56,6 +56,8 @@ Needs allocator combining (combine more then 1 entry into 64byte chunks)
  - hashmap entry
  - red black tree entry (will be when coded)
 
+hard fix for dtb address-cell and cell size as 64bit ("safely" panics)
+ - assumed in pager
 
 
 High priority.
