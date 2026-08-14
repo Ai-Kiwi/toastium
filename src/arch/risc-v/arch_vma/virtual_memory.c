@@ -382,7 +382,7 @@ static u64 vma_fetch_asid() {
 
 void vma_swap(process *process) {
     bool8 new_vma = FALSE;
-    if (process->vma_addr_space_id == U64_MAX) {
+    if (process->vma_addr_space_id == U64_MAX || max_asid == 0) {
         process->vma_addr_space_id = vma_fetch_asid();
         new_vma = TRUE;
     }
