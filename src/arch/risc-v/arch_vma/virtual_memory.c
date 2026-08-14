@@ -371,7 +371,11 @@ static void vma_reset_asid() {
 }
 
 static u64 vma_fetch_asid() {
-    if (current_highest_asid >= max_asid || max_asid == 0) {
+    if (max_asid == 0) {
+        vma_reset_asid();
+        return U64_MAX;
+    }
+    if (current_highest_asid >= max_asid) {
         vma_reset_asid();
         current_highest_asid = 0;
     }else{
