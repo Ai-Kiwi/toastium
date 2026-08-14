@@ -115,6 +115,7 @@ void dtb_dump(u8 *output_location, device_info_dump_response *response) {
             device->value = &dtb[(byte_location + 12)];
             device->value_len = prop_size;
             device->next_sibling = NULL;
+            device->first_child = NULL;
 
             if (node_stack[node_depth] != NULL) {
                 node_stack[node_depth]->next_sibling = device;
