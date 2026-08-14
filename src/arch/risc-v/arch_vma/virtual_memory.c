@@ -347,9 +347,6 @@ void vma_init() {
     asm volatile ("csrr %0, satp" : "=r"(max_asid));
     max_asid = (max_asid >> 44) & (BIT(16)-1);
     //set to max so first loop resets all
-    if (max_asid == 0){
-        PANIC("MAX_ASID_IS_ZERO", 0, 0, 0);
-    }
     current_highest_asid = max_asid;
 }
 
@@ -357,6 +354,10 @@ static void vma_reset_asid() {
     //loop over all processes, set asid to -1 meaning not set.
     current_highest_asid = 0;
     asm volatile ("sfence.vma zero, zero" ::: "memory");
+
+    if (max_asid == 0) {
+        return;
+    }
 
     list_iter iter;
     processes_iter(&iter);
@@ -370,7 +371,7 @@ static void vma_reset_asid() {
 }
 
 static u64 vma_fetch_asid() {
-    if (current_highest_asid >= max_asid) {
+    if (current_highest_asid >= max_asid || max_asid == 0) {
         vma_reset_asid();
         current_highest_asid = 0;
     }else{
