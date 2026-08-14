@@ -400,9 +400,14 @@ void vma_swap(process *process) {
     asm volatile ("fence.i");
     asm volatile ("csrw satp, %0" :: "r"(satp_value) : "memory");
     //might need fence here need to look more into it
-    if (new_vma) {
-        asm volatile ("sfence.vma zero, %0" :: "r"(process->vma_addr_space_id) : "memory");
+    if (max_asid != 0) {
+        if (new_vma) {
+            asm volatile ("sfence.vma zero, %0" :: "r"(process->vma_addr_space_id) : "memory");
+        }
+    }else {
+        asm volatile ("sfence.vma zero, zero" ::: "memory");
     }
+
 }
 
 void vma_enable_read_user() {
