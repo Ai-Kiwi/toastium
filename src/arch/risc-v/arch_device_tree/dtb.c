@@ -140,7 +140,7 @@ void dtb_dump(u8 *output_location, device_info_dump_response *response) {
         PANIC("INVALID_DEVICE_TREE_DUMP_LOCATION",0, 0, 0);
     }
 
-    response->end_loc = output_location;
+    response->end_loc = cur_loc;
     response->root = node_stack[0];
 }
 
