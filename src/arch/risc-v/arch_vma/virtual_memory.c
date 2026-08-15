@@ -290,11 +290,11 @@ static void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_ad
 }
 
 void vma_map_kernel(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
-    vma_replace_section((u64)proc->vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID, proc->vma_addr_space_id);
+    vma_replace_section((u64)proc->vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID | VMA_DIRTY | VMA_ACCESSED, proc->vma_addr_space_id);
 }
 
 void vma_map_user(process *proc, u64 virt_addr, u64 size, u64 phys_addr, u64 access_flags) {
-    vma_replace_section((u64)proc->vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID | VMA_USER, proc->vma_addr_space_id);
+    vma_replace_section((u64)proc->vma_table, virt_addr, size, phys_addr, access_flags | VMA_VALID | VMA_USER | VMA_DIRTY | VMA_ACCESSED, proc->vma_addr_space_id);
 }
 
 void vma_unmap(process *proc, u64 virt_addr, u64 size) {
@@ -345,6 +345,7 @@ void vma_create(process *proc) {
 void vma_init() {
     //find max ASID
     asm volatile ("csrr %0, satp" : "=r"(max_asid));
+    asm volatile ("sfence.vma zero, zero" ::: "memory");
     max_asid = (max_asid >> 44) & (BIT(16)-1);
     //set to max so first loop resets all
     current_highest_asid = max_asid;
