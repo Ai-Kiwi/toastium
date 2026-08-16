@@ -67,7 +67,18 @@ dentry *get_path(dentry *cwd, char *path) {
     while (TRUE) {
         char *next_slash = strchr(cur_char, '/');
 
-        strscpy(filename, cur_char, 257);//padded higher so it will always end in being null terminated
+        u64 name_size = (u64)next_slash - (u64)cur_char;
+
+        if (name_size > 256) {
+            //padded higher to get null terminated right
+            strscpy(filename, cur_char, 257);
+        }else{
+            strncpy(filename, cur_char, name_size);
+            filename[name_size] = 0x0;
+        }
+
+
+        //doesn't limit how large it copies. It will go past the /
 
         cur_node = get_child(cur_node, filename);
         if (cur_node == NULL) {
