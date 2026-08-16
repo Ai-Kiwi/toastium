@@ -16,6 +16,10 @@
 #include "virtual_memory.h"
 #include "board.h"
 
+//not 64 bytes aligned for multicore
+u64 max_asid;
+u64 current_highest_asid;
+
 static inline u64 create_leaf(u64 phys_addr, u64 arg_flags) {
     if (arg_flags == 0x0) {
         return 0;
@@ -120,6 +124,11 @@ static void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_ad
     const u64 ppn0_jmp_size = 4096;
     const u64 ppn1_jmp_size = 4096*512;
     const u64 ppn2_jmp_size = 4096*512*512;
+
+    u64 asid = vma_addr_asid;
+    if (max_asid == 0) {
+        asid = 0;
+    }
 
     bool8 is_kernelspace = virt_addr_start >= 0xffffffc000000000;
     u64 normal_virt_addr = virt_addr_start;
@@ -266,23 +275,23 @@ static void vma_replace_section(u64 table_root, u64 virt_addr_start, u64 virt_ad
     cur_offset = 0;
 
     for (u64 i = 0; i<pre_ppn0_cnt; i++) {
-        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(asid) : "memory");
         cur_offset += ppn0_jmp_size;
     }
     for (u64 i = 0; i<pre_ppn1_cnt; i++) {
-        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(asid) : "memory");
         cur_offset += ppn1_jmp_size;
     }
     for (u64 i = 0; i<ppn2_cnt; i++) {
-        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(asid) : "memory");
         cur_offset += ppn2_jmp_size;
     }
     for (u64 i = 0; i<post_ppn1_cnt; i++) {
-        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(asid) : "memory");
         cur_offset += ppn1_jmp_size;
     }
     for (u64 i = 0; i<post_ppn0_cnt; i++) {
-        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(vma_addr_asid) : "memory");
+        asm volatile ("sfence.vma %0, %1" :: "r"(virt_addr_start + cur_offset), "r"(asid) : "memory");
         cur_offset += ppn0_jmp_size;
     }
 
@@ -311,9 +320,7 @@ void vma_unmap(process *proc, u64 virt_addr, u64 size) {
 
 
 
-//not 64 bytes aligned for multicore
-u64 max_asid;
-u64 current_highest_asid;
+
 
 //need to sense if it is smaller then current and expand out
 //if it is same as current then compress
@@ -374,7 +381,7 @@ static void vma_reset_asid() {
 static u64 vma_fetch_asid() {
     if (max_asid == 0) {
         vma_reset_asid();
-        return U64_MAX;
+        return 0;
     }
     if (current_highest_asid >= max_asid) {
         vma_reset_asid();
