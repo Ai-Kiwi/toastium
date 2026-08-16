@@ -1,8 +1,8 @@
 #ifndef SCHEDULAR_H
 #define SCHEDULAR_H
 
-#include "types.h"
 #include "kernel/process/process.h"
+#include "types.h"
 
 void schedular_init(u64 hart_count);
 process *scheduler_next(u64 hart_id);

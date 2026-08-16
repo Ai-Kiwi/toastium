@@ -2,7 +2,6 @@
 #ifndef ARCH_CPU_H
 #define ARCH_CPU_H
 
-#include "kernel/trap/irq.h"
 #include "include/types.h"
 
 void freeze_system();

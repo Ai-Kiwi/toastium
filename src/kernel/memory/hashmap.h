@@ -5,7 +5,8 @@
 
 typedef struct {
     u64 *start;
-    u64 len; //length of data (stores as 4 bytes per entry so len/4 is byte len)
+    u64 len; // length of data (stores as 4 bytes per entry so len/4 is byte
+             // len)
     u64 (*hash_function)(u64);
     bool8 (*equal_function)(u64, u64);
 } hashmap;

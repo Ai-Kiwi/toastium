@@ -1,8 +1,6 @@
 #ifndef KERNEL_PROCESS_HANDLER_TRAP_H
 #define KERNEL_PROCESS_HANDLER_TRAP_H
 
-
-
 #include "types.h"
 typedef struct {
     u64 queued_response;

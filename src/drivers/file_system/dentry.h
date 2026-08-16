@@ -11,7 +11,7 @@ typedef struct {
 } dentry;
 
 typedef struct {
-    char name[256];
+    const char name[256];
     dentry *data_ptr;
 } dentry_entry;
 

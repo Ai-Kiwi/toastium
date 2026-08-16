@@ -1,11 +1,12 @@
-//for now timer just stops program running and calls schedular.
-//later will have a system that has list of timers and looks at most recent and uses that.
+// for now timer just stops program running and calls schedular.
+// later will have a system that has list of timers and looks at most recent and
+// uses that.
 
-#define BASE_CLOCK_SPEED 10000000 //clocks per second
+#define BASE_CLOCK_SPEED 10000000 // clocks per second
 
+#include "timer.h"
 #include "arch_cpu.h"
 #include "kernel/safety/panic.h"
-#include "timer.h"
 
 void timer_set_future_ms(u64 ms) {
     u64 response = timer_set(time_cnt() + ((BASE_CLOCK_SPEED / 1000) * ms));
@@ -14,18 +15,19 @@ void timer_set_future_ms(u64 ms) {
     }
 }
 
-//future outline
+// future outline
 //
-//void kernel_timer_schedule(kernel_timer *info, future_ms) {
-//    //add a timer to the list
-//}
+// void kernel_timer_schedule(kernel_timer *info, future_ms) {
+//     //add a timer to the list
+// }
 //
-//void kernel_timer_return_finished(kernel_timer *returned) {
-//    //finish the next timer on the list. Will be one that just set off, also removes it.
-//}
+// void kernel_timer_return_finished(kernel_timer *returned) {
+//     //finish the next timer on the list. Will be one that just set off, also
+//     removes it.
+// }
 //
-//void kernel_timer_resume() {
-//    //Sets for the next timer to go off.
-//}
-//also needs to be a way to change a timer. SO for example find the timer for next process
-//then change to be more in future if process ends early.
+// void kernel_timer_resume() {
+//     //Sets for the next timer to go off.
+// }
+// also needs to be a way to change a timer. SO for example find the timer for
+// next process then change to be more in future if process ends early.

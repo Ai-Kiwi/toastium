@@ -1,8 +1,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-
-
 typedef char s8;
 typedef short s16;
 typedef int s32;

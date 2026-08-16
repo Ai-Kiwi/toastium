@@ -9,7 +9,3 @@ void test_print_next();
 void tests_hang();
 
 #endif
-
-
-
-

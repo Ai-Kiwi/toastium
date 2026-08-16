@@ -1,11 +1,11 @@
 #ifndef INODE_H
 #define INODE_H
 
+#include "arch_trap/parser.h"
 #include "kernel/memory/hashmap.h"
 #include "kernel/memory/list.h"
-#include "types.h"
 #include "kernel/process/blocks.h"
-#include "arch_trap/parser.h"
+#include "types.h"
 
 typedef enum {
     INODE_FILE,
@@ -13,7 +13,6 @@ typedef enum {
     INODE_PIPE,
     INODE_FOLDER,
 } inode_type;
-
 
 typedef struct {
     u64 size;
@@ -47,12 +46,11 @@ typedef struct {
     };
 } inode;
 
-
 void inode_inc_link(inode *file);
 void inode_dec_link(inode *file);
 void inode_inc_open_cnt(inode *file);
 void inode_dec_open_cnt(inode *file);
 
-//file descriptor is actually he process accuses to a file
+// file descriptor is actually he process accuses to a file
 
 #endif

@@ -1,7 +1,7 @@
+#include "utils.h"
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
 #include "types.h"
-#include "utils.h"
 
 void asset_u64(u64 first_value, u64 second_value) {
     if (first_value != second_value) {
@@ -14,7 +14,7 @@ void test_print_step(char *text, u64 cur_step, u64 finish_step, u64 step_size) {
     u64 percent = ((cur_step) * 100) / finish_step;
     if (prev_percent == percent) {
         return;
-    } 
+    }
 
     uart_print_char('\r');
     uart_print_str(text);
@@ -22,14 +22,13 @@ void test_print_step(char *text, u64 cur_step, u64 finish_step, u64 step_size) {
     uart_print_str("%");
 }
 
-void test_print_next() {
-    uart_print_char('\n');
-}
+void test_print_next() { uart_print_char('\n'); }
 
 void tests_hang() {
-    #ifndef TEST_MODE
-        return;
-    #endif
+#ifndef TEST_MODE
+    return;
+#endif
 
-    while (TRUE) {}
+    while (TRUE) {
+    }
 }

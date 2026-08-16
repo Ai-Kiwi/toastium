@@ -1,6 +1,6 @@
+#include "kernel/safety/panic.h"
 #include "arch_cpu.h"
 #include "drivers/uart/uart.h"
-#include "kernel/safety/panic.h"
 #include "include/board.h"
 #include "panic.h"
 
@@ -25,7 +25,7 @@ const char *panic_messages[] = {
     "Fix for this issue can be found at 'cat /dev/urandom' (on linux computer). Just remove the boilerplate around it!",
     "Must have been a fault with qemu.",
     "Maybe the integer wasn't signed?",
-    "Panic has been handled gracefully by forcefully killing everything." ,
+    "Panic has been handled gracefully by forcefully killing everything.",
     "Was definitely userspace couldn't have been the kernel.",
     "The computer might be tired and needs more sleep.",
     "Might need to download more ram.",
@@ -38,7 +38,7 @@ const char *panic_messages[] = {
     "Maybe https://osdev.org talks about this.",
     "Could have trapped badly.",
     "Likely users fault.",
-    "Time to commit to a new commit." ,
+    "Time to commit to a new commit.",
     "Bad pointer.",
     "Null pointer reference.",
     "Something went wrong, not sure what though.",
@@ -66,34 +66,44 @@ const char *panic_messages[] = {
     "EMERGENCY MEETING!",
     "There is an imposter among us...",
     "The cake was a lie.",
-    "GAME OVER"
-};
+    "GAME OVER"};
 
 #define PANIC_MESSAGE_CNT (sizeof(panic_messages) / sizeof(panic_messages[0]))
 
-void kernel_panic(const char *file, const s64 file_line, const char *function, const char *message, s64 extra_value_1, s64 extra_value_2, s64 extra_value_3) {
+void kernel_panic(const char *file, const s64 file_line, const char *function,
+                  const char *message, s64 extra_value_1, s64 extra_value_2,
+                  s64 extra_value_3) {
     uart_println_str("");
-    uart_println_str(" _  ________ _____  _   _ ______ _        _____        _   _ _____ _____ ");
-    uart_println_str("| |/ /  ____|  __ \\| \\ | |  ____| |      |  __ \\ /\\   | \\ | |_   _/ ____|");
-    uart_println_str("| ' /| |__  | |__) |  \\| | |__  | |      | |__) /  \\  |  \\| | | || |     ");
-    uart_println_str("|  < |  __| |  _  /| . ` |  __| | |      |  ___/ /\\ \\ | . ` | | || |     ");
-    uart_println_str("| . \\| |____| | \\ \\| |\\  | |____| |____  | |  / ____ \\| |\\  |_| || |____ ");
-    uart_println_str("|_|\\_\\______|_|  \\_\\_| \\_|______|______| |_| /_/    \\_\\_| \\_|_____\\_____|");
+    uart_println_str(
+        " _  ________ _____  _   _ ______ _        _____        _   _ _____ _____ ");
+    uart_println_str(
+        "| |/ /  ____|  __ \\| \\ | |  ____| |      |  __ \\ /\\   | \\ | |_   _/ ____|");
+    uart_println_str(
+        "| ' /| |__  | |__) |  \\| | |__  | |      | |__) /  \\  |  \\| | | || |     ");
+    uart_println_str(
+        "|  < |  __| |  _  /| . ` |  __| | |      |  ___/ /\\ \\ | . ` | | || |     ");
+    uart_println_str(
+        "| . \\| |____| | \\ \\| |\\  | |____| |____  | |  / ____ \\| |\\  |_| || |____ ");
+    uart_println_str(
+        "|_|\\_\\______|_|  \\_\\_| \\_|______|______| |_| /_/    \\_\\_| \\_|_____\\_____|");
 
-    u64 random_value = time_cnt() + extra_value_1 + extra_value_2 + extra_value_3 + cycle_cnt();
+    u64 random_value = time_cnt() + extra_value_1 + extra_value_2 +
+                       extra_value_3 + cycle_cnt();
 
-    uart_println_str((char *)panic_messages[random_value % PANIC_MESSAGE_CNT] + (u64)&_kernel_start);
+    uart_println_str((char *)panic_messages[random_value % PANIC_MESSAGE_CNT] +
+                     (u64)&_kernel_start);
     uart_println_str("");
     uart_println_str("Here is some info relating to what went wrong...");
-    uart_println_str("-------------------------------------------------------------------------");
+    uart_println_str(
+        "-------------------------------------------------------------------------");
 
-    //file, function and line
+    // file, function and line
     uart_print_str("GIT VERSION HASH : ");
     uart_print_str(COMPILE_VERSION);
     uart_print_str(", COMPILE DATE : ");
     uart_println_str(__DATE__);
 
-    //file, function and line
+    // file, function and line
     uart_print_str("LOCATION : ");
     uart_print_str(file);
     uart_print_str(":");
@@ -102,11 +112,11 @@ void kernel_panic(const char *file, const s64 file_line, const char *function, c
     uart_print_str(function);
     uart_println_str(")");
 
-    //reason
+    // reason
     uart_print_str("REASON   : ");
     uart_println_str(message);
 
-    //prs32 out hex code for num
+    // prs32 out hex code for num
     uart_print_str("VALUE 1 : 0x");
     uart_print_u64_hex(extra_value_1);
     uart_print_str(" - (");

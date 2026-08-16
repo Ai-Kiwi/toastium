@@ -3,8 +3,12 @@
 
 #include "include/types.h"
 
-#define PANIC(message, extra_value_1, extra_value_2, extra_value_3) kernel_panic(__FILE__ ,__LINE__ , __FUNCTION__, message, extra_value_1, extra_value_2, extra_value_3);
+#define PANIC(message, extra_value_1, extra_value_2, extra_value_3)            \
+    kernel_panic(__FILE__, __LINE__, __FUNCTION__, message, extra_value_1,     \
+                 extra_value_2, extra_value_3);
 
-void kernel_panic(const char *file, const s64 file_line, const char *function, const char *message, s64 extra_value_1, s64 extra_value_2, s64 extra_value_3);
+void kernel_panic(const char *file, const s64 file_line, const char *function,
+                  const char *message, s64 extra_value_1, s64 extra_value_2,
+                  s64 extra_value_3);
 
 #endif

@@ -1,14 +1,9 @@
 #include "drivers/file_system/inode.h"
 #include "inode.h"
 
-static void cleanup_file() {
+static void cleanup_file() {}
 
-}
-
-
-void inode_inc_link(inode *file) {
-    file->link_refs += 1;
-}
+void inode_inc_link(inode *file) { file->link_refs += 1; }
 
 void inode_dec_link(inode *file) {
     file->link_refs -= 1;
@@ -17,9 +12,7 @@ void inode_dec_link(inode *file) {
     }
 }
 
-void inode_inc_open_cnt(inode *file) {
-    file->link_refs += 1;
-}
+void inode_inc_open_cnt(inode *file) { file->link_refs += 1; }
 
 void inode_dec_open_cnt(inode *file) {
     file->link_refs -= 1;

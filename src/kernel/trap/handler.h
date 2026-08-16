@@ -14,13 +14,13 @@ typedef enum {
 } trap_type;
 
 typedef enum {
-    //interrupts
+    // interrupts
     TRAP_SOFTWARE_INTERRUPT,
     TRAP_TIMER_INTERRUPT,
     TRAP_EXTERNAL_INTERRUPT,
-    //cntER_OVERFLOW_INTERRUPT, unhandled for now until needed
+    // cntER_OVERFLOW_INTERRUPT, unhandled for now until needed
 
-    //Exception
+    // Exception
     TRAP_ACCESS_MISALIGNED,
     TRAP_ACCESS_FAULT,
     TRAP_INSTRUCTION_INVALID,
@@ -34,7 +34,8 @@ typedef enum {
 } trap_code;
 
 typedef struct {
-    u64 process_ptr; //would like to be a process pointer type but causes circular import, will revisit
+    u64 process_ptr; // would like to be a process pointer type but causes
+                     // circular import, will revisit
     trap_type trap_type;
     privilege_mode privilege;
     trap_code code;
@@ -52,7 +53,6 @@ typedef enum {
     TRAP_RET_RESUME_PROCESS,
     TRAP_RET_HOLD_PROCESS
 } trap_response_type;
-
 
 u64 handle_sync_trap();
 void trap_change_process(trap_data *trap_data);

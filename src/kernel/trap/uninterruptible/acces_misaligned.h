@@ -5,6 +5,7 @@
 #include "kernel/trap/handler.h"
 #include "types.h"
 
-u64 uninterruptible_trap_access_misaligned(trap_data *trap, process_trap_state past_proc_state);
+u64 uninterruptible_trap_access_misaligned(trap_data *trap,
+                                           process_trap_state past_proc_state);
 
 #endif

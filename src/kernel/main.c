@@ -1,30 +1,27 @@
+#include "arch_device_tree/dtb.h"
+#include "arch_trap/handler.h"
 #include "arch_trap/irq.h"
+#include "arch_vma/virtual_memory.h"
 #include "drivers/uart/uart.h"
+#include "include/board.h"
+#include "include/endian.h"
 #include "kernel/devices/device_tree.h"
-#include "kernel/trap/irq.h"
-#include "kernel/trap/handler.h"
-#include "kernel/safety/panic.h"
+#include "kernel/memory/allocator.h"
+#include "kernel/memory/pager.h"
 #include "kernel/memory/stack.h"
+#include "kernel/process/context.h"
 #include "kernel/safety/safety.h"
+#include "kernel/timer/timer.h"
+#include "kernel/trap/irq.h"
 #include "process/process.h"
 #include "process/scheduler.h"
-#include "kernel/timer/timer.h"
-#include "arch_device_tree/dtb.h"
-#include "kernel/memory/pager.h"
-#include "include/board.h"
-#include "kernel/memory/allocator.h"
-#include "kernel/memory/radix.h"
-#include "include/endian.h"
-#include "arch_vma/virtual_memory.h"
-#include "kernel/process/context.h"
-#include "arch_trap/handler.h"
 
-#include "tests/pager.h"
-#include "tests/allocator.h"
-#include "tests/radix.h"
-#include "tests/hashmap.h"
-#include "tests/utils.h"
 #include "main.h"
+#include "tests/allocator.h"
+#include "tests/hashmap.h"
+#include "tests/pager.h"
+#include "tests/radix.h"
+#include "tests/utils.h"
 
 extern u8 _kernel_end, _kernel_start, _kernel_idle_process;
 
@@ -39,18 +36,19 @@ void kernel_main() {
 
     init_endian_conversion();
 
-    //setup stack
+    // setup stack
     uart_println_str("Initializing stack");
     stack_init();
     kernel_safety_test();
 
     uart_println_str("fetching core count");
     u64 hart_count = dtb_hart_cnt();
-    u64 dtb_location = ((u64)&_kernel_end) + (hart_count * HART_KERNEL_STACK_SIZE) + 8;
+    u64 dtb_location =
+        ((u64)&_kernel_end) + (hart_count * HART_KERNEL_STACK_SIZE) + 8;
 
-    //setup device tree
+    // setup device tree
     uart_println_str("Initializing device tree");
-    device_tree_init((u8*)dtb_location);
+    device_tree_init((u8 *)dtb_location);
 
     uart_println_str("Initializing pager");
     pager_init();
@@ -77,7 +75,7 @@ void kernel_main() {
     uart_println_str("Creating init process");
     create_init_process();
 
-    //enable irq and general interrupts
+    // enable irq and general interrupts
     uart_println_str("Initializing irq");
     irq_init();
     irq_enable_type(IRQ_TIMER);
@@ -86,10 +84,7 @@ void kernel_main() {
     irq_enable_type(IRQ_EXTERNAL);
 
     uart_println_str("Preforming schedular bootstrap");
-    context_bootstrap(0); //setup for running processes on core 0
-
-
-
+    context_bootstrap(0); // setup for running processes on core 0
 
     uart_println_str("Running final safety test");
     kernel_safety_test();
@@ -101,7 +96,6 @@ void kernel_main() {
 
     tests_hang();
 
-
-    //makes timer to kick start the os
+    // makes timer to kick start the os
     timer_set_future_ms(5);
 }

@@ -1,10 +1,10 @@
 #ifndef ARCH_TRAP_PARSER_H
 #define ARCH_TRAP_PARSER_H
 
-#include "kernel/trap/handler.h"
 #include "include/types.h"
-typedef struct { //each split into page so doesn't need to be 64 byte aligned
-    //register_0 is skipped as its always zero so not needed
+#include "kernel/trap/handler.h"
+typedef struct { // each split into page so doesn't need to be 64 byte aligned
+    // register_0 is skipped as its always zero so not needed
     u64 register_1;
     u64 register_2;
     u64 register_3;
@@ -36,10 +36,10 @@ typedef struct { //each split into page so doesn't need to be 64 byte aligned
     u64 register_29;
     u64 register_30;
     u64 register_31;
-    u64 scause; //What caused the trap. (Trap code)
-    u64 sepc; //What instruction caused trap (Instruction location)
-    u64 stval; //Extra trap info, e.g page fault says address in question
-    u64 sstatus; //Privilege level machine was in.
+    u64 scause;  // What caused the trap. (Trap code)
+    u64 sepc;    // What instruction caused trap (Instruction location)
+    u64 stval;   // Extra trap info, e.g page fault says address in question
+    u64 sstatus; // Privilege level machine was in.
     u64 process_ptr;
     u64 hart_id;
 } trapframe;

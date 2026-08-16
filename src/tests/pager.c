@@ -2,23 +2,22 @@
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
-#include "tests/utils.h"
 #include "kernel/safety/safety.h"
 #include "pager.h"
+#include "tests/utils.h"
 
 void test_pager() {
-    #ifndef TEST_MODE
-        return;
-    #endif
-
+#ifndef TEST_MODE
+    return;
+#endif
 
     uart_println_str("#TEST# - Testing Pager");
 
-    u64 value_cnt = 2000;//100000;
+    u64 value_cnt = 2000; // 100000;
 
     u64 first_loc = (u64)pg_alloc();
     u64 last_loc = first_loc;
-    for (u64 i=0; i<value_cnt; i++) {
+    for (u64 i = 0; i < value_cnt; i++) {
         test_print_step("(1/3) Creating pager data... ", i, value_cnt, 1);
 
         u64 loc = (u64)pg_alloc();
@@ -32,7 +31,7 @@ void test_pager() {
         }
 
         u64 *location_ptr = (u64 *)loc;
-        *location_ptr = (i*312)+86;
+        *location_ptr = (i * 312) + 86;
     }
 
     kernel_safety_test();
@@ -42,11 +41,12 @@ void test_pager() {
     pg_free(first_loc);
 
     test_print_next();
-    for (u64 i=0; i<value_cnt ; i++) {
-        u64 *loc = (u64 *)(first_loc+((i+1)*KERNEL_PAGE_SIZE));
-        test_print_step("(3/3) Releasing and confirming pager data... ", i, value_cnt, 1);
+    for (u64 i = 0; i < value_cnt; i++) {
+        u64 *loc = (u64 *)(first_loc + ((i + 1) * KERNEL_PAGE_SIZE));
+        test_print_step("(3/3) Releasing and confirming pager data... ", i,
+                        value_cnt, 1);
         pg_free((u64)loc);
-        asset_u64(*(u64 *)(loc), (i*312)+86);
+        asset_u64(*(u64 *)(loc), (i * 312) + 86);
     }
 
     kernel_safety_test();
