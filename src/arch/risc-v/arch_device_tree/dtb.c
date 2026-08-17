@@ -96,8 +96,8 @@ void dtb_dump(u8 *output_location, device_info_dump_response *response) {
             byte_location = byte_location + offset;
             break;
         case 0x00000002: // node end
-            node_stack[node_depth + 1] =
-                NULL; // removes deeper node. Idea being for finding sibling
+            // removes current nodes for siblings
+            node_stack[node_depth] = NULL;
             node_depth -= 1;
             if (node_depth < 0) {
                 PANIC("DTB_STACK_DEPTH_LESS_ZERO", byte_location, 0, 0);
