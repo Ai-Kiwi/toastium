@@ -1,5 +1,6 @@
 #include "kernel/devices/driver_manager.h"
 #include "drivers/uart/uart.h"
+#include "kernel/devices/device_tree.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/safety/panic.h"
 #include "types.h"
@@ -61,4 +62,6 @@ void init_drivers() {
     root_entry = NULL;
 
     // loop over all possible devices and append
+
+    // device_tree_print();
 }
