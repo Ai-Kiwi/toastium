@@ -20,5 +20,6 @@ typedef struct {
 void device_tree_init(u8 *kernel_end);
 device_info *device_tree_ptr();
 u8 *device_tree_end_ptr();
+void device_tree_print();
 
 #endif

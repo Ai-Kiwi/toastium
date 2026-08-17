@@ -56,3 +56,46 @@ u8 *device_tree_end_ptr() {
     }
     return kernel_device_end;
 }
+
+static void device_tree_print_node(device_info *device, u64 cur_depth) {
+    for (u64 i = 0; i < cur_depth; i++) {
+        uart_print_str(" | ");
+    }
+    if (device->is_leaf == TRUE) {
+        uart_print_str("- ");
+    } else {
+        uart_print_str("> ");
+    }
+    uart_println_str(device->name);
+
+    if (device->is_leaf == TRUE) {
+        for (u64 i = 0; i < cur_depth; i++) {
+            uart_print_str(" | ");
+        }
+        uart_print_str("  ^ len : ");
+        uart_println_u64(device->value_len);
+
+        for (u64 i = 0; i < cur_depth; i++) {
+            uart_print_str(" | ");
+        }
+        uart_print_str("  ^ value : ");
+        for (u64 i = 0; i < device->value_len; i++) {
+            uart_print_u8_hex(device->value[i]);
+        }
+        uart_println_str("");
+    }
+
+    if (device->first_child != NULL) {
+        device_tree_print_node((device_info *)device->first_child,
+                               cur_depth + 1);
+    }
+
+    if (device->next_sibling != NULL) {
+        device_tree_print_node((device_info *)device->next_sibling, cur_depth);
+    }
+}
+
+void device_tree_print() {
+    device_info *root_device = device_tree_ptr();
+    device_tree_print_node(root_device_node, 0);
+}
