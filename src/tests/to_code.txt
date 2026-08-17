@@ -1,0 +1,33 @@
+//device driver manager
+
+temp_test_add(13);
+temp_test_add(12);
+temp_test_add(43);
+temp_test_add(32);
+temp_test_add(1763);
+temp_test_add(327);
+temp_test_add(75);
+temp_test_add(1);
+temp_test_add(43);
+temp_test_add(23);
+temp_test_add(347);
+temp_test_add(325);
+temp_test_add(73);
+
+driver_boot_stage_entry *driver_running = NULL;
+
+uart_println_str("text");
+
+while (TRUE) {
+    driver_running = fetch_driver(100);
+    uart_println_u64(driver_running->stage);
+}
+
+void temp_test_add(u64 value) {
+    driver_boot_stage_entry *temp_entry =
+        (driver_boot_stage_entry *)mem_alloc(sizeof(driver_boot_stage_entry));
+    temp_entry->stage = value;
+    temp_entry->next_entry = NULL;
+
+    append_driver(temp_entry);
+}

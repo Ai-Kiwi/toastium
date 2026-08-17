@@ -35,6 +35,7 @@ needs to use red black tree
  - children of file descriptor (currently list)
  - scheduler (currently list with fifo)
  - timer (currently nothing) 
+ - driver manager for loading drivers. Uses linked list right now.
 
 hashmap
  - hashmap has 64byte per item overhead which is not needed (for cache coherency). Possible fix is todo sub lists to fix this.
