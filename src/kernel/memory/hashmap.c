@@ -70,13 +70,11 @@ static bool8 builtin_num_equal(u64 first_key, u64 second_keys) {
 
 static u64 builtin_word_hash(u64 key) {
     u8 *key_ptr = (u8 *)key;
-    u64 hash = 0;
+    u64 hash = 0x3E4C3161C5E6354AULL;
 
-    u64 char_value = 256;
     for (u64 i = 0; key_ptr[i] != '\0'; i++) {
-        hash += key_ptr[i] * char_value;
-
-        char_value = char_value * char_value;
+        hash ^= key_ptr[i];
+        hash *= 0x100000001b3ULL;
     }
     return hash;
 }
