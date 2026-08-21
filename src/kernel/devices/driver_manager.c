@@ -24,10 +24,6 @@ void append_driver(driver_boot_stage_entry *new_entry) {
     driver_boot_stage_entry *cur_entry = root_entry;
     u64 loop_num = 0;
     while (TRUE) {
-
-        if (loop_num > 15) {
-            PANIC("E", 0x0, 0x0, 0x0);
-        }
         driver_boot_stage_entry *next_entry = cur_entry->next_entry;
         if (next_entry == NULL) {
             cur_entry->next_entry = new_entry;
