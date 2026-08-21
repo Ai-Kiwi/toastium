@@ -370,15 +370,15 @@ void vma_unmap(process *proc, u64 virt_addr, u64 size) {
 // rules. if that one section is all the same rules then that page can be wiped
 // and replaced with a higher level one.
 
-// one of the reserved flag will be a special bit. It basiclly tells that this
+// one of the reserved flag will be a special bit. It basically tells that this
 // part can't be compressed. It would be used for files and what not
 
 void vma_create(process *proc) {
-    // likely todo will be vma generic enough so that it isnt just processes,
+    // likely todo will be vma generic enough so that it isn't just processes,
     // will keep this new generic as not shared. Then after that will use that
     // to create the inital kernel level. for kernel level it will go over a
     // premade list of ranges and setup all of those. this data made will then
-    // be cached and just straght copied whever a new process is loaded in,
+    // be cached and just straight copied wherever a new process is loaded in,
     // slight changes will be made from there tho such as setting up per process
     // kernel stack right at the end. Or assigning the process trapframe
     u64 new_page_addr = pg_alloc();
