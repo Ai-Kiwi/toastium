@@ -20,6 +20,45 @@ void memcpy(u64 dst, u64 src, u64 size) {
     }
 }
 
+s32 memcmp(u64 size, const char *src_a, const char *src_b) {
+    u64 i = 0;
+    const u64 *u64_src_a = (u64 *)src_a;
+    const u64 *u64_src_b = (u64 *)src_b;
+    while (size - i >= 4) {
+        if (u64_src_a[i / 4] != u64_src_b[i / 4]) {
+            return 1;
+        }
+
+        i = i + 4;
+    }
+
+    while (size - i > 0) {
+        if (src_a[i] != src_b[i]) {
+            return 1;
+        }
+        i = i + 1;
+    }
+
+    return 0;
+}
+
+s32 strcmp(char *src_a, const char *src_b) {
+    u64 i = 0;
+    while (TRUE) {
+        if (src_a[i] == 0x0 || src_b[i] == 0x0) {
+            if (src_a[i] != src_b[i]) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        if (src_a[i] != src_b[i]) {
+            return 1;
+        }
+        i++;
+    }
+}
+
 void strncpy(char *dest, const char *src, unsigned long size) {
     unsigned char mask = 255;
     for (unsigned long i = 0; i < size; i++) {
