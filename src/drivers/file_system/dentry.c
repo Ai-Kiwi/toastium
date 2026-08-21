@@ -9,7 +9,14 @@
 
 dentry root_folder;
 
-static void cleanup_dentry(dentry *item) { mem_free((u64)item); }
+static void cleanup_dentry(dentry *item) {
+    if (item->parent != NULL) {
+        dentry *parent = (dentry *)item->parent;
+        parent->link_refs -= 1;
+    }
+    mem_free((u64)item);
+    // needs to loop over all children removing them all
+}
 
 void dentry_inc_link(dentry *entry) { entry->link_refs += 1; }
 
@@ -29,16 +36,22 @@ void dentry_dec_open_cnt(dentry *entry) {
     }
 }
 
-static dentry *get_child(dentry *child, char *child_name) {
+static dentry *get_child(dentry *item, char *child_name) {
+
+    if (strcmp(child_name, ".")) {
+        return item;
+    }
+    if (strcmp(child_name, "..")) {
+        return item->parent;
+    }
 
     list_iter iter;
-    list_iter_create(&child->children, &iter);
+    list_iter_create(&item->children, &iter);
 
     while (iter.cur_upto < iter.cur_list->item_cnt) {
-        dentry_list_entry *item = (dentry_list_entry *)list_iter_next(&iter);
-        if (str_starts_with((const char *)&item->child_name, child_name) ==
-            TRUE) {
-            return item->entry;
+        dentry *child = *(dentry **)list_iter_next(&iter);
+        if (strcmp((const char *)&child->name, child_name) == TRUE) {
+            return child;
         }
     }
 
@@ -51,10 +64,9 @@ static void remove_child(dentry *child, char *child_name) {
     list_iter_create(&child->children, &iter);
 
     while (iter.cur_upto < iter.cur_list->item_cnt) {
-        dentry_list_entry *item = (dentry_list_entry *)list_iter_next(&iter);
-        if (str_starts_with((const char *)&item->child_name, child_name) ==
-            TRUE) {
-            dentry_dec_link(item->entry);
+        dentry *child = *(dentry **)list_iter_next(&iter);
+        if (strcmp((const char *)&child->name, child_name) == TRUE) {
+            dentry_dec_link(child);
             list_remove(&child->children, iter.cur_upto);
             return;
         }
@@ -63,12 +75,9 @@ static void remove_child(dentry *child, char *child_name) {
     PANIC("DENTRY_FAILED_TO_REMOVE_CHILD", (u64)child, 0, 0);
 }
 
-static void insert_child(dentry *folder, dentry *dentry_item,
-                         const char *name) {
-    dentry_list_entry item;
-    item.entry = dentry_item;
+static void insert_child(dentry *folder, dentry *dentry_item) {
+    u64 item = (u64)dentry_item;
     dentry_inc_link(dentry_item);
-    strscpy((char *)&item.child_name, name, 256);
 
     list_append(&folder->children, (u64)&item);
 
@@ -111,4 +120,24 @@ dentry *get_path(dentry *cwd, char *path) {
     }
 
     return cur_node;
+}
+
+dentry *create_folder(dentry *parent, const char *name) {
+    parent->link_refs += 1;
+
+    dentry *folder = (dentry *)mem_alloc(sizeof(dentry));
+    folder->link_refs = 0;
+    folder->open_refs = 0;
+
+    strscpy(folder->name, name, 256);
+
+    insert_child(parent, folder);
+
+    return folder;
+}
+
+void init_dentry() {
+    dentry *item = (dentry *)mem_alloc(sizeof(dentry));
+    item->name[0] = 0x0;
+    item->parent = NULL;
 }
