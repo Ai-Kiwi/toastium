@@ -5,7 +5,7 @@
 #include "kernel/memory/list.h"
 
 typedef struct {
-    char name[256];
+    const char name[256];
     inode *inode;
     list children;
     u32 open_refs; // processes have open folder
@@ -13,10 +13,15 @@ typedef struct {
 } dentry;
 
 typedef struct {
-    const char name[256];
-    dentry *data_ptr;
-} dentry_entry;
+    const char child_name[256];
+    dentry *entry;
+} dentry_list_entry;
 
 dentry *get_path(dentry *cwd, char *path);
+
+void dentry_inc_link(dentry *entry);
+void dentry_dec_link(dentry *entry);
+void dentry_inc_open_cnt(dentry *entry);
+void dentry_dec_open_cnt(dentry *entry);
 
 #endif
