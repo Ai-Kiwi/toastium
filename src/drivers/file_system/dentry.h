@@ -8,6 +8,8 @@ typedef struct {
     char name[256];
     inode *inode;
     list children;
+    u32 open_refs; // processes have open folder
+    u32 link_refs; // folders are linking to this folder
 } dentry;
 
 typedef struct {

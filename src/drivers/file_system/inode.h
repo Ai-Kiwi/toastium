@@ -35,8 +35,8 @@ typedef struct {
 } inode_folder;
 
 typedef struct {
-    u32 open_refs;
-    u32 link_refs;
+    u32 open_refs; // how many processes have it open
+    u32 link_refs; // how many dentry on disk are linking to it
     inode_type type;
     union {
         inode_file file_data;
