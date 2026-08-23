@@ -105,8 +105,8 @@ dentry *get_path(dentry *cwd, char *path) {
             // padded higher to get null terminated right
             strscpy(filename, cur_char, 257);
         } else {
-            strncpy(filename, cur_char, name_size);
-            filename[name_size] = 0x0;
+            // name is to large, decline
+            return NULL;
         }
 
         // doesn't limit how large it copies. It will go past the /
