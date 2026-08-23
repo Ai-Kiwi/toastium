@@ -4,6 +4,7 @@
 #include "kernel/trap/handler.h"
 #include "types.h"
 #define SYSCALL_UART_PRINT 1
+#define SYSCALL_IDLE_HANG 3
 
 u64 syscall_sync_handler(trap_data *trap);
 u64 syscall_async_handler(trap_data *trap);

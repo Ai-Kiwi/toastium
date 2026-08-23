@@ -1,4 +1,5 @@
 #include "kernel/trap/handler.h"
+#include "arch_cpu.h"
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "handler.h"
@@ -33,6 +34,8 @@ u64 syscall_async_handler(trap_data *trap) {
     case SYSCALL_UART_PRINT:
         return syscall_uart(trap, TRUE);
         break;
+    case SYSCALL_IDLE_HANG:
+        idle_loop_system();
     default:
         uart_println_str("process error: unknown syscall ");
         uart_print_str("process ID: ");

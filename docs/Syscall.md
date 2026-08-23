@@ -6,5 +6,5 @@
 | uart_print_char | Prints out a char to uart  | 1 | 0 | Char | | |
 | uart_print_str | Prints out a char to uart  | 1 | 1 | Ram Location | String Size | |
 | exit | Stops program | 2 | | | | |
-
+| idle_hang | Only should be used by idle process, hangs process but doesn't kill | 3 | | | | |
 

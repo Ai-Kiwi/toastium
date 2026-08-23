@@ -9,6 +9,12 @@ void freeze_system() {
     }
 }
 
+void idle_loop_system() {
+    while (1) {
+        asm volatile("wfi");
+    }
+}
+
 u64 cycle_cnt() {
     u64 cycle;
     asm volatile("csrr %0, cycle" : "=r"(cycle));
