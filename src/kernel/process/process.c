@@ -58,6 +58,7 @@ static process *new_blank_process() {
     new_process.phys_kernel_stack_addr[2] = pg_alloc();
     new_process.phys_kernel_stack_addr[3] = pg_alloc();
     new_process.reading_userspace = FALSE;
+    new_process.exe_file = NULL;
 
     vma_create(&new_process);
 
