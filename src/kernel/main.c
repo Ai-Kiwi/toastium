@@ -7,6 +7,7 @@
 #include "include/endian.h"
 #include "kernel/devices/device_tree.h"
 #include "kernel/devices/driver_manager.h"
+#include "kernel/file_system/dentry.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/memory/pager.h"
 #include "kernel/memory/stack.h"
@@ -56,6 +57,9 @@ void kernel_main() {
 
     uart_println_str("Initializing allocator");
     allocator_init();
+
+    uart_println_str("Initializing VFS");
+    init_dentry();
 
     init_drivers();
 

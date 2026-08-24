@@ -1,7 +1,9 @@
 
 #include "file_descriptor.h"
 #include "arch_trap/irq.h"
-#include "drivers/file_system/inode.h"
+#include "drivers/uart/uart.h"
+#include "inode.h"
+#include "kernel/file_system/dentry.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/memory/radix.h"
 #include "kernel/safety/panic.h"
@@ -11,6 +13,10 @@
 file_descriptor *open_file_descriptor(inode *file) {
     inode_inc_open_cnt(file);
 
+    if (file == NULL) {
+        return NULL;
+    }
+
     file_descriptor *desc =
         (file_descriptor *)mem_alloc(sizeof(file_descriptor));
 
@@ -19,17 +25,18 @@ file_descriptor *open_file_descriptor(inode *file) {
     desc->seek_pos = 0;
     desc->file = file;
 
-    return NULL;
+    return desc;
 }
 
 void release_file_descriptor(file_descriptor *desc) {
+    irq_disable();
     if (desc->virt_mapped_loc != 0) {
         PANIC("RELEASE_MAPPED_FILE_DESCRIPTOR_NOT_SUPPORTED", 0, 0, 0);
     }
+    inode_dec_open_cnt(desc->file);
 
     mem_free((u64)desc);
-
-    inode_dec_open_cnt(desc->file);
+    irq_enable();
 }
 
 static inline void increase_offset(u64 count, u64 *offset, u64 *size_left,
@@ -42,7 +49,8 @@ static inline void increase_offset(u64 count, u64 *offset, u64 *size_left,
 static inline u8 *find_page_start(u64 *offset, inode *file) {
     u64 page_num = *offset / 4096;
 
-    u64 leading_zeros = __builtin_clzl(*offset);
+    // 0 indexed
+    u64 leading_zeros = __builtin_clzl(page_num + 1);
     u64 furthest_one = (63 - leading_zeros);
     u64 radix_level = furthest_one / INODE_FILE_RADIX_LEVEL_DEPTH;
 
@@ -50,7 +58,7 @@ static inline u8 *find_page_start(u64 *offset, inode *file) {
     while (page_location == NULL) {
         page_location =
             (u8 *)radix_get(file->file_data.radix_roots[radix_level], page_num,
-                            radix_level, INODE_FILE_RADIX_LEVEL_DEPTH);
+                            radix_level + 1, INODE_FILE_RADIX_LEVEL_DEPTH);
         if (page_location == NULL) {
             // for now panic, will later load from disk with async.
             PANIC("READ/WRITE_OUT_OF_BOUNDS_FILE_DESC_UNIMPLENTED", 0, 0, 0);
@@ -59,12 +67,7 @@ static inline u8 *find_page_start(u64 *offset, inode *file) {
     return page_location;
 }
 
-u64 int_file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
-    desc;
-    //
-}
-
-u64 int_file_descriptor_write(file_descriptor *desc, u8 *dest, u64 size) {
+u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
     irq_disable();
     inode *file = desc->file;
 
@@ -79,11 +82,14 @@ u64 int_file_descriptor_write(file_descriptor *desc, u8 *dest, u64 size) {
         PANIC("ATTEMPT WRITE TO FOLDER", 0, 0, 0);
         break;
     case INODE_FILE:
-
-        u64 write_size = MIN(size, file->file_data.size - desc->seek_pos);
-        u64 size_left = write_size;
+        u64 read_size = MIN(size, file->file_data.size - desc->seek_pos);
+        u64 size_left = read_size;
         u64 offset = desc->seek_pos;
         u64 dest_offset = 0;
+
+        if (read_size == 0) {
+            return 0;
+        }
 
         while (size_left > 0) {
             u8 *page_start = find_page_start(&offset, file);
@@ -100,8 +106,79 @@ u64 int_file_descriptor_write(file_descriptor *desc, u8 *dest, u64 size) {
 
         desc->seek_pos = offset;
 
-        return write_size;
+        return read_size;
+    default:
+        PANIC("UNKNOWN_READ_FILE_TYPE", file->type, 0, 0);
+        break;
     }
     irq_enable();
     return 0;
+}
+
+u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size) {
+    irq_disable();
+    inode *file = desc->file;
+
+    switch (file->type) {
+    case INODE_SOCKET:
+        PANIC("ATTEMPT WRITE TO socket", 0, 0, 0);
+        break;
+    case INODE_PIPE:
+        PANIC("ATTEMPT WRITE TO PIPE", 0, 0, 0);
+        break;
+    case INODE_FOLDER:
+        PANIC("ATTEMPT WRITE TO FOLDER", 0, 0, 0);
+        break;
+    case INODE_FILE:
+
+        u64 size_left = size;
+        u64 offset = desc->seek_pos;
+        u64 src_offset = 0;
+
+        while (size_left > 0) {
+            u8 *page_start = find_page_start(&offset, file);
+
+            u64 page_end = MIN(size_left, 4096);
+            page_end = page_end - (offset % 4096);
+
+            for (u64 i = 0; i < page_end; i++) {
+                page_start[offset % 4096] = src[src_offset];
+
+                increase_offset(1, &offset, &size_left, &src_offset);
+            }
+        }
+
+        desc->seek_pos = offset;
+        file->file_data.size = MAX(file->file_data.size, size + desc->seek_pos);
+
+        return size;
+    default:
+        PANIC("UNKNOWN_WRITE_FILE_TYPE", file->type, 0, 0);
+        break;
+    }
+    irq_enable();
+    return 0;
+}
+
+file_descriptor *file_open_path(dentry *cwd, char *path) {
+    irq_disable();
+    dentry *dentry = dentry_get_path(cwd, path);
+
+    if (dentry == NULL) {
+        return NULL;
+    }
+    if (dentry->type != DENTRY_OTHER) {
+        return NULL;
+    }
+
+    inode *file = dentry->inode;
+
+    if (file == NULL) {
+        return NULL;
+    }
+
+    file_descriptor *file_desc = open_file_descriptor(file);
+
+    irq_enable();
+    return file_desc;
 }

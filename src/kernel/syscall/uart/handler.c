@@ -3,6 +3,8 @@
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "handler.h"
+#include "kernel/file_system/dentry.h"
+#include "kernel/file_system/file_descriptor.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/process/process.h"
 #include "kernel/trap/user_accses.h"
@@ -38,6 +40,21 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
         irq_disable();
         mem_free((u64)location);
         irq_enable();
+
+        // temp code to print from file
+
+        // need releasing too
+        file_descriptor *file =
+            file_open_path(root_dentry_folder, "/example.txt");
+
+        u8 data_buf[256];
+
+        u64 read_size = file_descriptor_read(file, (u8 *)data_buf, 256);
+
+        uart_println_str((char *)data_buf);
+
+        release_file_descriptor(file);
+
         return 0;
     default:
         return 1; // bad syscall

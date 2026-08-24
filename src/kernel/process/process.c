@@ -5,6 +5,7 @@
 #include "board.h"
 #include "def.h"
 #include "drivers/uart/uart.h"
+#include "kernel/file_system/dentry.h"
 #include "kernel/memory/allocator.h"
 #include "kernel/memory/hashmap.h"
 #include "kernel/memory/list.h"
@@ -59,6 +60,7 @@ static process *new_blank_process() {
     new_process.phys_kernel_stack_addr[3] = pg_alloc();
     new_process.reading_userspace = FALSE;
     new_process.exe_file = NULL;
+    new_process.working_dir = root_dentry_folder;
 
     vma_create(&new_process);
 

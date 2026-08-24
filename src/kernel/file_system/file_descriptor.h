@@ -1,7 +1,8 @@
 #ifndef FILE_DESC_H
 #define FILE_DESC_H
 
-#include "drivers/file_system/inode.h"
+#include "inode.h"
+#include "kernel/file_system/dentry.h"
 
 #define FILE_DESC_READ (1 << 0)
 #define FILE_DESC_WRITE (1 << 1)
@@ -15,10 +16,13 @@ typedef struct {
 } file_descriptor;
 
 file_descriptor *open_file_descriptor(inode *file);
+// interuptable function. Must be run with interrupt safe code
 void release_file_descriptor(file_descriptor *desc);
 // interuptable function. Must be run with interrupt safe code
-u64 int_file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size);
+u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size);
 // interuptable function. Must be run with interrupt safe code
-u64 int_file_descriptor_write(file_descriptor *desc, u8 *dest, u64 size);
+u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size);
+// interuptable function. Must be run with interrupt safe code
+file_descriptor *file_open_path(dentry *cwd, char *path);
 
 #endif

@@ -2,7 +2,8 @@
 #define PROCESS_H
 
 #include "arch_trap/parser.h"
-#include "drivers/file_system/file_descriptor.h"
+#include "kernel/file_system/dentry.h"
+#include "kernel/file_system/file_descriptor.h"
 #include "kernel/memory/hashmap.h"
 #include "kernel/memory/list.h"
 #include "kernel/process/blocks.h"
@@ -46,6 +47,7 @@ typedef struct {
     u16 runing_hart_id;
     bool8 running;
     file_descriptor *exe_file;
+    dentry *working_dir;
     process_type process_type;
     u64 phys_kernel_stack_addr[4]; // 12kb per process kernel stack
     u64 list_idx;

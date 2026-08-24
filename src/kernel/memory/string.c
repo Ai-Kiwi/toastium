@@ -45,15 +45,16 @@ s32 memcmp(u64 size, const char *src_a, const char *src_b) {
 s32 strcmp(const char *src_a, const char *src_b) {
     u64 i = 0;
     while (TRUE) {
-        if (src_a[i] == 0x0 || src_b[i] == 0x0) {
+        if (src_a[i] == 0x0 || src_b[i] == 0x0 || src_a[i] != src_b[i]) {
             if (src_a[i] != src_b[i]) {
-                return 1;
+                if (src_a[i] > src_b[i]) {
+                    return 1;
+                } else {
+                    return -1;
+                }
             } else {
                 return 0;
             }
-        }
-        if (src_a[i] != src_b[i]) {
-            return 1;
         }
         i++;
     }
@@ -99,4 +100,12 @@ char *strchr(const char *str, char c) {
     }
 
     return 0;
+}
+
+u64 strlen(const char *str) {
+    u64 len = 0;
+    for (const char *i = str; *i != 0x0; i++) {
+        len++;
+    }
+    return len;
 }

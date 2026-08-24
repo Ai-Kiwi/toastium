@@ -57,6 +57,7 @@ void inode_dec_open_cnt(inode *file);
 // Not for use after system started.
 // Will add rest of data for last page. (rounds up page size)
 void inode_file_debug_inject_data(u64 *src, u64 size, inode *file);
+inode *create_blank_inode_file();
 
 // file descriptor is actually he process accuses to a file
 
