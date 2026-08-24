@@ -47,11 +47,22 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
         file_descriptor *file =
             file_open_path(root_dentry_folder, "/example.txt");
 
-        u8 data_buf[256];
+        file_descriptor_seek(file, 50);
 
-        u64 read_size = file_descriptor_read(file, (u8 *)data_buf, 256);
+        char write_data[] = "[INSERT]";
 
-        uart_println_str((char *)data_buf);
+        file_descriptor_write(file, write_data, 8);
+
+        uart_println_str("now printing char");
+
+        file_descriptor_seek(file, 0);
+
+        u8 data_buf[128];
+        u64 read_size = file_descriptor_read(file, (u8 *)data_buf, 128);
+
+        for (u64 i = 0; i < 128; i++) {
+            uart_print_char(data_buf[i]);
+        }
 
         release_file_descriptor(file);
 

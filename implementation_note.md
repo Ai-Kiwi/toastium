@@ -60,6 +60,8 @@ Needs allocator combining (combine more then 1 entry into 64byte chunks)
 hard fix for dtb address-cell and cell size as 64bit ("safely" panics)
  - assumed in pager
 
+VFS
+ - read and write are byte by byte not 64bits at a time
 
 High priority.
  - There is a bug with allocator todo with not reusing sections. Issue appears in 

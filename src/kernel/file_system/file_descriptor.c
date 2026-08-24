@@ -5,6 +5,7 @@
 #include "inode.h"
 #include "kernel/file_system/dentry.h"
 #include "kernel/memory/allocator.h"
+#include "kernel/memory/pager.h"
 #include "kernel/memory/radix.h"
 #include "kernel/safety/panic.h"
 #include "types.h"
@@ -60,8 +61,18 @@ static inline u8 *find_page_start(u64 *offset, inode *file) {
             (u8 *)radix_get(file->file_data.radix_roots[radix_level], page_num,
                             radix_level + 1, INODE_FILE_RADIX_LEVEL_DEPTH);
         if (page_location == NULL) {
-            // for now panic, will later load from disk with async.
-            PANIC("READ/WRITE_OUT_OF_BOUNDS_FILE_DESC_UNIMPLENTED", 0, 0, 0);
+            // data is past limit, new data so doesn't need to be loaded
+            if (*offset >= file->file_data.size) {
+                page_location = (u8 *)pg_alloc();
+
+                radix_insert(file->file_data.radix_roots[radix_level], page_num,
+                             (u64)page_location, radix_level + 1,
+                             INODE_FILE_RADIX_LEVEL_DEPTH);
+            } else {
+                // for now panic, will later load from disk with async.
+                PANIC("READ/WRITE_OUT_OF_BOUNDS_FILE_DESC_UNIMPLENTED", 0, 0,
+                      0);
+            }
         }
     }
     return page_location;
@@ -85,6 +96,9 @@ u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
         u64 read_size = MIN(size, file->file_data.size - desc->seek_pos);
         u64 size_left = read_size;
         u64 offset = desc->seek_pos;
+        if (offset > file->file_data.size) {
+            return 0;
+        }
         u64 dest_offset = 0;
 
         if (read_size == 0) {
@@ -94,8 +108,7 @@ u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
         while (size_left > 0) {
             u8 *page_start = find_page_start(&offset, file);
 
-            u64 page_end = MIN(size_left, 4096);
-            page_end = page_end - (offset % 4096);
+            u64 page_end = MIN(size_left, 4096 - (offset % 4096));
 
             for (u64 i = 0; i < page_end; i++) {
                 dest[dest_offset] = page_start[offset % 4096];
@@ -130,16 +143,13 @@ u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size) {
         PANIC("ATTEMPT WRITE TO FOLDER", 0, 0, 0);
         break;
     case INODE_FILE:
-
         u64 size_left = size;
         u64 offset = desc->seek_pos;
         u64 src_offset = 0;
 
         while (size_left > 0) {
             u8 *page_start = find_page_start(&offset, file);
-
-            u64 page_end = MIN(size_left, 4096);
-            page_end = page_end - (offset % 4096);
+            u64 page_end = MIN(size_left, 4096 - (offset % 4096));
 
             for (u64 i = 0; i < page_end; i++) {
                 page_start[offset % 4096] = src[src_offset];
@@ -181,4 +191,10 @@ file_descriptor *file_open_path(dentry *cwd, char *path) {
 
     irq_enable();
     return file_desc;
+}
+
+void file_descriptor_seek(file_descriptor *desc, u64 seek_pos) {
+    irq_disable();
+    desc->seek_pos = seek_pos;
+    irq_enable();
 }

@@ -55,7 +55,6 @@ void inode_inc_open_cnt(inode *file);
 void inode_dec_open_cnt(inode *file);
 // used solely for debugging, allows injecting file data before system starts.
 // Not for use after system started.
-// Will add rest of data for last page. (rounds up page size)
 void inode_file_debug_inject_data(u64 *src, u64 size, inode *file);
 inode *create_blank_inode_file();
 

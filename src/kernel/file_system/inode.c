@@ -53,13 +53,23 @@ void inode_file_debug_inject_data(u64 *src, u64 size, inode *file) {
         PANIC("inode_file_debug_inject_data_ON_NON_FILE", 0, 0, 0);
     }
 
+    u8 *src_u8 = (u8 *)src;
+
     u64 page_cnt = ROUND_MOD_UP(size, 4096) / 4096;
 
     for (u64 i = 0; i < page_cnt; i++) {
         u64 *page_addr = (u64 *)pg_alloc();
+        u8 *page_addr_u8 = (u8 *)page_addr;
 
-        for (u64 j = 0; j < 512; j++) {
-            page_addr[j] = src[(512 * i) + j];
+        if (i != page_cnt - 1) {
+            for (u64 j = 0; j < 512; j++) {
+                page_addr[j] = src[(512 * i) + j];
+            }
+        } else {
+            const u64 u8_left_size = size % 4096;
+            for (u64 j = 0; j < u8_left_size; j++) {
+                page_addr_u8[j] = src_u8[(4096 * i) + j];
+            }
         }
 
         // inefficient but this is a debug program so fine for now.

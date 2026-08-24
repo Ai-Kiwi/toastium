@@ -172,9 +172,4 @@ void init_dentry() {
     inode_file_debug_inject_data((u64 *)text, size, example_file);
 
     create_dentry(root_dentry_folder, "example.txt", example_file);
-
-    uart_println_str("current info");
-    uart_println_u64_hex(example_file->type);
-    uart_println_u64_hex(example_file->file_data.size);
-    uart_println_u64_hex((u64)example_file);
 }

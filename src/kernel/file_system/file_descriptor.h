@@ -24,5 +24,7 @@ u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size);
 u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size);
 // interuptable function. Must be run with interrupt safe code
 file_descriptor *file_open_path(dentry *cwd, char *path);
+// interuptable function. Must be run with interrupt safe code
+void file_descriptor_seek(file_descriptor *desc, u64 seek_pos);
 
 #endif
