@@ -1,5 +1,4 @@
 misc
- - asid isn't best handled for when its not supported on hardware
  - allocator no cache system for last free
  - pager should have double past location buffer
  - pager can't handle overlap or same memory locations. Both for reserved and free
