@@ -62,6 +62,8 @@ hard fix for dtb address-cell and cell size as 64bit ("safely" panics)
 
 VFS
  - read and write are byte by byte not 64bits at a time
+ - Doesn't support if you write 5 pages ahead and then try to read between pages. It will think it doesn't need to load (will cause issues later but not now)
+ - No dirty system
 
 High priority.
  - There is a bug with allocator todo with not reusing sections. Issue appears in 
