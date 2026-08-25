@@ -18,6 +18,7 @@
 #define KEP_NSAM 6    // Invalid arch machine
 #define KEP_IBF 7     // Invalid bit format. basically not 64bit.
 #define KEP_IOC 8     // Invalid os code
+#define KEP_RF 9      // read failed
 
 #define OS_CODE 0x54
 
@@ -35,15 +36,23 @@ typedef struct {
     u8 abi;
     u16 object_type;
     u16 arch_type;
+    u64 entry;
+    u64 start_program_header;
+    u64 start_section_header;
+    u64 cnt_program_header;
+    u64 cnt_section_header;
+    u64 idx_section_names;
+
+    u32 arch_flags;
 
 } elf_header;
 
-u8 read_u8(void *ptr, elf_header *header) {
+static u8 read_u8(void *ptr, elf_header *header) {
     u8 *value = (u8 *)ptr;
     return *value;
 }
 
-u16 read_u16(void *ptr, elf_header *header) {
+static u16 read_u16(void *ptr, elf_header *header) {
     u16 *value = (u16 *)ptr;
     if (header->is_big_endian == TRUE) {
         return big_endian_u16_to_host(*value);
@@ -52,7 +61,7 @@ u16 read_u16(void *ptr, elf_header *header) {
     }
 }
 
-u32 read_u32(void *ptr, elf_header *header) {
+static u32 read_u32(void *ptr, elf_header *header) {
     u32 *value = (u32 *)ptr;
     if (header->is_big_endian == TRUE) {
         return big_endian_u32_to_host(*value);
@@ -61,12 +70,24 @@ u32 read_u32(void *ptr, elf_header *header) {
     }
 }
 
-u64 parse_header(file_descriptor *file, elf_header *header, u64 offset) {
+static u64 read_u64(void *ptr, elf_header *header) {
+    u64 *value = (u64 *)ptr;
+    if (header->is_big_endian == TRUE) {
+        return big_endian_u64_to_host(*value);
+    } else {
+        return little_endian_u64_to_host(*value);
+    }
+}
+
+static u64 parse_header(file_descriptor *file, elf_header *header, u64 offset) {
     header->is_big_endian = TRUE;
 
     file_descriptor_seek(file, offset);
     u8 read_data[0x40];
     u64 read = file_descriptor_read(file, read_data, 0x40);
+    if (read < 0x40) {
+        return KEP_RF;
+    }
 
     // magic header
     if (read_u32(&read_data[0x0], header) == 0x7F454c46) {
@@ -107,70 +128,118 @@ u64 parse_header(file_descriptor *file, elf_header *header, u64 offset) {
     // from here on only 64bit versions as this OS only supports 64bit.
     // 32bit is just ignored and will fail if not 32bit file.
 
-    if (read_u8(&read_data[0x04], header) != 2) {
+    if (read_u8(&read_data[0x14], header) != 1) {
         uart_println_str("ELF_PARSER : Unsupported elf version");
         return KEP_IV;
     }
+
+    header->entry = read_u64(&read_data[0x18], header);
+    header->start_program_header = read_u64(&read_data[0x20], header);
+    header->start_section_header = read_u64(&read_data[0x28], header);
+
+    header->arch_flags = read_u32(&read_data[0x30], header);
+    // 0x34, size 2 bytes, e_ehsize. Size of this header
+    // 0x36, size 2 bytes, e_phentsize. Size of program header table
+    header->cnt_program_header = read_u16(&read_data[0x38], header);
+    // 0x3A, size 2 bytes, e_shentsize. Size of section header table
+    header->cnt_section_header = read_u16(&read_data[0x3C], header);
+    header->idx_section_names = read_u16(&read_data[0x3E], header);
+
+    return KEP_SUCCESS;
+}
+
+typedef struct {
+    u32 type;
+    u64 flags;
+    u64 virt_addr;
+    u64 file_loc;
+    u64 size;
+    u32 linked_section_idx;
+    u32 extra_info;
+    u64 alignment;
+    u64 entrys_size;
+} elf_section;
+
+static u64 parse_section(file_descriptor *file, elf_section *header, u64 offset,
+                         elf_header *mheader) {
+    file_descriptor_seek(file, offset);
+    u8 read_data[0x40];
+    u64 read = file_descriptor_read(file, read_data, 0x40);
+    if (read < 0x40) {
+        return KEP_RF;
+    }
+
+    // 0x00, size 4 bytes, sh_name. Offset to the name location (in .shstrtab)
+
+    header->type = read_u32(&read_data[0x04], mheader);
+    header->flags = read_u64(&read_data[0x08], mheader);
+    header->virt_addr = read_u64(&read_data[0x10], mheader);
+    header->file_loc = read_u64(&read_data[0x18], mheader);
+    header->size = read_u64(&read_data[0x20], mheader);
+    header->linked_section_idx = read_u32(&read_data[0x28], mheader);
+    header->extra_info = read_u32(&read_data[0x2C], mheader);
+    header->alignment = read_u64(&read_data[0x30], mheader);
+    header->entrys_size = read_u64(&read_data[0x38], mheader);
+
+    return KEP_SUCCESS;
+}
+
+typedef struct {
+    u32 type;
+    u32 flags;
+    u64 file_loc;
+    u64 virt_mem_addr;
+    u64 phys_mem_addr;
+    u64 file_size;
+    u64 mem_size;
+    u64 alignment;
+} elf_program;
+
+static u64 parse_program(file_descriptor *file, elf_program *header, u64 offset,
+                         elf_header *mheader) {
+    file_descriptor_seek(file, offset);
+    u8 read_data[0x38];
+    u64 read = file_descriptor_read(file, read_data, 0x38);
+    if (read < 0x38) {
+        return KEP_RF;
+    }
+
+    header->type = read_u32(&read_data[0x0], mheader);
+    header->flags = read_u32(&read_data[0x4], mheader);
+    header->file_loc = read_u64(&read_data[0x08], mheader);
+    header->virt_mem_addr = read_u64(&read_data[0x10], mheader);
+    header->phys_mem_addr = read_u64(&read_data[0x18], mheader);
+    header->file_size = read_u64(&read_data[0x20], mheader);
+    header->mem_size = read_u64(&read_data[0x28], mheader);
+    header->alignment = read_u64(&read_data[0x30], mheader);
+
+    return KEP_SUCCESS;
 }
 
 u64 parse_elf(file_descriptor *file) {
 
-    u64 *entry_location_ptr = (u64 *)first_page[0x18];
-    u64 entry_location = elf_little_endian == TRUE
-                             ? little_endian_u64_to_host(*entry_location_ptr)
-                             : big_endian_u64_to_host(*entry_location_ptr);
+    elf_header header;
+    parse_header(file, &header, 0);
 
-    u64 *start_program_header_table_ptr = (u64 *)first_page[0x20];
-    u64 start_program_header_table =
-        elf_little_endian == TRUE
-            ? little_endian_u64_to_host(*start_program_header_table_ptr)
-            : big_endian_u64_to_host(*start_program_header_table_ptr);
-
-    u64 *start_section_header_table_ptr = (u64 *)first_page[0x28];
-    u64 start_section_header_table =
-        elf_little_endian == TRUE
-            ? little_endian_u64_to_host(*start_section_header_table_ptr)
-            : big_endian_u64_to_host(*start_section_header_table_ptr);
-
-    // TODO: 0x30 contains flags on features of arch needed for it to run
-    // currently this is just ignored. Planning to make it read and decline if
-    // not needed in future in far future will activate software emulation
-    // likely after warning user. it is safe to leave right now as risc-v will
-    // fire exception fire then kernel will kill
-
-    // size of elf header at 0x34 can just ignore as we know size. Fixed size
-
-    // size of program header table at 0x36 can just ignore again. Fixed size
-
-    u16 *program_header_entry_cnt_ptr = (u16 *)first_page[0x12];
-    u16 program_header_entry_cnt =
-        elf_little_endian == TRUE
-            ? little_endian_u16_to_host(*program_header_entry_cnt_ptr)
-            : big_endian_u16_to_host(*program_header_entry_cnt_ptr);
-
-    u16 *section_header_table_entry_cnt_ptr = (u16 *)first_page[0x12];
-    u16 section_header_table_entry_cnt =
-        elf_little_endian == TRUE
-            ? little_endian_u16_to_host(*section_header_table_entry_cnt_ptr)
-            : big_endian_u16_to_host(*section_header_table_entry_cnt_ptr);
-
-    u16 *idx_section_header_table_entry_cnt_ptr = (u16 *)first_page[0x12];
-    u16 idx_section_header_table_entry_cnt =
-        elf_little_endian == TRUE
-            ? little_endian_u16_to_host(*idx_section_header_table_entry_cnt_ptr)
-            : big_endian_u16_to_host(*idx_section_header_table_entry_cnt_ptr);
-
-    // program header
-
-    // for each one will load in data from what is stored
-    // get a array of header data then will iterate on that.
-    // hard part is keeping in mind page locations for performance.
-
-    for (s32 i = 0; i < program_header_entry_cnt; i++) {
+    for (u64 i = 0; i < header.cnt_program_header; i++) {
+        u64 offset = header.start_program_header + (0x38 * i);
+        elf_program program;
+        parse_program(file, &program, offset, &header);
     }
 
-    // section header
+    for (u64 i = 0; i < header.cnt_section_header; i++) {
+        u64 offset = header.start_section_header + (0x40 * i);
+        elf_section section;
+        parse_section(file, &section, offset, &header);
+    }
 
-    // loaded successfully return nothing
-    return KEP_SUCCESS;
+    // will from here somehow need to map data into load data for process.
+    // Bassicly some form of store that will return info for ram virt address.
+    // Probs will do as a sorted list for time being then later change to
+    // faster approach.
+    // Likely will do a permement file descriptor that is used for this.
+    // Was planning to prepopulate page however will likely start with lazy
+    // loading.
+
+    return 1;
 }
