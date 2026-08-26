@@ -67,3 +67,6 @@ VFS
 High priority.
  - There is a bug with allocator todo with not reusing sections. Issue appears in 
  - hashmap needs to remove old value on insert and return it
+
+Code clean up
+ - Move locations to void *ptr instead of u64 ptr
