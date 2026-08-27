@@ -4,6 +4,7 @@
 #include "drivers/uart/uart.h"
 #include "handler.h"
 #include "kernel/process/process.h"
+#include "kernel/syscall/file_system/handler.h"
 #include "kernel/syscall/handler.h"
 #include "kernel/syscall/uart/handler.h"
 #include "types.h"
@@ -36,6 +37,10 @@ u64 syscall_async_handler(trap_data *trap) {
         break;
     case SYSCALL_IDLE_HANG:
         idle_loop_system();
+        break;
+    case SYSCALL_FS_OPEN:
+        syscall_fs_open(trap);
+        break;
     default:
         uart_println_str("process error: unknown syscall ");
         uart_print_str("process ID: ");
