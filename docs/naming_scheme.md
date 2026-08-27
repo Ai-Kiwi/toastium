@@ -2,9 +2,8 @@ This naming scheme was made a lot later in development so a lot doesn't follow i
 Cost of learning a language and getting better at programming while making a project.
 
 Variables
-
 prefix:
-
+ - is : variable is bool
 
 main content: 
 noun
