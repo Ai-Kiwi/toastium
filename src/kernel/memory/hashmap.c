@@ -62,7 +62,7 @@ u64 hashmap_get(hashmap *hashmap, u64 key) {
 
 // built in data
 
-static u64 builtin_num_hash(u64 key) { return key; }
+static u64 builtin_num_hash(u64 key) { return key * 0x100000001b3ULL; }
 
 static bool8 builtin_num_equal(u64 first_key, u64 second_keys) {
     return first_key == second_keys;
