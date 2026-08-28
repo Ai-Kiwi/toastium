@@ -10,7 +10,9 @@
 #include "types.h"
 
 // response of 0 means it handled it
-// response of 1 means process died
+// response of 1 means it was unable hand it (invalid)
+// for not response of 1 will kill process however later will give it error
+
 // higher means will need async version to handle it.
 u64 syscall_sync_handler(trap_data *trap) {
 
@@ -29,7 +31,6 @@ u64 syscall_sync_handler(trap_data *trap) {
     return U64_MAX;
 }
 
-// response 1 means process killed
 u64 syscall_async_handler(trap_data *trap) {
     switch (trap->arg0_reg) {
     case SYSCALL_UART_PRINT:
@@ -40,6 +41,15 @@ u64 syscall_async_handler(trap_data *trap) {
         break;
     case SYSCALL_FS_OPEN:
         syscall_fs_open(trap);
+        break;
+    case SYSCALL_FS_READ:
+        syscall_fs_read(trap);
+        break;
+    case SYSCALL_FS_WRITE:
+        syscall_fs_write(trap);
+        break;
+    case SYSCALL_FS_SEEK:
+        syscall_fs_seek(trap);
         break;
     default:
         uart_println_str("process error: unknown syscall ");
@@ -56,4 +66,8 @@ u64 syscall_async_handler(trap_data *trap) {
         return 1;
         break;
     }
+
+    // a response must have handled it to end up here as default didn't so
+    // return 0;
+    return 0;
 }

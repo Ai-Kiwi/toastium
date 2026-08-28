@@ -15,13 +15,12 @@ typedef struct {
     u64 virt_mapped_loc; // null if not mmap
 } file_descriptor;
 
-file_descriptor *open_file_descriptor(inode *file);
 // interuptable function. Must be run with interrupt safe code
 void release_file_descriptor(file_descriptor *desc);
 // interuptable function. Must be run with interrupt safe code
-u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size);
+u64 file_descriptor_read(file_descriptor *desc, void *dest, u64 size);
 // interuptable function. Must be run with interrupt safe code
-u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size);
+u64 file_descriptor_write(file_descriptor *desc, void *src, u64 size);
 // interuptable function. Must be run with interrupt safe code
 file_descriptor *file_open_path(dentry *cwd, char *path);
 // interuptable function. Must be run with interrupt safe code

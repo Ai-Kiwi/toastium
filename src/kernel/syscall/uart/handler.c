@@ -23,48 +23,24 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
             return U64_MAX;
         }
         if (str_size > 512 || str_size == 0) {
-            trap->return_reg = 1;
+            trap->return_reg = -1;
             return 0;
         }
         irq_disable();
         u8 *location = (u8 *)mem_alloc(str_size);
         irq_enable();
-        bool8 response = kernel_read_user(str_src, str_size, (u64)location,
+        bool8 response = kernel_read_user(str_src, str_size, location,
                                           (process *)trap->process_ptr);
+        trap->return_reg = -1;
         if (response == TRUE) {
             for (u64 i = 0; i < str_size; i++) {
                 uart_print_char(location[i]);
             }
+            trap->return_reg = 0;
         }
-        trap->return_reg = !response;
         irq_disable();
         mem_free((u64)location);
         irq_enable();
-
-        // temp code to print from file
-
-        // need releasing too
-        file_descriptor *file =
-            file_open_path(root_dentry_folder, "/example.txt");
-
-        file_descriptor_seek(file, 50);
-
-        char write_data[] = "[INSERT]";
-
-        file_descriptor_write(file, write_data, 8);
-
-        uart_println_str("now printing char");
-
-        file_descriptor_seek(file, 0);
-
-        u8 data_buf[128];
-        u64 read_size = file_descriptor_read(file, (u8 *)data_buf, 128);
-
-        for (u64 i = 0; i < 128; i++) {
-            uart_print_char(data_buf[i]);
-        }
-
-        release_file_descriptor(file);
 
         return 0;
     default:

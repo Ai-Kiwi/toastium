@@ -11,7 +11,7 @@
 #include "types.h"
 #include "utils.h"
 
-file_descriptor *open_file_descriptor(inode *file) {
+static file_descriptor *file_descriptor_open(inode *file) {
     inode_inc_open_cnt(file);
 
     if (file == NULL) {
@@ -78,9 +78,10 @@ static inline u8 *find_page_start(u64 *offset, inode *file) {
     return page_location;
 }
 
-u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
+u64 file_descriptor_read(file_descriptor *desc, void *dest, u64 size) {
     irq_disable();
     inode *file = desc->file;
+    u8 *u8_dest = (u8 *)dest;
 
     switch (file->type) {
     case INODE_SOCKET:
@@ -111,7 +112,7 @@ u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
             u64 page_end = MIN(size_left, 4096 - (offset % 4096));
 
             for (u64 i = 0; i < page_end; i++) {
-                dest[dest_offset] = page_start[offset % 4096];
+                u8_dest[dest_offset] = page_start[offset % 4096];
 
                 increase_offset(1, &offset, &size_left, &dest_offset);
             }
@@ -128,9 +129,10 @@ u64 file_descriptor_read(file_descriptor *desc, u8 *dest, u64 size) {
     return 0;
 }
 
-u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size) {
+u64 file_descriptor_write(file_descriptor *desc, void *src, u64 size) {
     irq_disable();
     inode *file = desc->file;
+    u8 *u8_src = (u8 *)src;
 
     switch (file->type) {
     case INODE_SOCKET:
@@ -152,7 +154,7 @@ u64 file_descriptor_write(file_descriptor *desc, u8 *src, u64 size) {
             u64 page_end = MIN(size_left, 4096 - (offset % 4096));
 
             for (u64 i = 0; i < page_end; i++) {
-                page_start[offset % 4096] = src[src_offset];
+                page_start[offset % 4096] = u8_src[src_offset];
 
                 increase_offset(1, &offset, &size_left, &src_offset);
             }
@@ -187,7 +189,7 @@ file_descriptor *file_open_path(dentry *cwd, char *path) {
         return NULL;
     }
 
-    file_descriptor *file_desc = open_file_descriptor(file);
+    file_descriptor *file_desc = file_descriptor_open(file);
 
     irq_enable();
     return file_desc;

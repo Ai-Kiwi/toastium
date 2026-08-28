@@ -7,9 +7,7 @@ misc
  - No memory overlap handling for pager memory regions
  - if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
  ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
- - the idle process doesn't use wfi
  - floating point reg don't have state saved or swapped for context shift. 
- - read from userspace reads byte at a time not 64bits at a time. (would need to keep align in mind too) 
  - hashmap for processes should be expanded in size or auto size. (rn only a single page)
  - kernel vma no longer has global args for kernel side
  - No read/write/execute guard on virtual memory regions for kernelspace
@@ -36,21 +34,15 @@ needs to use red black tree
  - timer (currently nothing) 
  - driver manager for loading drivers. Uses linked list right now.
 
+userspace-access
+ - should read in 64bit chunks instead of single bytes
+
 hashmap
  - hashmap has 64byte per item overhead which is not needed (for cache coherency). Possible fix is todo sub lists to fix this.
  - needs to handle overwrite for insert. Instead of just being unhandled, it should overwrite old value with a new one.
  - needs to use random system for hashes to stop attack vector.
 
-test suits
- - pager tests to make sure it allocates again in order.
- - allocator needs more through testing to make sure it reallocates in order right
- - allocator currently has unfixed bug
- - hashmap needs system to make sure it doesn't remap to same location repetitively.
- - hashmap needs remove item testing.
- - list system
- - vma system
- - scheduler
- - trap handler
+
 
 Needs allocator combining (combine more then 1 entry into 64byte chunks)
  - hashmap entry
@@ -66,9 +58,30 @@ VFS
  - process to file descriptor is a straight list meaning slow find new free.
  - - most likely later move to global based approach
 
+syscall
+ - bad syscall kills process instead of returning error.
+
 High priority.
  - There is a bug with allocator todo with not reusing sections. Issue appears in 
  - hashmap needs to remove old value on insert and return it
 
 Code clean up
  - Move locations to void *ptr instead of u64 ptr
+
+
+
+test suits
+ - pager tests to make sure it allocates again in order.
+ - allocator needs more through testing to make sure it reallocates in order right
+ - allocator currently has unfixed bug
+ - hashmap needs system to make sure it doesn't remap to same location repetitively.
+ - hashmap needs remove item testing.
+ - list system
+ - vma system
+ - scheduler
+ - trap handler
+ - string and memory copy
+
+Not tested at all for seeing if works
+ - VFS userspace calls. Read, Write, Seek, Open.
+ - ELF parser
