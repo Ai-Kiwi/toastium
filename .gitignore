@@ -9,3 +9,5 @@ compile_commands.json
 mount
 .idea
 dtb.txt
+/userspace/*/build
+/userspace/*/libs/libc.a

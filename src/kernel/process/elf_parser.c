@@ -233,13 +233,20 @@ u64 parse_elf(file_descriptor *file) {
         parse_section(file, &section, offset, &header);
     }
 
-    // will from here somehow need to map data into load data for process.
-    // Bassicly some form of store that will return info for ram virt address.
-    // Probs will do as a sorted list for time being then later change to
-    // faster approach.
-    // Likely will do a permement file descriptor that is used for this.
-    // Was planning to prepopulate page however will likely start with lazy
-    // loading.
+    // for the time being will first make sure it is full static and not dynamic
+    // after this, it will load data into ram
+    // it will then execute the main start
+
+    // later with the actual linker it would load linker then run that instead
+    // along with actual program, through nothing really still dont with symbols
+    // that symbol stuff is all stored and handled by linker
+
+    // syscall for mapping is used. There is also a mapping handler
+    // this uses redblack tree and stores what is mapped where
+
+    // aprontly actually normally kernel loads in this symbol info
+    // it is then address plonked onto stack along with file descriptor for
+    // reading file
 
     return 1;
 }

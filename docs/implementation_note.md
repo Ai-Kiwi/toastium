@@ -11,8 +11,10 @@ misc
  - hashmap for processes should be expanded in size or auto size. (rn only a single page)
  - kernel vma no longer has global args for kernel side
  - No read/write/execute guard on virtual memory regions for kernelspace
+ - move per process kernel stack to being location in vma from heap.
  - No good trap handling if before context switch as nothing is loaded for a trapframe.
  - IRQ should enable after context switch, currently panics likely guess something queued and bug in trap system. (this doesn't completely make sense tho so will have to investigate)
+ - Files should support larger assignments in non page size. E.g megabyte
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
