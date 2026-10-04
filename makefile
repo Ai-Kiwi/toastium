@@ -1,20 +1,12 @@
 ARCH ?= risc-v
-BOARD ?= qemu
-
 CC = riscv64-unknown-elf-gcc
-ifeq ($(BOARD), qemu)
-    CC += -DBOARD_TARGET=0
-else ifeq ($(BOARD), VF2L) #visionfive 2 lite
-    CC += -DBOARD_TARGET=1
-else
-    $(error Unknown BOARD=$(BOARD))
-endif
 
-test: CC += -DTEST_MODE
+test: CC += -DQUICK_TEST_MODE
+full_test: CC += -DDEEP_TEST_MODE
 
 GIT_VERSION_HASH := $(shell git describe --always --dirty)
 CC += -DGIT_VERSION_HASH=\"$(GIT_VERSION_HASH)\"
-CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -ffreestanding -fno-builtin -fno-stack-protector \
+CCF = -nostdlib -nostartfiles -ffreestanding -march=rv64gc_zba_zbb -mabi=lp64d -mcmodel=medany -O2 -fno-builtin -fno-stack-protector \
 	-Wall -Wextra \
 	-Wno-unused-parameter \
 	-Wmissing-prototypes \
@@ -103,11 +95,22 @@ $(BIN): $(ELF)
 run: $(BIN)
 #tell the panic to be recompiled, means that git hash version will get updated.
 	touch src/kernel/safety/panic.c
+	touch src/tests/quick/run_quick_tests.c
+	touch src/tests/deep/run_deep_tests.c
 	@$(QEMU) $(QEMUF) -kernel $(BIN)
 
 test: $(BIN)
 #tell the panic to be recompiled, means that git hash version will get updated.
 	touch src/kernel/safety/panic.c
+	touch src/tests/quick/run_quick_tests.c
+	touch src/tests/deep/run_deep_tests.c
+	@$(QEMU) $(QEMUF) -kernel $(BIN)
+
+full_test: $(BIN)
+#tell the panic to be recompiled, means that git hash version will get updated.
+	touch src/kernel/safety/panic.c
+	touch src/tests/quick/run_quick_tests.c
+	touch src/tests/deep/run_deep_tests.c
 	@$(QEMU) $(QEMUF) -kernel $(BIN)
 
 run-traps: $(BIN)
