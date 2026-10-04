@@ -1,7 +1,6 @@
 #include "kernel/trap/handler.h"
 #include "arch_trap/parser.h"
 #include "arch_vma/virtual_memory.h"
-#include "board.h"
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "handler.h"
@@ -13,6 +12,7 @@
 #include "kernel/syscall/handler.h"
 #include "kernel/timer/timer.h"
 #include "kernel/trap/handler.h"
+#include "layout.h"
 #include "types.h"
 #include "uninterruptible/acces_misaligned.h"
 #include "uninterruptible/access_fault.h"
@@ -29,6 +29,11 @@
 // swap done in c)
 
 void trap_change_process(trap_data *trap_data) {
+    process *old_process = (process *)trap_data->process_ptr;
+    if (old_process->process_type == PROC_TYPE_NORMAL &&
+        old_process->block_waiting == 0) {
+        scheduler_queue_process((process *)trap_data->process_ptr);
+    }
     process *next_process = scheduler_next(trap_data->hart_id);
     context_change_process(next_process, trap_data->hart_id);
 
@@ -43,18 +48,18 @@ u64 handle_sync_trap() {
     process_trap_state past_proc_state = proc->trap_state;
     proc->trap_state = PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP;
 
-    u64 response = 0;
+    u64 is_handled = TRAP_HANDLED;
 
     switch (trap.code) {
     case TRAP_ACCESS_MISALIGNED:
-        response =
+        is_handled =
             uninterruptible_trap_access_misaligned(&trap, past_proc_state);
         break;
     case TRAP_ACCESS_FAULT:
-        response = uninterruptible_trap_access_fault(&trap, past_proc_state);
+        is_handled = uninterruptible_trap_access_fault(&trap, past_proc_state);
         break;
     case TRAP_INSTRUCTION_INVALID:
-        response =
+        is_handled =
             uninterruptible_trap_instruction_invalid(&trap, past_proc_state);
         break;
     case TRAP_BREAKPOINT:
@@ -62,10 +67,10 @@ u64 handle_sync_trap() {
               trap.fault_addr, trap.fault_pc);
         break;
     case TRAP_SYSCALL:
-        response = uninterruptible_trap_syscall(&trap);
+        is_handled = uninterruptible_trap_syscall(&trap);
         break;
     case TRAP_PAGE_FAULT:
-        response = uninterruptible_trap_page_fault(&trap, past_proc_state);
+        is_handled = uninterruptible_trap_page_fault(&trap, past_proc_state);
         break;
     case TRAP_DOUBLE_TRAP:
         PANIC("KERNEL_TRAP_DOUBLE_TRAP", trap.privilege, trap.fault_addr,
@@ -84,7 +89,7 @@ u64 handle_sync_trap() {
               trap.fault_addr, trap.fault_pc);
         break;
     case TRAP_TIMER_INTERRUPT:
-        response = uninterruptible_trap_timer(&trap);
+        is_handled = uninterruptible_trap_timer(&trap);
         break;
     case TRAP_EXTERNAL_INTERRUPT:
         PANIC("KERNEL_TRAP_UNIMPLENTED_EXTERNAL_INTERRUPT", trap.privilege,
@@ -97,7 +102,20 @@ u64 handle_sync_trap() {
     }
 
     proc->trap_state = past_proc_state;
-    return response;
+
+    // output stack to use
+    if (is_handled == TRAP_UNHANDLED) {
+        if (past_proc_state == PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP) {
+            u64 response = trapframe_stack_ptr(proc->kernelspace_trapframe);
+            response = ROUND_MOD_DOWN(response - 8, 8);
+        } else {
+            is_handled = ROUND_MOD_DOWN(PROC_KERN_STACK_TOP - 8, 8);
+        }
+    } else if (is_handled == TRAP_SWAP_PROCESS) {
+        trap_change_process(&trap);
+        is_handled = TRAP_HANDLED;
+    }
+    return is_handled;
 }
 
 // Will return trap action

@@ -1,5 +1,4 @@
 #include "page_fault.h"
-#include "board.h"
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "kernel/process/process.h"
@@ -18,11 +17,5 @@ u64 uninterruptible_trap_page_fault(trap_data *trap,
               trap->fault_pc);
     }
 
-    if (past_proc_state == PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP) {
-        u64 stack_location = trapframe_stack_ptr(proc->kernelspace_trapframe);
-        stack_location = ROUND_MOD_DOWN(stack_location - 8, 8);
-        return stack_location;
-    } else {
-        return PROCESS_KERNEL_STACK_TOP;
-    }
+    return TRAP_UNHANDLED;
 }

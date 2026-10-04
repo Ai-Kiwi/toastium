@@ -1,9 +1,6 @@
 #include "instruction_invalid.h"
-#include "board.h"
-#include "def.h"
 #include "kernel/process/process.h"
 #include "kernel/safety/panic.h"
-#include "kernel/syscall/handler.h"
 #include "kernel/trap/handler.h"
 #include "types.h"
 
@@ -17,5 +14,5 @@ u64 uninterruptible_trap_instruction_invalid(
 
     kill_process(((process *)trap->process_ptr)->process_id);
     trap_change_process(trap);
-    return 0;
+    return TRAP_HANDLED;
 }

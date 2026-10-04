@@ -2,7 +2,6 @@
 #include "arch_trap/handler.h"
 #include "arch_trap/parser.h"
 #include "arch_vma/virtual_memory.h"
-#include "board.h"
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "kernel/file_system/dentry.h"
@@ -10,9 +9,10 @@
 #include "kernel/memory/hashmap.h"
 #include "kernel/memory/list.h"
 #include "kernel/memory/pager.h"
+#include "kernel/memory/stack.h"
 #include "kernel/process/scheduler.h"
 #include "kernel/safety/panic.h"
-#include "kernel/trap/handler.h"
+#include "layout.h"
 #include "process.h"
 #include "types.h"
 #include <stdalign.h>
@@ -54,38 +54,26 @@ static process *new_blank_process() {
     new_process.running = FALSE;
     new_process.file_desc_cnt = 0;
     new_process.file_desc_pg = (u64 *)pg_alloc();
-    new_process.phys_kernel_stack_addr[0] = pg_alloc();
-    new_process.phys_kernel_stack_addr[1] = pg_alloc();
-    new_process.phys_kernel_stack_addr[2] = pg_alloc();
-    new_process.phys_kernel_stack_addr[3] = pg_alloc();
+    new_process.last_hart = U64_MAX;
+    for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
+        new_process.phys_kernel_stack_addr[i] = pg_alloc();
+    }
     new_process.reading_userspace = FALSE;
     new_process.exe_file = NULL;
     new_process.working_dir = root_dentry_folder;
 
     vma_create(&new_process);
 
+    vma_unmap(&new_process, KERN_MAPPING_BOTTOM, 0 - KERN_MAPPING_BOTTOM);
+
     vma_map_kernel(&new_process, TRAPFRAME_ADDRESS, KERNEL_PAGE_SIZE,
                    (u64)new_process.userspace_trapframe, VMA_READ | VMA_WRITE);
-    vma_unmap(&new_process, PROCESS_KERNEL_STACK_START - KERNEL_PAGE_SIZE,
-              KERNEL_PAGE_SIZE);
-    vma_map_kernel(&new_process,
-                   PROCESS_KERNEL_STACK_START + (KERNEL_PAGE_SIZE * 0),
-                   KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[0],
-                   VMA_READ | VMA_WRITE);
-    vma_map_kernel(&new_process,
-                   PROCESS_KERNEL_STACK_START + (KERNEL_PAGE_SIZE * 1),
-                   KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[1],
-                   VMA_READ | VMA_WRITE);
-    vma_map_kernel(&new_process,
-                   PROCESS_KERNEL_STACK_START + (KERNEL_PAGE_SIZE * 2),
-                   KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[2],
-                   VMA_READ | VMA_WRITE);
-    vma_map_kernel(&new_process,
-                   PROCESS_KERNEL_STACK_START + (KERNEL_PAGE_SIZE * 3),
-                   KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[3],
-                   VMA_READ | VMA_WRITE);
-    vma_unmap(&new_process, PROCESS_KERNEL_STACK_START + (KERNEL_PAGE_SIZE * 4),
-              KERNEL_PAGE_SIZE);
+    for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
+        vma_map_kernel(
+            &new_process, PROC_KERN_STACK_START + (KERNEL_PAGE_SIZE * i),
+            KERNEL_PAGE_SIZE, (u64)new_process.phys_kernel_stack_addr[i],
+            VMA_READ | VMA_WRITE);
+    }
 
     process *temp_process = (process *)mem_alloc(sizeof(process));
     new_process.userspace_trapframe->process_ptr = (u64)temp_process;
@@ -160,11 +148,24 @@ void process_cleanup(process *proc) {
     pg_free((u64)proc->userspace_trapframe);
     pg_free((u64)proc->kernelspace_trapframe);
     pg_free((u64)proc->vma_table);
-    pg_free((u64)proc->phys_kernel_stack_addr[0]);
-    pg_free((u64)proc->phys_kernel_stack_addr[1]);
-    pg_free((u64)proc->phys_kernel_stack_addr[2]);
-    pg_free((u64)proc->phys_kernel_stack_addr[3]);
+    for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
+        pg_free((u64)proc->phys_kernel_stack_addr[i]);
+    }
     mem_free((u64)proc);
+}
+
+void process_update_context_switch(process *proc, u64 hart_id) {
+    if (proc->last_hart == hart_id) {
+        return;
+    }
+    proc->last_hart = hart_id;
+    for (u64 i = 0; i < HART_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
+        vma_map_kernel(proc, HART_KERN_STACK_START + (KERNEL_PAGE_SIZE * i),
+                       KERNEL_PAGE_SIZE,
+                       hart_stacks_list[i + (hart_id * (HART_KERN_STACK_SIZE /
+                                                        KERNEL_PAGE_SIZE))],
+                       VMA_READ | VMA_WRITE);
+    }
 }
 
 void create_init_process() {

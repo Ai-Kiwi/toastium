@@ -14,7 +14,7 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
     switch (trap->arg1_reg) {
     case 0: // char
         uart_print_char(trap->arg2_reg);
-        return 0;
+        return TRAP_HANDLED;
         break;
     case 1:
         const u64 str_src = trap->arg2_reg;
@@ -24,7 +24,7 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
         }
         if (str_size > 512 || str_size == 0) {
             trap->return_reg = -1;
-            return 0;
+            return TRAP_HANDLED;
         }
         irq_disable();
         u8 *location = (u8 *)mem_alloc(str_size);
@@ -42,9 +42,9 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
         mem_free((u64)location);
         irq_enable();
 
-        return 0;
+        return TRAP_HANDLED;
     default:
-        return 1; // bad syscall
+        return TRAP_UNHANDLED; // bad syscall
         break;
     }
 }

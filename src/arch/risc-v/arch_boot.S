@@ -1,4 +1,4 @@
-#include "board.h"
+#include "layout.h"
 #include "arch_trap/state.S"
 .section .text.boot
 .global _start

@@ -2,8 +2,8 @@
 #include "arch_device_tree/dtb.h"
 #include "drivers/uart/uart.h"
 #include "endian.h"
-#include "include/board.h"
 #include "include/def.h"
+#include "include/layout.h"
 #include "kernel/devices/device_tree.h"
 #include "kernel/memory/string.h"
 #include "kernel/safety/panic.h"
@@ -79,7 +79,6 @@ static void find_memory_regions(const device_info *device,
         }
 
         u64 *value = (u64 *)memory_reg->value;
-        u64 *value_len = (u64 *)memory_reg->value_len;
 
         memory_regions->reserved_regions[memory_regions->reserved_cnt].start =
             big_endian_u64_to_host(value[0]) + KERNEL_VMA_START;

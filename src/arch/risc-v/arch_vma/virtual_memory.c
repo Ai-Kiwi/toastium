@@ -7,12 +7,13 @@
 // if it had merged it would be one large read field instead of more then 1
 
 #include "virtual_memory.h"
-#include "board.h"
 #include "def.h"
+#include "drivers/uart/uart.h"
 #include "kernel/memory/list.h"
 #include "kernel/memory/pager.h"
 #include "kernel/process/process.h"
 #include "kernel/safety/panic.h"
+#include "layout.h"
 #include "types.h"
 
 // not 64 bytes aligned for multicore
@@ -142,7 +143,7 @@ static void vma_replace_section(u64 table_root, u64 virt_addr_start,
         normal_virt_addr -
         ((0xffffffc000000000 - 0x4000000000) *
          (u64)is_kernelspace); // offsets in a way where it starts from 256
-                               // instead of from 0
+    // instead of from 0
 
     if (virt_addr_size > ppn2_jmp_size * 256) {
         PANIC("VMA_MAPPING_LARGER_THEN_MAX_SIZE", virt_addr_size, 0, 0);

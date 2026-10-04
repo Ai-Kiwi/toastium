@@ -2,7 +2,6 @@
 #include "arch_trap/irq.h"
 #include "arch_trap/parser.h"
 #include "arch_vma/virtual_memory.h"
-#include "board.h"
 #include "def.h"
 #include "drivers/uart/uart.h"
 #include "include/types.h"
@@ -13,6 +12,7 @@
 #include "kernel/syscall/handler.h"
 #include "kernel/trap/handler.h"
 #include "kernel/trap/page_fault/handler.h"
+#include "layout.h"
 #include "process_handler.h"
 
 void handle_async_trap() {
@@ -43,7 +43,6 @@ void handle_async_trap() {
     case PROC_TRAP_PROCESS_READ_USERSPACE:
         PANIC("PAGE_FAULT_FROM_KERNEL_READ_USERSPACE", trap.code,
               proc->process_id, 0);
-        break;
         break;
     }
     irq_enable();

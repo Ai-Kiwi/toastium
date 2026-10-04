@@ -1,7 +1,7 @@
 #include "kernel/safety/panic.h"
 #include "arch_cpu.h"
 #include "drivers/uart/uart.h"
-#include "include/board.h"
+#include "git.h"
 #include "panic.h"
 
 extern u8 _kernel_start;

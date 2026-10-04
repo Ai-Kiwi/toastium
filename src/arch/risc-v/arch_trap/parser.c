@@ -1,6 +1,6 @@
 #include "parser.h"
 #include "def.h"
-#include "include/board.h"
+#include "include/layout.h"
 #include "kernel/safety/panic.h"
 #include "kernel/safety/safety.h"
 #include "kernel/trap/handler.h"
@@ -21,8 +21,6 @@ void trapframe_parse(trap_data *trap) { // will have ptr input here that points
     trap->arg2_reg = trap_frame_data->register_12;
     trap->arg3_reg = trap_frame_data->register_13;
     trap->return_reg = trap_frame_data->register_10;
-
-    trap->hart_id = trap_frame_data->hart_id;
 
     trap->fault_pc = trap_frame_data->sepc;
     trap->fault_addr = trap_frame_data->stval;

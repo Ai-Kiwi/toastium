@@ -1,4 +1,4 @@
-#include "board.h"
+#include "layout.h"
 #include "state.S"
 .section .text.trap
 .global trap_entry
@@ -11,10 +11,7 @@ trap_entry:
     #swap to stack for kernel
     li t0, TRAPFRAME_ADDRESS
     la sp, _hart_stacks_start
-    ld t1, 288(t0) #tf->hart_id
-    li t3, HART_KERNEL_STACK_SIZE
-    mul t0, t3, t1
-    add sp, sp, t0
+    li sp, HART_KERN_STACK_TOP
 
     # setup restore once done
     li a0, TRAPFRAME_ADDRESS

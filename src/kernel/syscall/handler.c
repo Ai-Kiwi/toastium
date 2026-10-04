@@ -25,10 +25,7 @@ u64 syscall_sync_handler(trap_data *trap) {
         break;
     }
 
-    // actually very performant to return it must be async if it wasn't anything
-    // we handled as it will likely be killed if it isn't async as well as then
-    // it would be unknown
-    return U64_MAX;
+    return TRAP_UNHANDLED;
 }
 
 u64 syscall_async_handler(trap_data *trap) {
@@ -63,11 +60,11 @@ u64 syscall_async_handler(trap_data *trap) {
         uart_println_u64(trap->arg2_reg);
         uart_print_str("arg3: ");
         uart_println_u64(trap->arg3_reg);
-        return 1;
+        return TRAP_UNHANDLED;
         break;
     }
 
     // a response must have handled it to end up here as default didn't so
     // return 0;
-    return 0;
+    return TRAP_HANDLED;
 }

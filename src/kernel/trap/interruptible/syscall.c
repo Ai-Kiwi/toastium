@@ -7,7 +7,7 @@
 void interruptable_trap_syscall(trap_data *trap,
                                 interruptable_trap_response *response) {
     u64 async_response = syscall_async_handler(trap);
-    if (async_response == 1) {
+    if (async_response == TRAP_UNHANDLED) {
         response->kill_process = TRUE;
     }
     response->skip_instruction = TRUE;

@@ -14,5 +14,5 @@ u64 uninterruptible_trap_access_misaligned(trap_data *trap,
 
     kill_process(((process *)trap->process_ptr)->process_id);
     trap_change_process(trap);
-    return 0;
+    return TRAP_HANDLED;
 }

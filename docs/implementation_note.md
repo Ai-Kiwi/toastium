@@ -5,16 +5,15 @@ misc
  - dtb is hard coded in a lot of locations. Will cause issues when switching between arch and is messy right now for different systems
  - bitmaps overlap with page size meaning data will be passed to user in virtual memory
  - No memory overlap handling for pager memory regions
- - if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
- ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
  - floating point reg don't have state saved or swapped for context shift. 
  - hashmap for processes should be expanded in size or auto size. (rn only a single page)
  - kernel vma no longer has global args for kernel side
  - No read/write/execute guard on virtual memory regions for kernelspace
- - move per process kernel stack to being location in vma from heap.
  - No good trap handling if before context switch as nothing is loaded for a trapframe.
  - IRQ should enable after context switch, currently panics likely guess something queued and bug in trap system. (this doesn't completely make sense tho so will have to investigate)
  - Files should support larger assignments in non page size. E.g megabyte
+ - make more aggressive warnings
+ - make warnings error instead of warn
 
 Need large pages
  - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
@@ -24,6 +23,8 @@ Need large pages
  - pager should support multipages
  - user processes don't do large pages
  - pipe/sockets need merged pages
+ - Hart kernel stacks
+ - - Move over the list to use root ptrs after change made and vma mapper
 
 Need bss fix
  - asid upto data not aligned 64 bytes (current and max)
@@ -87,3 +88,11 @@ test suits
 Not tested at all for seeing if works
  - VFS userspace calls. Read, Write, Seek, Open.
  - ELF parser
+ - if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
+ ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
+
+Code cleanup
+ - trap handler
+ - - make escalation level a number
+ - - on processes make less verbose for changing level
+ - - make easier to understand way to return if it was handled

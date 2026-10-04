@@ -1,4 +1,4 @@
-#include "board.h"
+#include "layout.h"
 #include "state.S"
 .section .text.unsafe_trap
 .global unsafe_trap_entry

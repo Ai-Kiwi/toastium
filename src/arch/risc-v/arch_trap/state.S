@@ -1,4 +1,4 @@
-#include "board.h"
+#include "layout.h"
 
 .global STORE_TRAP_FRAME
 .global LOAD_TRAP_FRAME

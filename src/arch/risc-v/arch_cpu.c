@@ -1,4 +1,5 @@
 #include "arch_cpu.h"
+#include "drivers/uart/uart.h"
 #include "include/types.h"
 #include "open_sbi.h"
 

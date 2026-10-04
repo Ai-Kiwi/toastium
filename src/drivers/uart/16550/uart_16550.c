@@ -1,7 +1,6 @@
 #include "uart_16550.h"
-#include "board.h"
-#include "drivers/uart/uart.h"
 #include "kernel/safety/panic.h"
+#include "layout.h"
 
 #define UART_BASE_LOCATION 0x10000000 + KERNEL_VMA_START
 #define UART_STATUS_OFFSET 5

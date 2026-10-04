@@ -1,6 +1,10 @@
 #ifndef KERNEL_TRAP_H
 #define KERNEL_TRAP_H
 
+#define TRAP_HANDLED 0
+#define TRAP_UNHANDLED 1
+#define TRAP_SWAP_PROCESS 2
+
 #include "types.h"
 typedef enum {
     TRAP_MODE_USER,

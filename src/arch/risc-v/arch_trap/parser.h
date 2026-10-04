@@ -41,7 +41,6 @@ typedef struct { // each split into page so doesn't need to be 64 byte aligned
     u64 stval;   // Extra trap info, e.g page fault says address in question
     u64 sstatus; // Privilege level machine was in.
     u64 process_ptr;
-    u64 hart_id;
 } trapframe;
 
 void trapframe_parse(trap_data *trap);

@@ -52,6 +52,7 @@ typedef struct {
     u64 phys_kernel_stack_addr[4]; // 12kb per process kernel stack
     u64 list_idx;
     bool8 reading_userspace;
+    u64 last_hart;
 } __attribute__((aligned(64))) process;
 
 void processes_init(u64 hart_count);
@@ -60,5 +61,6 @@ void process_cleanup(process *process);
 void create_init_process();
 void kill_process(pid process_id);
 void processes_iter(list_iter *iter);
+void process_update_context_switch(process *proc, u64 hart_id);
 
 #endif

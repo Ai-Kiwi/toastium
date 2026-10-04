@@ -1,28 +1,18 @@
 #include "stack.h"
-#include "drivers/uart/uart.h"
-#include "kernel/safety/panic.h"
+#include "def.h"
+#include "kernel/memory/pager.h"
+#include "layout.h"
 
-#define stack_end_magic_num 0x22B3D20B07438DF4
-#define stack_top_magic_num 0x58C0E68DE152E781
+// stores location to data contains info on where each of the hart stacks is
+// currently a list for each hart, later will be single ptr per core, will need
+// to find all uses and replace those when that happens. This is bad code but
+// yeah
+u64 *hart_stacks_list;
 
-extern u64 _stack_top_test, _stack_bottom_test;
-
-void stack_init() {
-    *(volatile u64 *)(&_stack_bottom_test) = stack_end_magic_num;
-    *(volatile u64 *)(&_stack_top_test) = stack_top_magic_num;
-    uart_print_str("STACK TOP : ");
-    uart_println_u64_hex((u64)&_stack_top_test);
-}
-
-void stack_confirm() {
-    if (*(volatile u64 *)(&_stack_bottom_test) != stack_end_magic_num) {
-        PANIC("DATA_HAS_BEEN_WRITTEN_BELOW_STACK",
-              *(volatile u64 *)((u64)&_stack_bottom_test),
-              (s64)(&_stack_bottom_test), 0);
-    }
-    if (*(volatile u64 *)(&_stack_top_test) != stack_top_magic_num) {
-        PANIC("DATA_HAS_BEEN_WRITTEN_ABOVE_STACK",
-              *(volatile u64 *)((u64)&_stack_top_test), (s64)(&_stack_top_test),
-              0);
+void stack_init(u64 hart_cnt) {
+    hart_stacks_list = (u64 *)pg_alloc();
+    for (u64 i = 0; i < hart_cnt * (HART_KERN_STACK_SIZE / KERNEL_PAGE_SIZE);
+         i++) {
+        hart_stacks_list[i] = pg_alloc();
     }
 }

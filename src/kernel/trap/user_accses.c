@@ -1,9 +1,9 @@
 #include "user_accses.h"
 #include "arch_trap/irq.h"
 #include "arch_vma/virtual_memory.h"
-#include "board.h"
 #include "include/types.h"
 #include "kernel/process/process.h"
+#include "layout.h"
 
 extern u64 arch_copy_user(u64 src, u64 size, u64 dest);
 

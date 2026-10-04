@@ -9,6 +9,5 @@ u64 uninterruptible_trap_timer(trap_data *trap) {
               trap->fault_addr, trap->fault_pc);
     }
 
-    trap_change_process(trap);
-    return 0;
+    return TRAP_SWAP_PROCESS;
 }
