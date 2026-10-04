@@ -7,11 +7,8 @@
 #include "tests/utils.h"
 
 void test_pager() {
-#ifndef TEST_MODE
-    return;
-#endif
 
-    uart_println_str("#TEST# - Testing Pager");
+    test_print_stage_start("Pager");
 
     u64 value_cnt = 2000; // 100000;
 
@@ -51,5 +48,5 @@ void test_pager() {
 
     kernel_safety_test();
 
-    uart_println_str("\nPASS");
+    test_print_stage_pass();
 }

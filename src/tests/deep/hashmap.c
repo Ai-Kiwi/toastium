@@ -6,11 +6,8 @@
 #include "tests/utils.h"
 
 void test_hashmap() {
-#ifndef TEST_MODE
-    return;
-#endif
 
-    uart_println_str("#TEST# - Testing Hashmap");
+    test_print_stage_start("Hashmap");
 
     hashmap hmap;
     u64 *loc = (u64 *)pg_alloc();
@@ -39,5 +36,5 @@ void test_hashmap() {
     // make sure none of the hashmaps get to many kids (see that it assigns
     // right, likely a custom function of some kind)
 
-    uart_println_str("\nPASS");
+    test_print_stage_pass();
 }

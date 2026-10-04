@@ -3,7 +3,6 @@
 #include "arch_trap/irq.h"
 #include "arch_vma/virtual_memory.h"
 #include "drivers/uart/uart.h"
-#include "include/board.h"
 #include "include/endian.h"
 #include "kernel/devices/device_tree.h"
 #include "kernel/devices/driver_manager.h"
@@ -15,15 +14,13 @@
 #include "kernel/safety/safety.h"
 #include "kernel/timer/timer.h"
 #include "kernel/trap/irq.h"
+#include "layout.h"
 #include "process/process.h"
 #include "process/scheduler.h"
+#include "tests/deep/run_deep_tests.h"
+#include "tests/quick/run_quick_tests.h"
 
 #include "main.h"
-#include "tests/allocator.h"
-#include "tests/hashmap.h"
-#include "tests/pager.h"
-#include "tests/radix.h"
-#include "tests/utils.h"
 
 extern u8 _kernel_end, _kernel_start, _kernel_idle_process;
 
@@ -38,15 +35,11 @@ void kernel_main() {
 
     init_endian_conversion();
 
-    // setup stack
-    uart_println_str("Initializing stack");
-    stack_init();
     kernel_safety_test();
 
     uart_println_str("fetching core count");
     u64 hart_count = dtb_hart_cnt();
-    u64 dtb_location =
-        ((u64)&_kernel_end) + (hart_count * HART_KERNEL_STACK_SIZE) + 8;
+    u64 dtb_location = ((u64)&_kernel_end) + 8;
 
     // setup device tree
     uart_println_str("Initializing device tree");
@@ -63,14 +56,9 @@ void kernel_main() {
 
     init_drivers();
 
-    // run tests
-    test_pager();
-
-    test_allocator();
-
-    test_radix();
-
-    test_hashmap();
+    // setup stack
+    uart_println_str("Initializing stacks");
+    stack_init(hart_count);
 
     uart_println_str("Initializing process handler");
     processes_init(hart_count);
@@ -95,6 +83,9 @@ void kernel_main() {
     uart_println_str("Preforming schedular bootstrap");
     context_bootstrap(0); // setup for running processes on core 0
 
+    tests_run_deep();
+    tests_run_quick();
+
     uart_println_str("Running final safety test");
     kernel_safety_test();
 
@@ -102,8 +93,6 @@ void kernel_main() {
     attach_trap_handler();
 
     uart_println_str("Finished initialization, now running kernel");
-
-    tests_hang();
 
     // makes timer to kick start the os
     timer_set_future_ms(5);

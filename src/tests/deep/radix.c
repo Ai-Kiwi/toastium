@@ -5,11 +5,8 @@
 #include "tests/utils.h"
 
 void test_radix() {
-#ifndef TEST_MODE
-    return;
-#endif
 
-    uart_println_str("#TEST# - Testing Radix");
+    test_print_stage_start("Radix");
 
     u64 tree_root = radix_create(4);
 
@@ -47,5 +44,5 @@ void test_radix() {
 
     radix_delete(tree_root, TRUE, 9, 3);
 
-    uart_println_str("\nPASS");
+    test_print_stage_pass();
 }

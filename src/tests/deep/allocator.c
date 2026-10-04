@@ -8,11 +8,8 @@
 #include "types.h"
 
 void test_allocator() {
-#ifndef TEST_MODE
-    return;
-#endif
 
-    uart_println_str("#TEST# - Testing Allocator");
+    test_print_stage_start("Allocator");
 
     const u64 value_cnt = 2000; // 100000;
 
@@ -140,5 +137,5 @@ void test_allocator() {
     }
     kernel_safety_test();
 
-    uart_println_str("\nPASS");
+    test_print_stage_pass();
 }
