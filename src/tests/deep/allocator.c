@@ -126,7 +126,7 @@ void test_allocator() {
     test_print_next();
     for (u64 i = 0; i < value_cnt; i++) {
         test_print_step("(7/8) Verifying values... ", i, value_cnt, 1);
-        asset_u64(*(alloc_locations[i]), (i * 653) + 3);
+        assert_u64(*(alloc_locations[i]), (i * 653) + 3);
     }
 
     test_print_next();

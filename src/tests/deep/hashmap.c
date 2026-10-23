@@ -25,7 +25,7 @@ void test_hashmap() {
     for (u64 i = 0; i < 100000; i++) {
         test_print_step("(2/2) Confirming data... ", i, 100000, 1);
         u64 data = hashmap_get(&hmap, i);
-        asset_u64((i * 32) + 36, data);
+        assert_u64((i * 32) + 36, data);
     }
 
     test_print_next();

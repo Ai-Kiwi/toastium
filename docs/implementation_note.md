@@ -25,6 +25,7 @@ Need large pages
  - pipe/sockets need merged pages
  - Hart kernel stacks
  - - Move over the list to use root ptrs after change made and vma mapper
+ - - make larger, atleast 1MB, most likely more.
 
 Need bss fix
  - asid upto data not aligned 64 bytes (current and max)
@@ -73,17 +74,10 @@ Code clean up
 
 
 
-test suits
- - pager tests to make sure it allocates again in order.
- - allocator needs more through testing to make sure it reallocates in order right
- - allocator currently has unfixed bug
- - hashmap needs system to make sure it doesn't remap to same location repetitively.
- - hashmap needs remove item testing.
- - list system
- - vma system
- - scheduler
- - trap handler
- - string and memory copy
+test
+ - add final build C file
+ - - have fsanitize (-fsanitize=address,undefined)
+ - - Split up file for easier handling
 
 Not tested at all for seeing if works
  - VFS userspace calls. Read, Write, Seek, Open.

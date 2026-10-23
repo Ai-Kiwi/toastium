@@ -43,7 +43,7 @@ void test_pager() {
         test_print_step("(3/3) Releasing and confirming pager data... ", i,
                         value_cnt, 1);
         pg_free((u64)loc);
-        asset_u64(*(u64 *)(loc), (i * 312) + 86);
+        assert_u64(*(u64 *)(loc), (i * 312) + 86);
     }
 
     kernel_safety_test();

@@ -3,7 +3,7 @@
 #include "kernel/safety/panic.h"
 #include "types.h"
 
-void asset_u64(u64 first_value, u64 second_value) {
+void assert_u64(u64 first_value, u64 second_value) {
     if (first_value == second_value) {
         return;
     }
