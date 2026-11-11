@@ -1,92 +1,102 @@
 misc
- - allocator no cache system for last free
- - pager should have double past location buffer
- - pager can't handle overlap or same memory locations. Both for reserved and free
- - dtb is hard coded in a lot of locations. Will cause issues when switching between arch and is messy right now for different systems
- - bitmaps overlap with page size meaning data will be passed to user in virtual memory
- - No memory overlap handling for pager memory regions
- - floating point reg don't have state saved or swapped for context shift. 
- - hashmap for processes should be expanded in size or auto size. (rn only a single page)
- - kernel vma no longer has global args for kernel side
- - No read/write/execute guard on virtual memory regions for kernelspace
- - No good trap handling if before context switch as nothing is loaded for a trapframe.
- - IRQ should enable after context switch, currently panics likely guess something queued and bug in trap system. (this doesn't completely make sense tho so will have to investigate)
- - Files should support larger assignments in non page size. E.g megabyte
- - make more aggressive warnings
- - make warnings error instead of warn
+
+- allocator no cache system for last free
+- pager should have double past location buffer
+- pager can't handle overlap or same memory locations. Both for reserved and free
+- dtb is hard coded in a lot of locations. Will cause issues when switching between arch and is messy right now for different systems
+- bitmaps overlap with page size meaning data will be passed to user in virtual memory
+- No memory overlap handling for pager memory regions
+- floating point reg don't have state saved or swapped for context shift.
+- hashmap for processes should be expanded in size or auto size. (rn only a single page)
+- kernel vma no longer has global args for kernel side
+- No read/write/execute guard on virtual memory regions for kernelspace
+- No good trap handling if before context switch as nothing is loaded for a trapframe.
+- IRQ should enable after context switch, currently panics likely guess something queued and bug in trap system. (this doesn't completely make sense tho so will have to investigate)
+- Files should support larger assignments in non page size. E.g megabyte
+- make more aggressive warnings
+- make warnings error instead of warn
 
 Need large pages
- - kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
- - virtual memory assigns page by page not in bulk
- - virtual memory doesn't support mega or giga pages
- - Allocator should use multipages when support is added
- - pager should support multipages
- - user processes don't do large pages
- - pipe/sockets need merged pages
- - Hart kernel stacks
- - - Move over the list to use root ptrs after change made and vma mapper
- - - make larger, atleast 1MB, most likely more.
+
+- kernel stack for process is 1 page, temp fix for now will defo need to be larger very soon.
+- virtual memory assigns page by page not in bulk
+- virtual memory doesn't support mega or giga pages
+- Allocator should use multipages when support is added
+- pager should support multipages
+- user processes don't do large pages
+- pipe/sockets need merged pages
+- Hart kernel stacks
+- - Move over the list to use root ptrs after change made and vma mapper
+- - make larger, atleast 1MB, most likely more.
 
 Need bss fix
- - asid upto data not aligned 64 bytes (current and max)
- - processes info
- - current running process info
+
+- asid upto data not aligned 64 bytes (current and max)
+- processes info
+- current running process info
 
 needs to use red black tree
- - children of file descriptor (currently list)
- - scheduler (currently list with fifo)
- - timer (currently nothing) 
- - driver manager for loading drivers. Uses linked list right now.
+
+- children of file descriptor (currently list)
+- scheduler (currently list with fifo)
+- timer (currently nothing)
+- driver manager for loading drivers. Uses linked list right now.
 
 userspace-access
- - should read in 64bit chunks instead of single bytes
+
+- should read in 64bit chunks instead of single bytes
 
 hashmap
- - hashmap has 64byte per item overhead which is not needed (for cache coherency). Possible fix is todo sub lists to fix this.
- - needs to handle overwrite for insert. Instead of just being unhandled, it should overwrite old value with a new one.
- - needs to use random system for hashes to stop attack vector.
 
-
+- hashmap has 64byte per item overhead which is not needed (for cache coherency). Possible fix is todo sub lists to fix this.
+- needs to handle overwrite for insert. Instead of just being unhandled, it should overwrite old value with a new one.
+- needs to use random system for hashes to stop attack vector.
 
 Needs allocator combining (combine more then 1 entry into 64byte chunks)
- - hashmap entry
- - red black tree entry (will be when coded)
+
+- hashmap entry
+- red black tree entry (will be when coded)
 
 hard fix for dtb address-cell and cell size as 64bit ("safely" panics)
- - assumed in pager
+
+- assumed in pager
 
 VFS
- - read and write are byte by byte not 64bits at a time
- - Doesn't support if you write 5 pages ahead and then try to read between pages. It will think it doesn't need to load (will cause issues later but not now)
- - No dirty system
- - process to file descriptor is a straight list meaning slow find new free.
- - - most likely later move to global based approach
+
+- read and write are byte by byte not 64bits at a time
+- Doesn't support if you write 5 pages ahead and then try to read between pages. It will think it doesn't need to load (will cause issues later but not now)
+- No dirty system
+- process to file descriptor is a straight list meaning slow find new free.
+- - most likely later move to global based approach
 
 syscall
- - bad syscall kills process instead of returning error.
+
+- bad syscall kills process instead of returning error.
 
 High priority.
- - There is a bug with allocator todo with not reusing sections. Issue appears in 
- - hashmap needs to remove old value on insert and return it
+
+- hashmap needs to remove old value on insert and return it
 
 Code clean up
- - Move locations to void *ptr instead of u64 ptr
 
-
+- Move locations to void \*ptr instead of u64 ptr
 
 test
- - add final build C file
- - - have fsanitize (-fsanitize=address,undefined)
- - - Split up file for easier handling
+
+- add final build C file
+- - have fsanitize (-fsanitize=address,undefined)
+- - Split up file for easier handling
 
 Not tested at all for seeing if works
- - VFS userspace calls. Read, Write, Seek, Open.
- - ELF parser
- - if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
- ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
+
+- VFS userspace calls. Read, Write, Seek, Open.
+- ELF parser
+- if there is only 1 process available the schuadler can't see it for next process so won't repick it again. Meaning half is wasted cpu cycles.
+  ^ Also for planing on wfi this will cause a lot of issues as won't likely have timer done.
 
 Code cleanup
- - trap handler
- - - make escalation level a number
- - - on processes make less verbose for changing level
- - - make easier to understand way to return if it was handled
+
+- trap handler
+- - make escalation level a number
+- - on processes make less verbose for changing level
+- - make easier to understand way to return if it was handled
