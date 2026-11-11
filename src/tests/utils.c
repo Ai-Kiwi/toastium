@@ -3,10 +3,21 @@
 #include "kernel/safety/panic.h"
 #include "types.h"
 
-void assert_u64(u64 first_value, u64 second_value) {
+void assert_u64(u64 first_value, u64 second_value, const char *file,
+                const s64 file_line, const char *function) {
+
     if (first_value == second_value) {
         return;
     }
+
+    uart_print_str("LOCATION : ");
+    uart_print_str(file);
+    uart_print_str(":");
+    uart_print_s64(file_line);
+    uart_print_str(" (");
+    uart_print_str(function);
+    uart_println_str(")");
+
     uart_print_str("first value : ");
     uart_println_u64(first_value);
     uart_print_str("second value : ");

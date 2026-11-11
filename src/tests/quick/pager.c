@@ -10,7 +10,7 @@ void test_quick_pager() {
 
     for (u64 i = 1; i < 10; i++) {
         u64 next_location = pg_alloc();
-        assert_u64(next_location, first_addr + (i * KERNEL_PAGE_SIZE));
+        ASSERT_U64(next_location, first_addr + (i * KERNEL_PAGE_SIZE));
     }
 
     // remove certain items
@@ -20,11 +20,11 @@ void test_quick_pager() {
 
     // make sure added back in that order
     u64 next_loc = pg_alloc();
-    assert_u64(next_loc, first_addr + (3 * KERNEL_PAGE_SIZE));
+    ASSERT_U64(next_loc, first_addr + (3 * KERNEL_PAGE_SIZE));
     u64 next_loc_2 = pg_alloc();
-    assert_u64(next_loc_2, first_addr + (5 * KERNEL_PAGE_SIZE));
+    ASSERT_U64(next_loc_2, first_addr + (5 * KERNEL_PAGE_SIZE));
     u64 next_loc_3 = pg_alloc();
-    assert_u64(next_loc_3, first_addr + (8 * KERNEL_PAGE_SIZE));
+    ASSERT_U64(next_loc_3, first_addr + (8 * KERNEL_PAGE_SIZE));
 
     // free pages
     for (u64 i = 0; i < 10; i++) {

@@ -46,7 +46,7 @@ void test_allocator() {
         test_print_step("(2/8) Creating blank, testing distance... ", i,
                         blank_assigns, 1);
 
-        u64 location = mem_alloc(32);
+        u64 location = (u64)mem_alloc(32);
         u64 location_change = location - old_location;
         if (location_change >
             9000) { // little over 8kb. Means that it has room for idx and page
@@ -126,7 +126,7 @@ void test_allocator() {
     test_print_next();
     for (u64 i = 0; i < value_cnt; i++) {
         test_print_step("(7/8) Verifying values... ", i, value_cnt, 1);
-        assert_u64(*(alloc_locations[i]), (i * 653) + 3);
+        ASSERT_U64(*(alloc_locations[i]), (i * 653) + 3);
     }
 
     test_print_next();

@@ -41,7 +41,7 @@ static void confirm_size(void *start, u64 size, u64 seed) {
     for (u64 i = 0; i < size; i++) {
         value = next_iter_value(size, value);
         u8 expected = value % 256;
-        assert_u64(expected, *ptr);
+        ASSERT_U64(expected, *ptr);
         ptr++;
     }
 }
@@ -83,9 +83,9 @@ void test_quick_allocator() {
     for (u64 i = 0; i < ALLOCATOR_SIZES_CNT; i++) {
         const u64 size = allocator_sizes[i];
 
-        assert_u64(allocator_sizes_start[i][1], mem_alloc(size));
-        assert_u64(allocator_sizes_start[i][2], mem_alloc(size));
-        assert_u64(allocator_sizes_start[i][3], mem_alloc(size));
+        ASSERT_U64(allocator_sizes_start[i][1], (u64)mem_alloc(size));
+        ASSERT_U64(allocator_sizes_start[i][2], (u64)mem_alloc(size));
+        ASSERT_U64(allocator_sizes_start[i][3], (u64)mem_alloc(size));
     }
 
     for (u64 i = 0; i < ALLOCATOR_SIZES_CNT; i++) {
