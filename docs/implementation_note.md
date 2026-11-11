@@ -77,10 +77,6 @@ High priority.
 
 - hashmap needs to remove old value on insert and return it
 
-Code clean up
-
-- Move locations to void \*ptr instead of u64 ptr
-
 test
 
 - add final build C file

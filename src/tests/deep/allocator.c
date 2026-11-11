@@ -100,11 +100,11 @@ void test_allocator() {
     // randomly sets values and frees them. On next assign these same values
     // should be set. also worth noting the high value then low value. This is
     // designed to test the cache system
-    mem_free((u64)alloc_locations[267]);
-    mem_free((u64)alloc_locations[965]);
-    mem_free((u64)alloc_locations[1233]);
-    mem_free((u64)alloc_locations[385]);
-    mem_free((u64)alloc_locations[1367]);
+    mem_free(alloc_locations[267]);
+    mem_free(alloc_locations[965]);
+    mem_free(alloc_locations[1233]);
+    mem_free(alloc_locations[385]);
+    mem_free(alloc_locations[1367]);
 
     *(alloc_locations[267]) = 0;
     *(alloc_locations[965]) = 0;
@@ -133,7 +133,7 @@ void test_allocator() {
     for (u64 i = 0; i < value_cnt; i++) {
         test_print_step("(8/8) Releasing some of values... ", i, value_cnt, 1);
 
-        mem_free((u64)alloc_locations[i]);
+        mem_free(alloc_locations[i]);
     }
     kernel_safety_test();
 

@@ -57,7 +57,7 @@ void radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size) {
             u64 child_addr = (u64)addr_table[i];
             if (child_addr > 0) {
                 radix_delete(child_addr, remove_leaves, depth - 1, depth_size);
-                mem_free(child_addr);
+                mem_free((void *)child_addr);
             }
         }
     } else {
@@ -65,7 +65,7 @@ void radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 depth_size) {
             for (s32 i = 0; i < size; i++) {
                 u64 child_addr = (u64)addr_table[i];
                 if (child_addr > 0) {
-                    mem_free(child_addr);
+                    mem_free((void *)child_addr);
                 }
             }
         }

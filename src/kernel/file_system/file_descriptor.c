@@ -35,7 +35,7 @@ void release_file_descriptor(file_descriptor *desc) {
     }
     inode_dec_open_cnt(desc->file);
 
-    mem_free((u64)desc);
+    mem_free(desc);
     irq_enable();
 }
 

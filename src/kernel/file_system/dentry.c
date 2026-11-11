@@ -16,7 +16,7 @@ static void cleanup_dentry(dentry *item) {
         dentry *parent = (dentry *)item->parent;
         parent->link_refs -= 1;
     }
-    mem_free((u64)item);
+    mem_free(item);
     // needs to loop over all children removing them all
 }
 

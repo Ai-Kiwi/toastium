@@ -261,7 +261,7 @@ void *pg_alloc() { // will add cnt later u64 byte_cnt
     return 0;
 }
 
-void pg_free(u64 location) {
+void pg_free(void *location) {
     u8 *page_location = (u8 *)location;
     const s64 page_list_cnt = pager_bitmap_list[0];
 

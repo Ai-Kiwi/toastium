@@ -144,7 +144,7 @@ void syscall_fs_read(trap_data *trap) {
     }
 
     irq_disable();
-    pg_free((u64)page);
+    pg_free(page);
     irq_enable();
 
     trap->return_reg = read_size;
@@ -198,7 +198,7 @@ void syscall_fs_write(trap_data *trap) {
     }
 
     irq_disable();
-    pg_free((u64)page);
+    pg_free(page);
     irq_enable();
 
     trap->return_reg = write_size;

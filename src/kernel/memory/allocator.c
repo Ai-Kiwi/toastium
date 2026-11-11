@@ -95,14 +95,14 @@ void *mem_alloc(u64 size_bytes) {
     }
 }
 
-void mem_free(u64 location) {
+void mem_free(void *location) {
     u64 *current_data_page =
-        (u64 *)(ROUND_MOD_DOWN(location, KERNEL_PAGE_SIZE));
+        (u64 *)(ROUND_MOD_DOWN((u64)location, KERNEL_PAGE_SIZE));
 
     // fetch the page location and which num it is
     const u64 size = current_data_page[1];
 
-    u64 slot = ((location & 0xFFF) - 64) / size;
+    u64 slot = (((u64)location & 0xFFF) - 64) / size;
 
     u64 idx = slot / 64;
     u64 bit = (slot % 64);

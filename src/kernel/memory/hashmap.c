@@ -33,7 +33,7 @@ u64 hashmap_remove(hashmap *hashmap, u64 key) {
     while ((u64)current_leaf != 0) {
         if (hashmap->equal_function(current_leaf->key, key)) {
             *current_leaf_parent_ptr = (u64)current_leaf->next_leaf;
-            mem_free((u64)current_leaf);
+            mem_free(current_leaf);
             return current_leaf->data;
         }
 

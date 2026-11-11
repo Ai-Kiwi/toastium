@@ -59,7 +59,7 @@ void list_delete(list *new_list) {
 
     while (TRUE) {
         u64 next_section = section[0];
-        pg_free((u64)section);
+        pg_free(section);
         if (next_section == 0) {
             break;
         }

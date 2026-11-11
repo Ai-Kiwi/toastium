@@ -10,6 +10,6 @@ typedef struct {
 
 void pager_init();
 void *pg_alloc();
-void pg_free(u64 location);
+void pg_free(void *location);
 
 #endif

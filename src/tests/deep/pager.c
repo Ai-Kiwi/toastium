@@ -35,14 +35,14 @@ void test_pager() {
 
     test_print_next();
     test_print_step("(2/3) Releasing first page data... ", 1, 1, 1);
-    pg_free(first_loc);
+    pg_free((void *)first_loc);
 
     test_print_next();
     for (u64 i = 0; i < value_cnt; i++) {
         u64 *loc = (u64 *)(first_loc + ((i + 1) * KERNEL_PAGE_SIZE));
         test_print_step("(3/3) Releasing and confirming pager data... ", i,
                         value_cnt, 1);
-        pg_free((u64)loc);
+        pg_free((void *)(u64)loc);
         ASSERT_U64(*(u64 *)(loc), (i * 312) + 86);
     }
 

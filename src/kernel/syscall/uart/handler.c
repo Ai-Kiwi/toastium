@@ -39,7 +39,7 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
             trap->return_reg = 0;
         }
         irq_disable();
-        mem_free((u64)location);
+        mem_free(location);
         irq_enable();
 
         return TRAP_HANDLED;

@@ -83,7 +83,7 @@ static void destroy_branch(u64 *branch_loc, u64 branch_jmp_size) {
         destroy_branch((u64 *)physical_loc[i], branch_jmp_size / 512);
     }
 
-    pg_free((u64)physical_loc);
+    pg_free(physical_loc);
 }
 
 static void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
@@ -115,12 +115,12 @@ static void shrink_branch(u64 *branch_loc, u64 branch_jmp_size) {
     if (can_shrink == TRUE) {
         if (branch_leafs[0] == 0) { // unmapped
             *branch_loc = 0;
-            pg_free((u64)branch_leafs);
+            pg_free(branch_leafs);
         } else {
             u64 start_phys_loc = get_phys_leaf_loc(branch_leafs[0]);
             u64 start_access_flags = get_leaf_flags(branch_leafs[0]);
             create_leaf(start_phys_loc, start_access_flags);
-            pg_free((u64)branch_leafs);
+            pg_free(branch_leafs);
         }
     }
 }

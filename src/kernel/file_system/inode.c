@@ -8,7 +8,7 @@
 #include "kernel/memory/string.h"
 #include "kernel/safety/panic.h"
 
-static void cleanup_file(inode *file) { mem_free((u64)file); }
+static void cleanup_file(inode *file) { mem_free(file); }
 
 void inode_inc_link(inode *file) { file->link_refs += 1; }
 

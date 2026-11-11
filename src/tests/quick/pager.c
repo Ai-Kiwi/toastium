@@ -14,9 +14,9 @@ void test_quick_pager() {
     }
 
     // remove certain items
-    pg_free(first_addr + (8 * KERNEL_PAGE_SIZE));
-    pg_free(first_addr + (3 * KERNEL_PAGE_SIZE));
-    pg_free(first_addr + (5 * KERNEL_PAGE_SIZE));
+    pg_free((void *)(first_addr + (8 * KERNEL_PAGE_SIZE)));
+    pg_free((void *)(first_addr + (3 * KERNEL_PAGE_SIZE)));
+    pg_free((void *)(first_addr + (5 * KERNEL_PAGE_SIZE)));
 
     // make sure added back in that order
     u64 next_loc = (u64)pg_alloc();
@@ -28,7 +28,7 @@ void test_quick_pager() {
 
     // free pages
     for (u64 i = 0; i < 10; i++) {
-        pg_free(first_addr + (i * KERNEL_PAGE_SIZE));
+        pg_free((void *)(first_addr + (i * KERNEL_PAGE_SIZE)));
     }
 
     test_print_stage_pass();

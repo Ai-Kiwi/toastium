@@ -5,7 +5,7 @@
 
 void allocator_init();
 void *mem_alloc(u64 size_bytes);
-void mem_free(u64 location);
+void mem_free(void *location);
 u64 bump_alloc(u64 size);
 
 #endif

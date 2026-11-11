@@ -7,7 +7,7 @@ const u64 allocator_sizes[] = {1, 3, 4, 12, 131, 124, 623, 1000, 2020};
 #define ALLOCATOR_SIZES_CNT                                                    \
     (sizeof(allocator_sizes) / sizeof(allocator_sizes[0]))
 
-static u64 allocator_sizes_start[ALLOCATOR_SIZES_CNT][5];
+static void *allocator_sizes_start[ALLOCATOR_SIZES_CNT][5];
 
 static u64 next_iter_value(u64 size, u64 past_value) {
     u64 value = past_value;
@@ -54,8 +54,8 @@ void test_quick_allocator() {
         const u64 size = allocator_sizes[i];
 
         for (u64 j = 0; j < 5; j++) {
-            u8 *ptr = (u8 *)mem_alloc(size);
-            allocator_sizes_start[i][j] = (u64)ptr;
+            void *ptr = (u8 *)mem_alloc(size);
+            allocator_sizes_start[i][j] = ptr;
             set_size(ptr, size, j);
         }
     }
@@ -83,9 +83,9 @@ void test_quick_allocator() {
     for (u64 i = 0; i < ALLOCATOR_SIZES_CNT; i++) {
         const u64 size = allocator_sizes[i];
 
-        ASSERT_U64(allocator_sizes_start[i][1], (u64)mem_alloc(size));
-        ASSERT_U64(allocator_sizes_start[i][2], (u64)mem_alloc(size));
-        ASSERT_U64(allocator_sizes_start[i][3], (u64)mem_alloc(size));
+        ASSERT_U64((u64)allocator_sizes_start[i][1], (u64)mem_alloc(size));
+        ASSERT_U64((u64)allocator_sizes_start[i][2], (u64)mem_alloc(size));
+        ASSERT_U64((u64)allocator_sizes_start[i][3], (u64)mem_alloc(size));
     }
 
     for (u64 i = 0; i < ALLOCATOR_SIZES_CNT; i++) {

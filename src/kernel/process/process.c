@@ -145,13 +145,13 @@ void process_cleanup(process *proc) {
         replacement_process->list_idx = highest_idx;
     }
 
-    pg_free((u64)proc->userspace_trapframe);
-    pg_free((u64)proc->kernelspace_trapframe);
-    pg_free((u64)proc->vma_table);
+    pg_free(proc->userspace_trapframe);
+    pg_free(proc->kernelspace_trapframe);
+    pg_free(proc->vma_table);
     for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
-        pg_free((u64)proc->phys_kernel_stack_addr[i]);
+        pg_free((void *)proc->phys_kernel_stack_addr[i]);
     }
-    mem_free((u64)proc);
+    mem_free(proc);
 }
 
 void process_update_context_switch(process *proc, u64 hart_id) {
