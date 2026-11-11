@@ -75,7 +75,7 @@ static process *new_blank_process() {
             VMA_READ | VMA_WRITE);
     }
 
-    process *temp_process = (process *)mem_alloc(sizeof(process));
+    process *temp_process = mem_alloc(sizeof(process));
     new_process.userspace_trapframe->process_ptr = (u64)temp_process;
     new_process.kernelspace_trapframe->process_ptr = (u64)temp_process;
     *temp_process = new_process;

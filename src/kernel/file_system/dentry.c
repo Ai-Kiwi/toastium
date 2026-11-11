@@ -130,7 +130,7 @@ dentry *create_dentry(dentry *parent, const char *name, inode *file) {
         parent->link_refs += 1;
     }
 
-    dentry *folder = (dentry *)mem_alloc(sizeof(dentry));
+    dentry *folder = mem_alloc(sizeof(dentry));
     folder->link_refs = 0;
     folder->open_refs = 0;
 

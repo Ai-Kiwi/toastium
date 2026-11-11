@@ -31,7 +31,7 @@ u64 radix_insert(u64 addr, u64 key, u64 child_addr, u8 depth, u8 depth_size) {
         u64 idx = (key >> ((depth - i) * depth_size)) & mask;
         if (!addr_table[idx]) {
             u64 node_size = size * 8;
-            u64 *new_node = (u64 *)mem_alloc(node_size);
+            u64 *new_node = mem_alloc(node_size);
             for (s32 j = 0; j < node_size / 8; j++) {
                 new_node[j] = 0;
             }
@@ -95,7 +95,7 @@ bool8 radix_remove(u64 addr, u64 key, u8 depth, u8 depth_size) {
 u64 radix_create(u8 level_depth) {
     u64 size = (1UL << level_depth);
     u64 node_size = size * 8;
-    u64 *tree = (u64 *)mem_alloc(node_size);
+    u64 *tree = mem_alloc(node_size);
 
     for (s32 i = 0; i < node_size / 8; i++) {
         tree[i] = 0;

@@ -11,7 +11,7 @@ u64 hashmap_insert(hashmap *hashmap, u64 key, u64 data) {
     u64 hash = hashmap->hash_function(key);
     u64 index = hash % hashmap->len;
 
-    volatile hashmap_leaf *new_leaf = (volatile hashmap_leaf *)mem_alloc(64);
+    volatile hashmap_leaf *new_leaf = mem_alloc(64);
 
     new_leaf->data = data;
     new_leaf->key = key;

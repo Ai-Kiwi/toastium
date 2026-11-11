@@ -17,7 +17,7 @@ void test_radix() {
     for (u64 i = 0; i < 100000; i++) {
         test_print_step("(1/3) Creating Data... ", i, 100000, 1);
 
-        u64 *child_ptr = (u64 *)mem_alloc(8);
+        u64 *child_ptr = mem_alloc(8);
         *child_ptr = (i * i) + 68359;
         radix_insert(tree_root, i, (u64)child_ptr, 9, 3);
     }
@@ -26,7 +26,7 @@ void test_radix() {
     for (u64 i = 0; i < 100000; i++) {
         test_print_step("(2/3) Confirming Data... ", i, 100000, 1);
 
-        u64 *child_ptr = (u64 *)mem_alloc(8);
+        u64 *child_ptr = mem_alloc(8);
         *child_ptr = i;
         u64 *child = (u64 *)radix_get(tree_root, i, 9, 3);
         if (!child) {

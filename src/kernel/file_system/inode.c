@@ -29,7 +29,7 @@ void inode_dec_open_cnt(inode *file) {
 }
 
 inode *create_blank_inode_file() {
-    inode *file = (inode *)mem_alloc(sizeof(inode));
+    inode *file = mem_alloc(sizeof(inode));
     file->type = INODE_FILE;
     file->link_refs = 0;
     file->open_refs = 0;

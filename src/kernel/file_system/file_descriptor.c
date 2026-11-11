@@ -18,8 +18,7 @@ static file_descriptor *file_descriptor_open(inode *file) {
         return NULL;
     }
 
-    file_descriptor *desc =
-        (file_descriptor *)mem_alloc(sizeof(file_descriptor));
+    file_descriptor *desc = mem_alloc(sizeof(file_descriptor));
 
     desc->virt_mapped_loc = 0;
     desc->access_mode = 0;
