@@ -16,7 +16,6 @@ typedef struct {
     u64 cnt;
 } __attribute__((aligned(64))) bump_state;
 
-alignas(64) bump_state bump_allocator_state;
 alignas(64) u64 root_idx_page[256]; // multiple of 64, so cache aligned
 
 static u32 max_cnt_per_page(u64 size) { return (KERNEL_PAGE_SIZE - 64) / size; }
@@ -25,9 +24,6 @@ void allocator_init() {
     for (s32 i = 0; i < 256; i++) {
         root_idx_page[i] = 0;
     }
-
-    bump_allocator_state.cnt = 0;
-    bump_allocator_state.page = pg_alloc();
 }
 
 static void *new_data_page(u64 size) {
@@ -112,23 +108,6 @@ void mem_free(void *location) {
     }
 
     current_data_page[idx + 2] &= ~BIT(bit);
-}
-
-u64 bump_alloc(u64 size) {
-    if (size > KERNEL_PAGE_SIZE) {
-        PANIC("ALLOCATOR_BUMP_LARGER_THEN_PAGE", 0, 0, 0);
-    }
-
-    if (bump_allocator_state.cnt + size >= KERNEL_PAGE_SIZE) {
-        bump_allocator_state.page = pg_alloc();
-        bump_allocator_state.cnt = 0;
-    }
-
-    u64 response = ((u64)bump_allocator_state.page) + bump_allocator_state.cnt;
-
-    bump_allocator_state.cnt += ROUND_MOD_UP(size, 8);
-
-    return response;
 }
 
 // TODO: Add caching so can know where to start looking instant
