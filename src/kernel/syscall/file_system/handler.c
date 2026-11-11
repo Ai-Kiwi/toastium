@@ -39,7 +39,7 @@ static u64 fd_insert_local(file_descriptor *fd, process *proc) {
         }
         if (page[0] == 0) {
             irq_disable();
-            page[0] = pg_alloc();
+            page[0] = (u64)pg_alloc();
             irq_enable();
         }
         page = (u64 *)page[0];
@@ -120,7 +120,7 @@ void syscall_fs_read(trap_data *trap) {
     }
 
     irq_disable();
-    u64 *page = (u64 *)pg_alloc();
+    u64 *page = pg_alloc();
     irq_enable();
 
     u64 read_size = 0;
@@ -165,7 +165,7 @@ void syscall_fs_write(trap_data *trap) {
     }
 
     irq_disable();
-    u64 *page = (u64 *)pg_alloc();
+    u64 *page = pg_alloc();
     irq_enable();
 
     u64 write_size = 0;

@@ -10,9 +10,9 @@
 u64 *hart_stacks_list;
 
 void stack_init(u64 hart_cnt) {
-    hart_stacks_list = (u64 *)pg_alloc();
+    hart_stacks_list = pg_alloc();
     for (u64 i = 0; i < hart_cnt * (HART_KERN_STACK_SIZE / KERNEL_PAGE_SIZE);
          i++) {
-        hart_stacks_list[i] = pg_alloc();
+        hart_stacks_list[i] = (u64)pg_alloc();
     }
 }

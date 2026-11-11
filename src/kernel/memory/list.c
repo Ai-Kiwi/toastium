@@ -8,7 +8,7 @@
 
 void list_create(list *new_list, u64 item_size) {
     new_list->section_size = KERNEL_PAGE_SIZE;
-    new_list->first_section = (u64 *)pg_alloc();
+    new_list->first_section = pg_alloc();
     new_list->item_cnt = 0;
     new_list->item_size = item_size;
 }
@@ -27,7 +27,7 @@ u64 list_get(list *new_list, u64 item_idx) { // return ptr to item
     for (u64 i = 0; i < section_num; i++) {
         section = (u64 *)*section;
         if (section == 0) {
-            section = (u64 *)pg_alloc();
+            section = pg_alloc();
         }
     }
 

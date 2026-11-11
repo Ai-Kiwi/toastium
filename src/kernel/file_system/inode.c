@@ -58,7 +58,7 @@ void inode_file_debug_inject_data(u64 *src, u64 size, inode *file) {
     u64 page_cnt = ROUND_MOD_UP(size, 4096) / 4096;
 
     for (u64 i = 0; i < page_cnt; i++) {
-        u64 *page_addr = (u64 *)pg_alloc();
+        u64 *page_addr = pg_alloc();
         u8 *page_addr_u8 = (u8 *)page_addr;
 
         if (i != page_cnt - 1) {

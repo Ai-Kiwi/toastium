@@ -27,12 +27,12 @@ void allocator_init() {
     }
 
     bump_allocator_state.cnt = 0;
-    bump_allocator_state.page = (u64 *)pg_alloc();
+    bump_allocator_state.page = pg_alloc();
 }
 
 static void *new_data_page(u64 size) {
     // could make sure everything is zero here, pager already handles this
-    u64 *data_page = (u64 *)pg_alloc();
+    u64 *data_page = pg_alloc();
     data_page[1] = size;
     return data_page;
 }
@@ -120,7 +120,7 @@ u64 bump_alloc(u64 size) {
     }
 
     if (bump_allocator_state.cnt + size >= KERNEL_PAGE_SIZE) {
-        bump_allocator_state.page = (u64 *)pg_alloc();
+        bump_allocator_state.page = pg_alloc();
         bump_allocator_state.cnt = 0;
     }
 

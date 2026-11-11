@@ -227,7 +227,7 @@ void pager_init() {
     }
 }
 
-u64 pg_alloc() { // will add cnt later u64 byte_cnt
+void *pg_alloc() { // will add cnt later u64 byte_cnt
     // unsigned page_cnt = (byte_cnt+4095) / KERNEL_PAGE_SIZE;
 
     const s64 page_list_cnt = pager_bitmap_list[0];
@@ -253,7 +253,7 @@ u64 pg_alloc() { // will add cnt later u64 byte_cnt
                 for (s32 k = 0; k < KERNEL_PAGE_SIZE / 8; k++) {
                     page_ptr_s64[k] = 0UL;
                 }
-                return page_location;
+                return (void *)page_location;
             }
         }
     }

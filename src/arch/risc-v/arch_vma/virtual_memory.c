@@ -51,7 +51,7 @@ static inline u64 get_phys_leaf_loc(u64 leaf_data) {
 }
 
 static u64 expand_leaf(u64 *leaf, u64 branch_jmp_size) {
-    u64 *new_branch = (u64 *)pg_alloc();
+    u64 *new_branch = pg_alloc();
     u64 physical_location = get_phys_leaf_loc(*leaf);
     u64 flags = get_leaf_flags(*leaf);
 
@@ -382,7 +382,7 @@ void vma_create(process *proc) {
     // be cached and just straight copied wherever a new process is loaded in,
     // slight changes will be made from there tho such as setting up per process
     // kernel stack right at the end. Or assigning the process trapframe
-    u64 new_page_addr = pg_alloc();
+    u64 new_page_addr = (u64)pg_alloc();
 
     // create kernel mapping
     /// allow read/write/execute, mark as global for optimization, is valid and

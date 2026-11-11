@@ -64,7 +64,7 @@ void scheduler_remove(process *proc) {
 
 void schedular_init(u64 hart_count) {
     // kernel_running_process = null_program_pid;
-    process_queue = (u64 *)pg_alloc();
+    process_queue = pg_alloc();
     process_queue_size = KERNEL_PAGE_SIZE / 8;
     process_queue_count = 0;
     process_queue_start = 0;
@@ -74,7 +74,7 @@ void schedular_init(u64 hart_count) {
     if (hart_count > (KERNEL_PAGE_SIZE / 8)) {
         PANIC("TO_MANY_IDLE_PROCESSES_FOR_PAGE", 0, 0, 0);
     }
-    hart_idle_process = (process **)pg_alloc();
+    hart_idle_process = pg_alloc();
 
     for (u64 i = 0; i < hart_count; i++) {
         hart_idle_process[i] = (process *)process_from_id(i);

@@ -62,7 +62,7 @@ static inline u8 *find_page_start(u64 *offset, inode *file) {
         if (page_location == NULL) {
             // data is past limit, new data so doesn't need to be loaded
             if (*offset >= file->file_data.size) {
-                page_location = (u8 *)pg_alloc();
+                page_location = pg_alloc();
 
                 radix_insert(file->file_data.radix_roots[radix_level], page_num,
                              (u64)page_location, radix_level + 1,

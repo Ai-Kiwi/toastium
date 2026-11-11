@@ -47,16 +47,16 @@ static process *new_blank_process() {
     new_process.process_id = state.process_upto;
     new_process.vma_addr_space_id = U64_MAX;
     new_process.vma_table = 0;
-    new_process.userspace_trapframe = (trapframe *)pg_alloc();
-    new_process.kernelspace_trapframe = (trapframe *)pg_alloc();
-    new_process.page_fault_trapframe = (trapframe *)pg_alloc();
+    new_process.userspace_trapframe = pg_alloc();
+    new_process.kernelspace_trapframe = pg_alloc();
+    new_process.page_fault_trapframe = pg_alloc();
     new_process.process_type = PROC_TYPE_NORMAL;
     new_process.running = FALSE;
     new_process.file_desc_cnt = 0;
-    new_process.file_desc_pg = (u64 *)pg_alloc();
+    new_process.file_desc_pg = pg_alloc();
     new_process.last_hart = U64_MAX;
     for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
-        new_process.phys_kernel_stack_addr[i] = pg_alloc();
+        new_process.phys_kernel_stack_addr[i] = (u64)pg_alloc();
     }
     new_process.reading_userspace = FALSE;
     new_process.exe_file = NULL;
@@ -95,7 +95,7 @@ static process *new_blank_process() {
 
 void processes_init(u64 hart_count) {
     hashmap_create(HASHMAP_TYPE_NUMBER, &state.process_hashmap);
-    state.process_hashmap.start = (u64 *)pg_alloc();
+    state.process_hashmap.start = pg_alloc();
     state.process_hashmap.len = KERNEL_PAGE_SIZE / 8;
 
     state.process_upto = 0;

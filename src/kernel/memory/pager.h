@@ -9,7 +9,7 @@ typedef struct {
 } page_range;
 
 void pager_init();
-u64 pg_alloc();
+void *pg_alloc();
 void pg_free(u64 location);
 
 #endif
