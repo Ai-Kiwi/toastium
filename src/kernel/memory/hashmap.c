@@ -1,4 +1,5 @@
 #include "kernel/memory/hashmap.h"
+#include "codes.h"
 #include "drivers/uart/uart.h"
 #include "hashmap.h"
 #include "include/types.h"
@@ -11,14 +12,18 @@ u64 hashmap_insert(hashmap *hashmap, u64 key, u64 data) {
     u64 hash = hashmap->hash_function(key);
     u64 index = hash % hashmap->len;
 
-    volatile hashmap_leaf *new_leaf = mem_alloc(64);
+    if (!hashmap_lookup(hashmap, key, NULL)) {
+        PANIC("HASHMAP_ALREADY_CONTAINS_KEY", (u64)hashmap, key, 0);
+    }
+
+    hashmap_leaf *new_leaf = mem_alloc(64);
 
     new_leaf->data = data;
     new_leaf->key = key;
 
     new_leaf->next_leaf = hashmap->start[index];
-    hashmap->start[index] = (u64)new_leaf;
-    return 0; // will return collision
+    hashmap->start[index] = new_leaf;
+    return 0;
 }
 
 // returns data if anything removed
@@ -26,38 +31,40 @@ u64 hashmap_remove(hashmap *hashmap, u64 key) {
     u64 hash = hashmap->hash_function(key);
     u64 index = hash % hashmap->len;
 
-    volatile u64 *current_leaf_parent_ptr = (u64 *)((hashmap->start)[index]);
-    volatile hashmap_leaf *current_leaf =
-        (hashmap_leaf *)current_leaf_parent_ptr;
+    hashmap_leaf *current_leaf_parent_ptr = (hashmap->start)[index];
+    hashmap_leaf *current_leaf = current_leaf_parent_ptr;
 
     while ((u64)current_leaf != 0) {
         if (hashmap->equal_function(current_leaf->key, key)) {
-            *current_leaf_parent_ptr = (u64)current_leaf->next_leaf;
+            current_leaf_parent_ptr->next_leaf = current_leaf->next_leaf;
             mem_free(current_leaf);
             return current_leaf->data;
         }
 
-        current_leaf_parent_ptr = (u64 *)current_leaf->next_leaf;
-        current_leaf = (hashmap_leaf *)current_leaf->next_leaf;
+        current_leaf_parent_ptr = current_leaf->next_leaf;
+        current_leaf = current_leaf->next_leaf;
     }
     return 0;
 }
 
-// returns 0 if nothing fetched
-u64 hashmap_get(hashmap *hashmap, u64 key) {
+int hashmap_lookup(hashmap *hashmap, u64 key, u64 *data) {
     u64 hash = hashmap->hash_function(key);
     u64 index = hash % hashmap->len;
 
-    hashmap_leaf *current_leaf = (hashmap_leaf *)((hashmap->start)[index]);
+    hashmap_leaf *current_leaf = (hashmap->start)[index];
 
     while ((u64)current_leaf != 0) {
         if (hashmap->equal_function(current_leaf->key, key)) {
-            return current_leaf->data;
+            if (data == NULL) {
+                return 0;
+            }
+            *data = current_leaf->data;
+            return 0;
         }
 
-        current_leaf = (hashmap_leaf *)current_leaf->next_leaf;
+        current_leaf = current_leaf->next_leaf;
     }
-    return 0;
+    return ENOENT;
 }
 
 // built in data

@@ -9,7 +9,7 @@
 
 u64 uninterruptible_trap_page_fault(trap_data *trap,
                                     process_trap_state past_proc_state) {
-    process *proc = (process *)trap->process_ptr;
+    process *proc = trap->process_ptr;
 
     if (past_proc_state != PROC_TRAP_PROCESS &&
         proc->reading_userspace == FALSE) {

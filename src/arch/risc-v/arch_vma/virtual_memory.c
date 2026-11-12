@@ -394,7 +394,7 @@ void vma_create(process *proc) {
         entry_leaf[256 + i] = (i << 28) | access_mask;
     }
 
-    proc->vma_table = (u64 *)new_page_addr;
+    proc->vma_table = (void *)new_page_addr;
 }
 
 // must be called when init vma has already been set

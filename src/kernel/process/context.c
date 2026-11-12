@@ -45,7 +45,7 @@ void context_change_process(process *proc, u64 hart_id) {
 
 void context_bootstrap(u64 hart_id) {
     process *idle_process = (process *)process_from_id((pid)hart_id);
-    if ((u64)idle_process == 0) {
+    if (idle_process == NULL) {
         PANIC("INVALID_IDLE_PROCESS_FOR_HART", (s64)hart_id, (s64)idle_process,
               0);
     }

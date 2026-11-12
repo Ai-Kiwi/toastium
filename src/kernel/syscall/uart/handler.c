@@ -17,7 +17,7 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
         return TRAP_HANDLED;
         break;
     case 1:
-        const u64 str_src = trap->arg2_reg;
+        const void *str_src = (void *)trap->arg2_reg;
         const u64 str_size = trap->arg3_reg;
         if (async == FALSE) {
             return U64_MAX;
@@ -29,8 +29,8 @@ u64 syscall_uart(trap_data *trap, bool8 async) {
         irq_disable();
         u8 *location = mem_alloc(str_size);
         irq_enable();
-        bool8 response = kernel_read_user(str_src, str_size, location,
-                                          (process *)trap->process_ptr);
+        bool8 response =
+            kernel_read_user(str_src, str_size, location, trap->process_ptr);
         trap->return_reg = -1;
         if (response == TRUE) {
             for (u64 i = 0; i < str_size; i++) {

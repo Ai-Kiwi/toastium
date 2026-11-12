@@ -19,7 +19,7 @@ void handle_async_trap() {
     // need to some how get process
     trap_data trap;
     trapframe_parse((trap_data *)&trap);
-    process *proc = (process *)trap.process_ptr;
+    process *proc = trap.process_ptr;
     process_trap_state past_proc_state = proc->trap_state;
     switch (past_proc_state) {
     case PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP:

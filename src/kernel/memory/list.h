@@ -18,11 +18,11 @@ typedef struct {
 } list_iter;
 
 void list_create(list *new_list, u64 item_size);
-u64 list_get(list *new_list, u64 item_idx);
-void list_append(list *new_list, u64 src);
+void *list_get(list *new_list, u64 item_idx);
+void list_append(list *new_list, void *src);
 void list_remove(list *new_list, u64 item_idx);
 void list_delete(list *new_list);
 void list_iter_create(list *new_list, list_iter *iter);
-u64 list_iter_next(list_iter *iter);
+void *list_iter_next(list_iter *iter);
 
 #endif

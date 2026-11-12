@@ -19,7 +19,7 @@ typedef enum {
 
 typedef struct {
     u64 size;
-    u64 radix_roots[INODE_FILE_RADIX_MAX_DEPTH];
+    void *radix_roots[INODE_FILE_RADIX_MAX_DEPTH];
 } inode_file;
 
 typedef struct {

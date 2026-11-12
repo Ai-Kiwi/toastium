@@ -20,7 +20,7 @@ static file_descriptor *file_descriptor_open(inode *file) {
 
     file_descriptor *desc = mem_alloc(sizeof(file_descriptor));
 
-    desc->virt_mapped_loc = 0;
+    desc->virt_mapped_loc = NULL;
     desc->access_mode = 0;
     desc->seek_pos = 0;
     desc->file = file;
@@ -30,7 +30,7 @@ static file_descriptor *file_descriptor_open(inode *file) {
 
 void release_file_descriptor(file_descriptor *desc) {
     irq_disable();
-    if (desc->virt_mapped_loc != 0) {
+    if (desc->virt_mapped_loc != NULL) {
         PANIC("RELEASE_MAPPED_FILE_DESCRIPTOR_NOT_SUPPORTED", 0, 0, 0);
     }
     inode_dec_open_cnt(desc->file);
@@ -56,17 +56,18 @@ static inline u8 *find_page_start(u64 *offset, inode *file) {
 
     u8 *page_location = NULL;
     while (page_location == NULL) {
-        page_location =
-            (u8 *)radix_get(file->file_data.radix_roots[radix_level], page_num,
-                            radix_level + 1, INODE_FILE_RADIX_LEVEL_DEPTH);
+        radix_tree tree = {.addr =
+                               (void *)file->file_data.radix_roots[radix_level],
+                           .level_size = INODE_FILE_RADIX_LEVEL_DEPTH,
+                           .levels = radix_level + 1};
+
+        page_location = (u8 *)radix_get(&tree, page_num);
         if (page_location == NULL) {
             // data is past limit, new data so doesn't need to be loaded
             if (*offset >= file->file_data.size) {
                 page_location = pg_alloc();
 
-                radix_insert(file->file_data.radix_roots[radix_level], page_num,
-                             (u64)page_location, radix_level + 1,
-                             INODE_FILE_RADIX_LEVEL_DEPTH);
+                radix_insert(&tree, page_num, (u64)page_location);
             } else {
                 // for now panic, will later load from disk with async.
                 PANIC("READ/WRITE_OUT_OF_BOUNDS_FILE_DESC_UNIMPLENTED", 0, 0,

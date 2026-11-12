@@ -2,8 +2,9 @@
 #include "def.h"
 #include "include/types.h"
 
-void memcpy(u64 dst, u64 src, u64 size) {
-    if (ROUND_MOD_DOWN(dst, 8) != dst || ROUND_MOD_DOWN(src, 8) != src ||
+void memcpy(void *dst, void *src, u64 size) {
+    if (ROUND_MOD_DOWN((u64)dst, 8) != (u64)dst ||
+        ROUND_MOD_DOWN((u64)src, 8) != (u64)src ||
         ROUND_MOD_DOWN(size, 8) != size) {
         // not both 8 byte aligned, use byte by byte
         u8 *src_ptr = (u8 *)src;

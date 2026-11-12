@@ -12,7 +12,7 @@
 // also none of this is fast or safe for SMP. THis doesn't matter as it is just
 // planning code it will be replaced before smp gets added.
 
-volatile u64 *process_queue; // page storing ring buffer of processes
+process **process_queue; // page storing ring buffer of processes
 u64 process_queue_size;
 u64 process_queue_count;
 u64 process_queue_start;
@@ -27,7 +27,7 @@ process *scheduler_next(u64 hart_id) {
     if (process_queue_count == 0) {
         return hart_idle_process[hart_id];
     }
-    process *output_process = (process *)process_queue[process_queue_start];
+    process *output_process = process_queue[process_queue_start];
     process_queue_start = (process_queue_start + 1) % process_queue_size;
 
     process_queue_count--;
@@ -39,7 +39,7 @@ void scheduler_queue_process(process *proc) {
         PANIC("KERNEL_SCHEDULER_QUEUE_FULL", 0, 0, 0);
     }
     process_queue[(process_queue_start + process_queue_count) %
-                  process_queue_size] = (u64)proc;
+                  process_queue_size] = proc;
     process_queue_count++;
 }
 
@@ -47,7 +47,7 @@ void scheduler_remove(process *proc) {
     u64 offset = 0;
     for (u64 i = 1; i < process_queue_count + 1; i++) {
         if (process_queue[(process_queue_start + (process_queue_count - i)) %
-                          process_queue_size] == (u64)proc) {
+                          process_queue_size] == proc) {
             offset--;
         }
         if (offset == 0) {
@@ -65,7 +65,7 @@ void scheduler_remove(process *proc) {
 void schedular_init(u64 hart_count) {
     // kernel_running_process = null_program_pid;
     process_queue = pg_alloc();
-    process_queue_size = KERNEL_PAGE_SIZE / 8;
+    process_queue_size = KERNEL_PAGE_SIZE / sizeof(process *);
     process_queue_count = 0;
     process_queue_start = 0;
     // make sure to set process trapframe hart_id to correct value, both kernel
@@ -77,6 +77,10 @@ void schedular_init(u64 hart_count) {
     hart_idle_process = pg_alloc();
 
     for (u64 i = 0; i < hart_count; i++) {
-        hart_idle_process[i] = (process *)process_from_id(i);
+        process *proc = process_from_id(i);
+        if (proc == NULL) {
+            PANIC("IDLE_PROCESS_DOESN'T_EXIST", 0, 0, 0);
+        }
+        hart_idle_process[i] = proc;
     }
 }

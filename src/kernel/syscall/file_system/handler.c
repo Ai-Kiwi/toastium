@@ -70,14 +70,14 @@ static void fd_remove_local(u64 local_id, process *proc) {
 // As such it isn't split up.
 
 void syscall_fs_open(trap_data *trap) {
-    process *proc = (process *)trap->process_ptr;
+    process *proc = trap->process_ptr;
 
     if (proc->file_desc_cnt >= MAX_OPEN_FILE_DESCRIPTORS) {
         trap->return_reg = -1;
         return;
     }
 
-    u64 path_user_addr = trap->arg1_reg;
+    void *path_user_addr = (void *)trap->arg1_reg;
     u64 flags = trap->arg2_reg;
 
     char path[257];
@@ -107,7 +107,7 @@ void syscall_fs_open(trap_data *trap) {
 }
 
 void syscall_fs_read(trap_data *trap) {
-    process *proc = (process *)trap->process_ptr;
+    process *proc = trap->process_ptr;
 
     s64 fd_local_id = trap->arg1_reg;
     s64 user_buf_loc = trap->arg2_reg;
@@ -126,7 +126,7 @@ void syscall_fs_read(trap_data *trap) {
     u64 read_size = 0;
 
     u64 size_left = size % 4096;
-    u64 cur_addr = user_buf_loc;
+    void *cur_addr = (void *)user_buf_loc;
     for (u64 i = 0; i < (size / 4096); i++) {
         u64 read_cnt = file_descriptor_read(fd, page, 4096);
         read_size = read_size + read_cnt;
@@ -152,10 +152,10 @@ void syscall_fs_read(trap_data *trap) {
 }
 
 void syscall_fs_write(trap_data *trap) {
-    process *proc = (process *)trap->process_ptr;
+    process *proc = trap->process_ptr;
 
     s64 fd_local_id = trap->arg1_reg;
-    s64 user_buf_loc = trap->arg2_reg;
+    void *user_buf_loc = (void *)trap->arg2_reg;
     s64 size = trap->arg3_reg;
 
     file_descriptor *fd = fd_get_local(fd_local_id, proc);
@@ -171,9 +171,10 @@ void syscall_fs_write(trap_data *trap) {
     u64 write_size = 0;
 
     u64 size_left = size % 4096;
-    u64 cur_addr = user_buf_loc;
+    u64 cur_addr = (u64)user_buf_loc;
     for (u64 i = 0; i < (size / 4096); i++) {
-        bool8 is_user_read = kernel_read_user(cur_addr, 4096, page, proc);
+        bool8 is_user_read =
+            kernel_read_user((void *)cur_addr, 4096, page, proc);
         if (is_user_read == FALSE) {
             size_left = 0;
             break;
@@ -188,7 +189,8 @@ void syscall_fs_write(trap_data *trap) {
         cur_addr = cur_addr + 4096;
     }
     if (size_left > 0) {
-        bool8 is_user_read = kernel_read_user(cur_addr, size_left, page, proc);
+        bool8 is_user_read =
+            kernel_read_user((void *)cur_addr, size_left, page, proc);
         if (is_user_read == FALSE) {
             size_left = 0;
         }
@@ -206,7 +208,7 @@ void syscall_fs_write(trap_data *trap) {
 }
 
 void syscall_fs_seek(trap_data *trap) {
-    process *proc = (process *)trap->process_ptr;
+    process *proc = trap->process_ptr;
 
     s64 fd_local_id = trap->arg1_reg;
     u64 seek_pos = trap->arg2_reg;

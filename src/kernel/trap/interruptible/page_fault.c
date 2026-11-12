@@ -8,7 +8,7 @@
 
 void interruptable_trap_page_fault(trap_data *trap,
                                    interruptable_trap_response *response) {
-    process *proc = (process *)trap->process_ptr;
+    process *proc = trap->process_ptr;
     bool8 page_loaded = pgfault_load(trap);
     if (proc->trap_state == PROC_TRAP_PROCESS_READ_USERSPACE) {
         response->queued_response = !page_loaded;

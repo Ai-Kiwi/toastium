@@ -38,8 +38,8 @@ typedef enum {
 } trap_code;
 
 typedef struct {
-    u64 process_ptr; // would like to be a process pointer type but causes
-                     // circular import, will revisit
+    void *process_ptr; // would like to be a process pointer type but causes
+                       // circular import, will revisit
     trap_type trap_type;
     privilege_mode privilege;
     trap_code code;

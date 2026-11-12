@@ -12,7 +12,7 @@ typedef struct {
     inode *file;
     u64 seek_pos;
     u8 access_mode;
-    u64 virt_mapped_loc; // null if not mmap
+    void *virt_mapped_loc;
 } file_descriptor;
 
 // interuptable function. Must be run with interrupt safe code

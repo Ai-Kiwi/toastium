@@ -38,11 +38,12 @@ inode *create_blank_inode_file() {
     u64 cur_radix = 0;
 
     for (u64 i = 0; i < INODE_FILE_RADIX_MAX_DEPTH; i++) {
-        u64 new_radix = radix_create(INODE_FILE_RADIX_LEVEL_DEPTH);
+        radix_tree tree;
+        radix_create(&tree, INODE_FILE_RADIX_LEVEL_DEPTH, 1);
 
-        radix_insert(new_radix, 0, cur_radix, 1, INODE_FILE_RADIX_LEVEL_DEPTH);
-        cur_radix = new_radix;
-        file->file_data.radix_roots[i] = cur_radix;
+        radix_insert(&tree, 0, cur_radix);
+        cur_radix = (u64)tree.addr;
+        file->file_data.radix_roots[i] = (void *)cur_radix;
     }
 
     return file;
@@ -73,10 +74,12 @@ void inode_file_debug_inject_data(u64 *src, u64 size, inode *file) {
         }
 
         // inefficient but this is a debug program so fine for now.
-        u64 old_addr = radix_insert(
-            file->file_data.radix_roots[INODE_FILE_RADIX_MAX_DEPTH - 1], i,
-            (u64)page_addr, INODE_FILE_RADIX_MAX_DEPTH,
-            INODE_FILE_RADIX_LEVEL_DEPTH);
+        radix_tree tree = {
+            .addr = file->file_data.radix_roots[INODE_FILE_RADIX_MAX_DEPTH - 1],
+            .levels = INODE_FILE_RADIX_MAX_DEPTH,
+            .level_size = INODE_FILE_RADIX_LEVEL_DEPTH,
+        };
+        u64 old_addr = radix_insert(&tree, i, (u64)page_addr);
         if (old_addr) {
             PANIC("inode_file_debug_inject_data_ALREADY_CONTENTS", 0, 0, 0);
         }

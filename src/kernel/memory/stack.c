@@ -7,12 +7,12 @@
 // currently a list for each hart, later will be single ptr per core, will need
 // to find all uses and replace those when that happens. This is bad code but
 // yeah
-u64 *hart_stacks_list;
+void **hart_stacks_list;
 
 void stack_init(u64 hart_cnt) {
     hart_stacks_list = pg_alloc();
     for (u64 i = 0; i < hart_cnt * (HART_KERN_STACK_SIZE / KERNEL_PAGE_SIZE);
          i++) {
-        hart_stacks_list[i] = (u64)pg_alloc();
+        hart_stacks_list[i] = pg_alloc();
     }
 }

@@ -36,7 +36,7 @@ typedef struct {
     trapframe *userspace_trapframe;
     trapframe *kernelspace_trapframe;
     trapframe *page_fault_trapframe;
-    u64 *vma_table;
+    void *vma_table;
     // in risc-v also known as ASID
     u64 vma_addr_space_id;
     // ptr to pages for process handles. First 4 bytes is location of next. rest
@@ -49,7 +49,7 @@ typedef struct {
     file_descriptor *exe_file;
     dentry *working_dir;
     process_type process_type;
-    u64 phys_kernel_stack_addr[4]; // 12kb per process kernel stack
+    void *phys_kernel_stack_addr[4]; // 12kb per process kernel stack
     u64 list_idx;
     bool8 reading_userspace;
     u64 last_hart;

@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef CODES_H
+#define CODES_H
 
 typedef char s8;
 typedef short s16;

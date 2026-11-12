@@ -3,6 +3,7 @@
 
 #include "include/types.h"
 #include "kernel/trap/handler.h"
+
 typedef struct { // each split into page so doesn't need to be 64 byte aligned
     // register_0 is skipped as its always zero so not needed
     u64 register_1;
@@ -46,6 +47,6 @@ typedef struct { // each split into page so doesn't need to be 64 byte aligned
 void trapframe_parse(trap_data *trap);
 void trap_data_set_response(trap_data *trap);
 void trap_data_iter_instruction(trap_data *trap);
-u64 trapframe_stack_ptr(trapframe *trap_frame);
+void *trapframe_stack_ptr(trapframe *trap_frame);
 
 #endif

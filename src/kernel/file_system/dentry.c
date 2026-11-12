@@ -50,7 +50,7 @@ static dentry *get_child(dentry *item, char *child_name) {
     list_iter_create(&item->children, &iter);
 
     while (iter.cur_upto < iter.cur_list->item_cnt) {
-        dentry *child = *(dentry **)list_iter_next(&iter);
+        dentry *child = list_iter_next(&iter);
         if (strcmp((const char *)&child->name, child_name) == 0) {
             return child;
         }
@@ -65,7 +65,7 @@ static void remove_child(dentry *child, char *child_name) {
     list_iter_create(&child->children, &iter);
 
     while (iter.cur_upto < iter.cur_list->item_cnt) {
-        dentry *child = *(dentry **)list_iter_next(&iter);
+        dentry *child = list_iter_next(&iter);
         if (strcmp((const char *)&child->name, child_name) == TRUE) {
             dentry_dec_link(child);
             list_remove(&child->children, iter.cur_upto);
@@ -77,10 +77,9 @@ static void remove_child(dentry *child, char *child_name) {
 }
 
 static void insert_child(dentry *folder, dentry *dentry_item) {
-    u64 item = (u64)dentry_item;
     dentry_inc_link(dentry_item);
 
-    list_append(&folder->children, (u64)&item);
+    list_append(&folder->children, dentry_item);
 }
 
 dentry *dentry_get_path(dentry *cwd, char *path) {

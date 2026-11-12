@@ -3,19 +3,19 @@
 
 #include "types.h"
 
+typedef struct hashmap_leaf hashmap_leaf;
+struct hashmap_leaf {
+    hashmap_leaf *next_leaf;
+    u64 key;
+    u64 data;
+} __attribute__((aligned(64)));
+
 typedef struct {
-    u64 *start;
-    u64 len; // length of data (stores as 4 bytes per entry so len/4 is byte
-             // len)
+    hashmap_leaf **start;
+    u64 len;
     u64 (*hash_function)(u64);
     bool8 (*equal_function)(u64, u64);
 } hashmap;
-
-typedef struct {
-    u64 next_leaf;
-    u64 key;
-    u64 data;
-} __attribute__((aligned(64))) hashmap_leaf;
 
 typedef enum {
     HASHMAP_TYPE_STR,
@@ -24,7 +24,8 @@ typedef enum {
 
 u64 hashmap_insert(hashmap *hashmap, u64 key, u64 data);
 u64 hashmap_remove(hashmap *hashmap, u64 key);
-u64 hashmap_get(hashmap *hashmap, u64 key);
+int hashmap_lookup(hashmap *hashmap, u64 key, u64 *data);
 void hashmap_create(hashmap_types type, hashmap *init_hashmap);
+bool8 hashmap_contains(hashmap *hashmap, u64 key);
 
 #endif

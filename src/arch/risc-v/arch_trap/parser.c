@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "def.h"
 #include "include/layout.h"
+#include "kernel/process/process.h"
 #include "kernel/safety/panic.h"
 #include "kernel/safety/safety.h"
 #include "kernel/trap/handler.h"
@@ -14,7 +15,7 @@ void trapframe_parse(trap_data *trap) { // will have ptr input here that points
                           0x7FFFFFFFFFFFFFFF; // everything but last bit
     const u64 is_user_mode = trap_frame_data->scause & BIT(8);
 
-    trap->process_ptr = trap_frame_data->process_ptr;
+    trap->process_ptr = (process *)trap_frame_data->process_ptr;
 
     trap->arg0_reg = trap_frame_data->register_10;
     trap->arg1_reg = trap_frame_data->register_11;
@@ -143,6 +144,6 @@ void trap_data_iter_instruction(trap_data *kernel_trap) {
     trap_frame_data->sepc += 4;
 }
 
-u64 trapframe_stack_ptr(trapframe *trap_frame) {
-    return trap_frame->register_2;
+void *trapframe_stack_ptr(trapframe *trap_frame) {
+    return (void *)trap_frame->register_2;
 }

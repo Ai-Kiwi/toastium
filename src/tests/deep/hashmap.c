@@ -10,8 +10,7 @@ void test_hashmap() {
     test_print_stage_start("Hashmap");
 
     hashmap hmap;
-    u64 *loc = (u64 *)pg_alloc();
-    hmap.start = loc;
+    hmap.start = pg_alloc();
     hmap.len = KERNEL_PAGE_SIZE / 8;
     hashmap_create(HASHMAP_TYPE_NUMBER, &hmap);
 
@@ -24,7 +23,9 @@ void test_hashmap() {
     test_print_next();
     for (u64 i = 0; i < 100000; i++) {
         test_print_step("(2/2) Confirming data... ", i, 100000, 1);
-        u64 data = hashmap_get(&hmap, i);
+        u64 data;
+        int ret = hashmap_lookup(&hmap, i, &data);
+        ASSERT_U64((u64)ret, 0)
         ASSERT_U64((i * 32) + 36, data);
     }
 

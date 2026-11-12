@@ -3,13 +3,18 @@
 
 #include "include/types.h"
 
-u64 radix_get(u64 addr, u64 key, u8 depth, u8 level_depth);
+typedef struct {
+    void *addr;
+    u8 levels;
+    u8 level_size;
+} radix_tree;
+
+u64 radix_get(radix_tree *tree, u64 key);
 // returns old address
-u64 radix_insert(u64 addr, u64 key, u64 child_addr, u8 depth, u8 level_depth);
-bool8 radix_remove(u64 addr, u64 key, u8 depth, u8 level_depth);
-u64 radix_create(u8 level_depth);
-void radix_delete(u64 addr, bool8 remove_leaves, u8 depth, u8 level_depth);
-void radix_iter(u64 addr, u8 depth, u8 depth_size, u64 parameters,
-                void (*function)(u64, u64));
+u64 radix_insert(radix_tree *tree, u64 key, u64 value);
+bool8 radix_remove(radix_tree *tree, u64 key);
+void radix_create(radix_tree *output_tree, u8 level_size, u8 levels);
+void radix_delete(radix_tree *tree, bool8 remove_leaves);
+void radix_iter(radix_tree *tree, u64 parameters, void (*function)(u64, u64));
 
 #endif

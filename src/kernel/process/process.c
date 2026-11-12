@@ -28,19 +28,26 @@ extern u8 _kernel_idle_process, _kernel_init_process;
 alignas(64) process_handler_state __attribute__((aligned(64))) state;
 
 process *process_from_id(pid process_id) {
-    return (process *)hashmap_get(&state.process_hashmap, (u64)process_id);
+    u64 process_ptr;
+    int ret =
+        hashmap_lookup(&state.process_hashmap, (u64)process_id, &process_ptr);
+    if (ret) {
+        return NULL;
+    }
+    return (process *)process_ptr;
 }
 
 static process *new_blank_process() {
     process *current_process; // Non zero
     while (TRUE) {
-        current_process =
-            (process *)hashmap_get(&state.process_hashmap, state.process_upto);
-        if (!current_process) {
+        int ret = hashmap_lookup(&state.process_hashmap, state.process_upto,
+                                 (u64 *)&current_process);
+        if (ret) {
             break;
         }
         state.process_upto++;
     }
+
     process new_process;
     new_process.trap_state = PROC_TRAP_PROCESS;
     new_process.block_waiting = 0;
@@ -56,7 +63,7 @@ static process *new_blank_process() {
     new_process.file_desc_pg = pg_alloc();
     new_process.last_hart = U64_MAX;
     for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
-        new_process.phys_kernel_stack_addr[i] = (u64)pg_alloc();
+        new_process.phys_kernel_stack_addr[i] = pg_alloc();
     }
     new_process.reading_userspace = FALSE;
     new_process.exe_file = NULL;
@@ -87,7 +94,7 @@ static process *new_blank_process() {
               0);
     }
 
-    list_append(&state.running_list, (u64)temp_process);
+    list_append(&state.running_list, temp_process);
 
     state.process_upto++; // increase for next process
     return (process *)temp_process;
@@ -118,6 +125,9 @@ void processes_init(u64 hart_count) {
 
 void kill_process(pid process_id) {
     process *proc = process_from_id(process_id);
+    if (proc == NULL) {
+        PANIC("PROCESS_TO_KILL_DOESN'T_EXIST", process_id, 0, 0);
+    }
     uart_print_str("process killed : ");
     uart_println_u64(process_id);
     if (proc->process_type == PROC_TYPE_IDLE) {
@@ -149,7 +159,7 @@ void process_cleanup(process *proc) {
     pg_free(proc->kernelspace_trapframe);
     pg_free(proc->vma_table);
     for (u64 i = 0; i < PROC_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
-        pg_free((void *)proc->phys_kernel_stack_addr[i]);
+        pg_free(proc->phys_kernel_stack_addr[i]);
     }
     mem_free(proc);
 }
@@ -160,11 +170,12 @@ void process_update_context_switch(process *proc, u64 hart_id) {
     }
     proc->last_hart = hart_id;
     for (u64 i = 0; i < HART_KERN_STACK_SIZE / KERNEL_PAGE_SIZE; i++) {
-        vma_map_kernel(proc, HART_KERN_STACK_START + (KERNEL_PAGE_SIZE * i),
-                       KERNEL_PAGE_SIZE,
-                       hart_stacks_list[i + (hart_id * (HART_KERN_STACK_SIZE /
-                                                        KERNEL_PAGE_SIZE))],
-                       VMA_READ | VMA_WRITE);
+        vma_map_kernel(
+            proc, HART_KERN_STACK_START + (KERNEL_PAGE_SIZE * i),
+            KERNEL_PAGE_SIZE,
+            (u64)hart_stacks_list[i + (hart_id * (HART_KERN_STACK_SIZE /
+                                                  KERNEL_PAGE_SIZE))],
+            VMA_READ | VMA_WRITE);
     }
 }
 

@@ -1,15 +1,11 @@
-#include "kernel/trap/handler.h"
-#include "arch_trap/parser.h"
-#include "arch_vma/virtual_memory.h"
-#include "def.h"
-#include "drivers/uart/uart.h"
 #include "handler.h"
+#include "arch_trap/parser.h"
+#include "def.h"
 #include "kernel/process/context.h"
 #include "kernel/process/process.h"
 #include "kernel/process/scheduler.h"
 #include "kernel/safety/panic.h"
 #include "kernel/safety/safety.h"
-#include "kernel/syscall/handler.h"
 #include "kernel/timer/timer.h"
 #include "kernel/trap/handler.h"
 #include "layout.h"
@@ -29,10 +25,10 @@
 // swap done in c)
 
 void trap_change_process(trap_data *trap_data) {
-    process *old_process = (process *)trap_data->process_ptr;
+    process *old_process = trap_data->process_ptr;
     if (old_process->process_type == PROC_TYPE_NORMAL &&
         old_process->block_waiting == 0) {
-        scheduler_queue_process((process *)trap_data->process_ptr);
+        scheduler_queue_process(trap_data->process_ptr);
     }
     process *next_process = scheduler_next(trap_data->hart_id);
     context_change_process(next_process, trap_data->hart_id);
@@ -44,7 +40,7 @@ u64 handle_sync_trap() {
     trap_data trap;
     trapframe_parse((trap_data *)&trap);
 
-    process *proc = (process *)trap.process_ptr;
+    process *proc = trap.process_ptr;
     process_trap_state past_proc_state = proc->trap_state;
     proc->trap_state = PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP;
 
@@ -106,7 +102,8 @@ u64 handle_sync_trap() {
     // output stack to use
     if (is_handled == TRAP_UNHANDLED) {
         if (past_proc_state == PROC_TRAP_PROCESS_UNINTERRUPTABLE_TRAP) {
-            u64 response = trapframe_stack_ptr(proc->kernelspace_trapframe);
+            u64 response =
+                (u64)trapframe_stack_ptr(proc->kernelspace_trapframe);
             response = ROUND_MOD_DOWN(response - 8, 8);
         } else {
             is_handled = ROUND_MOD_DOWN(PROC_KERN_STACK_TOP - 8, 8);

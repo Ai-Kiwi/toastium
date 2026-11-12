@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-extern u64 *hart_stacks_list;
+extern void **hart_stacks_list;
 
 void stack_init(u64 hart_cnt);
 

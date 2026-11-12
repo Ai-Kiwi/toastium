@@ -13,7 +13,7 @@ void list_create(list *new_list, u64 item_size) {
     new_list->item_size = item_size;
 }
 
-u64 list_get(list *new_list, u64 item_idx) { // return ptr to item
+void *list_get(list *new_list, u64 item_idx) { // return ptr to item
     if (item_idx > new_list->item_cnt) {
         PANIC("ATTEMPT_REMOVE_LIST_ITEM_OUT_BOUNDS", 0, 0, 0);
     }
@@ -31,11 +31,11 @@ u64 list_get(list *new_list, u64 item_idx) { // return ptr to item
         }
     }
 
-    return ((u64)section) + 8 + (new_list->item_size * section_idx);
+    return (void *)((u64)section) + 8 + (new_list->item_size * section_idx);
 }
 
-void list_append(list *new_list, u64 src) { // return new item num
-    u64 new_item_ptr = list_get(new_list, new_list->item_cnt);
+void list_append(list *new_list, void *src) { // return new item num
+    void *new_item_ptr = list_get(new_list, new_list->item_cnt);
 
     memcpy(new_item_ptr, src, new_list->item_size);
     new_list->item_cnt += 1;
@@ -47,8 +47,8 @@ void list_remove(list *new_list, u64 item_idx) {
         PANIC("ATTEMPT_REMOVE_LIST_ITEM_OUT_BOUNDS", 0, 0, 0);
     }
 
-    u64 last_item_ptr = list_get(new_list, new_list->item_size - 1);
-    u64 item_removing_ptr = list_get(new_list, item_idx);
+    void *last_item_ptr = list_get(new_list, new_list->item_size - 1);
+    void *item_removing_ptr = list_get(new_list, item_idx);
 
     memcpy(item_removing_ptr, last_item_ptr, new_list->item_size);
     new_list->item_cnt -= 1;
@@ -75,11 +75,11 @@ void list_iter_create(list *new_list, list_iter *iter) {
         ((new_list->section_size - 8) / new_list->item_size);
 }
 
-u64 list_iter_next(list_iter *iter) {
+void *list_iter_next(list_iter *iter) {
     u64 cur_section_idx = iter->cur_upto % iter->max_iter_per_section;
 
-    u64 ret = ((u64)iter->cur_list->first_section) + 8 +
-              (iter->cur_list->item_size * cur_section_idx);
+    void *ret = (void *)((u64)iter->cur_list->first_section) + 8 +
+                (iter->cur_list->item_size * cur_section_idx);
 
     iter->cur_list += 1;
 

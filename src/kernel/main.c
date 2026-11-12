@@ -83,8 +83,8 @@ void kernel_main() {
     uart_println_str("Preforming schedular bootstrap");
     context_bootstrap(0); // setup for running processes on core 0
 
-    tests_run_deep();
     tests_run_quick();
+    tests_run_deep();
 
     uart_println_str("Running final safety test");
     kernel_safety_test();
