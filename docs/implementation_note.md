@@ -96,3 +96,4 @@ Code cleanup
 - - make escalation level a number
 - - on processes make less verbose for changing level
 - - make easier to understand way to return if it was handled
+- use int error codes in more places instead of returning NULL
